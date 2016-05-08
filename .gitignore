@@ -1,3 +1,5 @@
 build/
 *.log
 *.out
+blank.png
+stdin_forward
