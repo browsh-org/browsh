@@ -2,26 +2,68 @@ package main
 
 import (
 	"fmt"
-	"github.com/nsf/termbox-go"
 	"strings"
 	"os"
 	"os/exec"
+	"math"
+	"github.com/nsf/termbox-go"
 )
 
 var current string
 var curev termbox.Event
 var lastMouseButton string
-var desktopX int
-var desktopY int
-var termWidth, termHeight = termbox.Size()
+var desktopWidth float32 = 1600
+var desktopHeight float32 = 1200
+var desktopXFloat float32
+var desktopYFloat float32
+var roundedDesktopX int
+var roundedDesktopY int
+// Dimensions of hiptext output
+var hipWidth int
+var hipHeight int
 
 // For keeping track of the zoom
-var zoomLevel float32 = 1
-var viewport = map[string] float32 {
-	"xSize": 1600,
-	"ySize": 1200,
-	"xOffset": 0,
-	"yOffset": 0,
+// TODO: look at the XFCE code to accurately determine the factor. It may
+// even be linear.
+var zoomFactor float32 = 0.03
+var maxZoom float32 = 1000000
+var zoomLevel float32
+var viewport map[string] float32
+
+func initialise() {
+	log("Starting...")
+	calculateHipDimensions()
+	zoomLevel = 1
+	viewport = map[string] float32 {
+		"xSize": desktopWidth,
+		"ySize": desktopHeight,
+		"xOffset": 0,
+		"yOffset": 0,
+	}
+}
+
+// Hiptext needs to render the aspect ratio faithfully. So firstly it tries to fill
+// the terminal as much as it can. And secondly it treat a row as representing twice
+// as much as a column - thus why there are some multiplications/divisions by 2.
+func calculateHipDimensions() {
+	_tw, _th := termbox.Size()
+	tw := float32(_tw)
+	th := float32(_th * 2)
+	ratio := desktopWidth / desktopHeight
+	bestHeight := min(th, (tw / ratio))
+  bestWidth := min(tw, (bestHeight * ratio))
+	// Not sure why the +1 and -1 are needed
+  hipWidth = roundToInt(bestWidth) + 1
+  hipHeight = roundToInt(bestHeight / 2) - 1
+	log(fmt.Sprintf("Term dimensions: W: %d, H: %d", _tw, _th))
+	log(fmt.Sprintf("Hiptext dimensions: W: %d, H: %d", hipWidth, hipHeight))
+}
+
+func min(a float32, b float32) float32 {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func log(msg string) {
@@ -47,6 +89,21 @@ func xdotool(args ...string) {
 	}
 }
 
+func roundToInt(value32 float32) int {
+	var rounded float64
+	value := float64(value32)
+	if value < 0 {
+		rounded = math.Ceil(value - 0.5)
+	}
+	rounded = math.Floor(value + 0.5)
+	return int(rounded)
+}
+
+// Whether the current input event includes a depressed CTRL key.
+func ctrlPressed() bool {
+	return curev.Mod&termbox.ModCtrl != 0
+}
+
 // Convert Termbox symbols to xdotool arguments
 func mouseButtonStr(k termbox.Key) []string {
 	switch k {
@@ -62,13 +119,13 @@ func mouseButtonStr(k termbox.Key) []string {
 	case termbox.MouseRelease:
 		return []string{"mouseup", lastMouseButton}
 	case termbox.MouseWheelUp:
-		if curev.Mod&termbox.ModCtrl != 0 {
-			trackZoom("out")
+		if ctrlPressed() {
+			trackZoom("in")
 		}
 		return []string{"click", "4"}
 	case termbox.MouseWheelDown:
-		if curev.Mod&termbox.ModCtrl != 0 {
-			trackZoom("in")
+		if ctrlPressed() {
+			trackZoom("out")
 		}
 		return []string{"click", "5"}
 	}
@@ -100,18 +157,17 @@ func mouseEvent() {
 			curev.MouseX, curev.MouseY, mouseButtonStr(curev.Key), modStr(curev.Mod)))
 
 	// CTRL allows the user to drag the mouse to pan and zoom the desktop.
-	if curev.Mod&termbox.ModCtrl != 0 {
+	if ctrlPressed() {
 		xdotool("keydown", "alt")
 	} else {
 		xdotool("keyup", "alt")
 	}
 
-
 	// Always move the mouse first. This is because we're not constantly updating the mouse position,
-	// *unless* a drag event is happening. This saves bandwidth and also mouse movement isn't supported
+	// *unless* a drag event is happening. This saves bandwidth. Also, mouse movement isn't supported
 	// on all terminals.
 	setCurrentDesktopCoords()
-	xdotool("mousemove", fmt.Sprintf("%d", desktopX), fmt.Sprintf("%d", desktopY))
+	xdotool("mousemove", fmt.Sprintf("%d", roundedDesktopX), fmt.Sprintf("%d", roundedDesktopY))
 
 	// Send a button press to X. Note that the "Motion" modifier is sent when the user is doing
 	// a drag event and thus mouse reporting will be constantly streamed.
@@ -122,33 +178,72 @@ func mouseEvent() {
 
 // Convert terminal coords into desktop coords
 func setCurrentDesktopCoords() {
-	termWidthFloat := float32(termWidth)
-	termHeightFloat := float32(termHeight)
+	hipWidthFloat := float32(hipWidth)
+	hipHeightFloat := float32(hipHeight)
 	eventX := float32(curev.MouseX)
 	eventY := float32(curev.MouseY)
-	x := (eventX * (viewport["xSize"] / termWidthFloat)) + viewport["xOffset"]
-	y := (eventY * (viewport["ySize"] / termHeightFloat)) + viewport["yOffset"]
-	desktopX = int(x)
-	desktopY = int(y)
+	desktopXFloat = (eventX * (viewport["xSize"] / hipWidthFloat)) + viewport["xOffset"]
+	desktopYFloat = (eventY * (viewport["ySize"] / hipHeightFloat)) + viewport["yOffset"]
+	log(
+		fmt.Sprintf(
+			"setCurrentDesktopCoords: tw: %d, th: %d, dx: %d, dy: %d",
+			hipHeightFloat, hipWidthFloat, desktopXFloat, desktopYFloat))
+	roundedDesktopX = roundToInt(desktopXFloat)
+	roundedDesktopY = roundToInt(desktopYFloat)
 }
 
-// XFCE doesn't provide the current zoom, so we need to keep track of it.
-// For every zoom level the terminal coords will be mapped differently onto the X desktop.
+// XFCE doesn't provide the current zoom, so *we* need to keep track of it.
+// For every zoom level, the terminal coords will be mapped differently onto the X desktop.
 // TODO: support custom desktop sizes.
 func trackZoom(direction string) {
 	if direction == "in" {
-		zoomLevel += 0.2
+		if zoomLevel <= maxZoom {
+			zoomLevel += zoomFactor
+		} else {
+			return
+		}
 	} else {
-		zoomLevel -= 0.2
+		if zoomLevel >= 1 {
+			zoomLevel -= zoomFactor
+		} else {
+			return
+		}
 	}
+	// Use the existing viewport to get the current coords
 	setCurrentDesktopCoords()
-	desktopXFloat := float32(desktopX)
-	desktopYFloat := float32(desktopY)
+
+	// The actual zoom
+	viewport["xSize"] = desktopWidth / zoomLevel
+	viewport["ySize"] = desktopHeight / zoomLevel
 	viewport["xOffset"] = desktopXFloat - (viewport["xSize"] / 2)
 	viewport["yOffset"] = desktopYFloat - (viewport["ySize"] / 2)
-	viewport["xSize"] = 1600 / zoomLevel
-	viewport["ySize"] = 1200 / zoomLevel
+
+	keepViewportInDesktop()
+
+	log(fmt.Sprintf("zoom: %s", zoomLevel))
 	log(fmt.Sprintf("viewport: %s", viewport))
+}
+
+// When zooming near the edges of the desktop it is possible that the viewport's edges overlap
+// the desktop's edges. So just limit the possible movement of the viewport.
+func keepViewportInDesktop() {
+	xLeft   := viewport["xOffset"]
+	xRight  := viewport["xOffset"] + viewport["xSize"]
+	yTop    := viewport["yOffset"]
+	yBottom := viewport["yOffset"] + viewport["ySize"]
+
+	if xLeft < 0 {
+		viewport["xOffset"] = 0
+	}
+	if xRight > desktopWidth {
+		viewport["xOffset"] = desktopWidth - viewport["xSize"]
+	}
+	if yTop < 0 {
+		viewport["yOffset"] = 0
+	}
+	if yBottom > desktopHeight {
+		viewport["yOffset"] = desktopHeight - viewport["ySize"]
+	}
 }
 
 // Convert a keyboard event into an xdotool command
@@ -186,6 +281,7 @@ func main() {
 	}
 	defer termbox.Close()
 	termbox.SetInputMode(termbox.InputMouse)
+	initialise()
 	parseInput()
 
 	data := make([]byte, 0, 64)
@@ -202,6 +298,7 @@ mainloop:
 		case termbox.EventRaw:
 			data = data[:beg+ev.N]
 			current = fmt.Sprintf("%q", data)
+			// TODO: think of a different way to exit, 'q' will be needed for actual text input.
 			if current == `"q"` {
 				break mainloop
 			}

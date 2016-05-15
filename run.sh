@@ -34,15 +34,15 @@ ffmpeg \
 sleep 1
 
 # Intercept STDIN (mouse and keypresses) and forward to the X framebuffer via xdotool
-(./stdin_forward <&3) 3<&0
+(./stdin_forward <&3 &) 3<&0
 
 # Hiptext renders images and videos into text characters displayable in a terminal
 # Hiptext complains unless you specify the exact path to the font, seems like a bug to me
 # TODO: support variable width, ideally dynamic sizing
-# hiptext \
-#   -font /usr/share/fonts/ttf-dejavu/DejaVuSansMono.ttf \
-#   $UDP_URI \
-#   2> hiptext.log
+hiptext \
+  -font /usr/share/fonts/ttf-dejavu/DejaVuSansMono.ttf \
+  $UDP_URI \
+  2> hiptext.log
 
 # Kill all the subprocesses created in this script if the script itself exits
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
