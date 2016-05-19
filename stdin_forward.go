@@ -3,12 +3,24 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 	"os"
 	"os/exec"
 	"math"
-	"github.com/nsf/termbox-go"
+	"github.com/tombh/termbox-go"
 )
 
+// Import the xzoom C code that creates an X window that zooms
+// and pans the desktop.
+// It's written in C because it borrows from the original xzoom
+// binary: http://git.r-36.net/xzoom/
+// NB: The following comments are parsed by `go build` ...
+
+// #cgo LDFLAGS: -lXext -lX11 -lXt
+// #include "xzoom/xzoom.h"
+import "C"
+
+var logfile = "./input.log"
 var current string
 var curev termbox.Event
 var lastMouseButton string
@@ -43,7 +55,7 @@ func initialise() {
 }
 
 // Hiptext needs to render the aspect ratio faithfully. So firstly it tries to fill
-// the terminal as much as it can. And secondly it treat a row as representing twice
+// the terminal as much as it can. And secondly it treats a row as representing twice
 // as much as a column - thus why there are some multiplications/divisions by 2.
 func calculateHipDimensions() {
 	_tw, _th := termbox.Size()
@@ -52,7 +64,7 @@ func calculateHipDimensions() {
 	ratio := desktopWidth / desktopHeight
 	bestHeight := min(th, (tw / ratio))
   bestWidth := min(tw, (bestHeight * ratio))
-	// Not sure why the +1 and -1 are needed
+	// Not sure why the +1 and -1 are needed, but they are.
   hipWidth = roundToInt(bestWidth) + 1
   hipHeight = roundToInt(bestHeight / 2) - 1
 	log(fmt.Sprintf("Term dimensions: W: %d, H: %d", _tw, _th))
@@ -68,7 +80,7 @@ func min(a float32, b float32) float32 {
 
 func log(msg string) {
 	msg = msg + "\n"
-	f, err := os.OpenFile("stdin.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -83,6 +95,9 @@ func log(msg string) {
 // Issue an xdotool command to simulate mouse and keyboard input
 func xdotool(args ...string) {
 	log(strings.Join(args, " "))
+	if args[0] == "noop" {
+		return
+	}
 	if err := exec.Command("xdotool", args...).Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -120,19 +135,23 @@ func mouseButtonStr(k termbox.Key) []string {
 		return []string{"mouseup", lastMouseButton}
 	case termbox.MouseWheelUp:
 		if ctrlPressed() {
-			trackZoom("in")
+			C.magx++
+			C.magy++
+			return []string{"noop"}
 		}
 		return []string{"click", "4"}
 	case termbox.MouseWheelDown:
 		if ctrlPressed() {
-			trackZoom("out")
+			C.magx--
+			C.magy--
+			return []string{"noop"}
 		}
 		return []string{"click", "5"}
 	}
 	return []string{""}
 }
 
-// Auxillary data, whether the mouse was moving or a mod key like CTRL
+// Auxillary data. Whether the mouse was moving or a mod key like CTRL
 // is being pressed at the same time.
 func modStr(m termbox.Modifier) string {
 	var out []string
@@ -157,9 +176,7 @@ func mouseEvent() {
 			curev.MouseX, curev.MouseY, mouseButtonStr(curev.Key), modStr(curev.Mod)))
 
 	// CTRL allows the user to drag the mouse to pan and zoom the desktop.
-	if ctrlPressed() {
-		xdotool("keydown", "alt")
-	} else {
+	if !ctrlPressed() {
 		xdotool("keyup", "alt")
 	}
 
@@ -196,6 +213,8 @@ func setCurrentDesktopCoords() {
 // For every zoom level, the terminal coords will be mapped differently onto the X desktop.
 // TODO: support custom desktop sizes.
 func trackZoom(direction string) {
+	xdotool("keydown", "alt")
+
 	if direction == "in" {
 		if zoomLevel <= maxZoom {
 			zoomLevel += zoomFactor
@@ -274,7 +293,37 @@ func parseInput() {
 	}
 }
 
+// a channel to tell it to stop
+var stopchan = make(chan struct{})
+// a channel to signal that it's stopped
+var stoppedchan = make(chan struct{})
+
+func xzoomBackground(){
+	go func(){ // work in background
+	  // close the stoppedchan when this func
+	  // exits
+	  defer close(stoppedchan)
+	  // TODO: do setup work
+	  defer func(){
+	    // TODO: do teardown work
+	  }()
+	  for {
+	    select {
+	      default:
+	        C.xzoom_loop()
+					time.Sleep(40 * time.Millisecond) // 25fps
+	      case <-stopchan:
+	        // stop
+	        return
+	    }
+	  }
+	}()
+}
+
 func main() {
+	C.xzoom_init()
+	xzoomBackground()
+
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
@@ -300,6 +349,8 @@ mainloop:
 			current = fmt.Sprintf("%q", data)
 			// TODO: think of a different way to exit, 'q' will be needed for actual text input.
 			if current == `"q"` {
+				close(stopchan)  // tell it to stop
+				<-stoppedchan    // wait for it to have stopped
 				break mainloop
 			}
 

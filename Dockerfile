@@ -8,9 +8,10 @@ RUN apk add --no-cache xvfb xdotool@testing xfce4 ffmpeg openssh mosh chromium
 # Generate host keys
 RUN ssh-keygen -A
 
-# Installing Hiptext, video to text renderer
+# Installing Hiptext, video to text renderer and our own stdin_forward
 RUN apk --no-cache add --virtual build-dependencies \
-  build-base git freetype-dev jpeg-dev ffmpeg-dev ragel
+  build-base git go freetype-dev jpeg-dev ffmpeg-dev ragel libx11-dev libxt-dev
+# setup GOPATH and GOBIN and build stdin_forward
 RUN apk --no-cache add libgflags-dev@testing glog-dev@testing
 RUN mkdir -p build \
   && cd build \
