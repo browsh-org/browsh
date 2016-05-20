@@ -36,10 +36,9 @@ var roundedDesktopY int
 var hipWidth int
 var hipHeight int
 
-var panning bool
 var panNeedsSetup bool
-var panCachedXOffset float32
-var panCachedYOffset float32
+var panStartingX float32
+var panStartingY float32
 
 func initialise() {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
@@ -247,21 +246,24 @@ func mouseEvent() {
 	xdotool("mousemove", fmt.Sprintf("%d", roundedDesktopX), fmt.Sprintf("%d", roundedDesktopY))
 
 	if ctrlPressed() && mouseMotion() && lastMouseButton == "1" {
-		panning = true
-		if panNeedsSetup {
-			panCachedXOffset = float32(C.xgrab)
-			panCachedYOffset = float32(C.ygrab)
-			panNeedsSetup = false
-		}
-		C.xgrab = C.int(desktopXFloat - panCachedXOffset)
-		C.ygrab = C.int(desktopYFloat - panCachedYOffset)
+		pan()
 	} else {
 		panNeedsSetup = true
-		panning = false
 		if !ctrlPressed() {
 			xdotool(mouseButtonStr(curev.Key)...)
 		}
 	}
+}
+
+func pan() {
+	if panNeedsSetup {
+		panStartingX = desktopXFloat
+		panStartingY = desktopYFloat
+		panNeedsSetup = false
+	}
+	C.xgrab = C.int(float32(C.xgrab) + panStartingX - desktopXFloat)
+  C.ygrab = C.int(float32(C.ygrab) + panStartingY - desktopYFloat)
+	keepViewportInDesktop()
 }
 
 // Convert terminal coords into desktop coords
@@ -274,16 +276,8 @@ func setCurrentDesktopCoords() {
 	eventY := float32(curev.MouseY)
 	width := float32(C.width[C.SRC])
 	height := float32(C.height[C.SRC])
-	if panning {
-		// When panning starts we want to do it all within the same viewport.
-		// Without the caching here, then the viewport would change for each
-		// mouse movement and panning becomes overly sensitive.
-		xOffset = panCachedXOffset
-		yOffset = panCachedYOffset
-	} else {
-		xOffset = float32(C.xgrab)
-		yOffset = float32(C.ygrab)
-	}
+	xOffset = float32(C.xgrab)
+	yOffset = float32(C.ygrab)
 	desktopXFloat = (eventX * (width / hipWidthFloat)) + xOffset
 	desktopYFloat = (eventY * (height / hipHeightFloat)) + yOffset
 	log(
