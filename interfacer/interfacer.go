@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"path/filepath"
 	"time"
 	"os"
 	"os/exec"
@@ -17,15 +18,15 @@ import (
 // NB: The following comments are parsed by `go build` ...
 
 // #cgo LDFLAGS: -lXext -lX11 -lXt
-// #include "xzoom/xzoom.h"
+// #include "../xzoom/xzoom.h"
 import "C"
 
-var logfile = "./input.log"
+var logfile string
 var current string
 var curev termbox.Event
 var lastMouseButton string
-var desktopWidth float32 = 1600
-var desktopHeight float32 = 1200
+var desktopWidth = float32(C.WIDTH)
+var desktopHeight = float32(C.HEIGHT)
 var desktopXFloat float32
 var desktopYFloat float32
 var roundedDesktopX int
@@ -35,14 +36,20 @@ var roundedDesktopY int
 var hipWidth int
 var hipHeight int
 
+var panning bool
 var panNeedsSetup bool
 var panCachedXOffset float32
 var panCachedYOffset float32
 
 func initialise() {
-	tErr := os.Truncate(logfile, 0)
-	if tErr != nil {
-		panic(tErr)
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		panic(err)
+	}
+	os.Mkdir(filepath.Join(dir, "..", "logs"), os.ModePerm)
+	logfile = fmt.Sprintf(filepath.Join(dir, "..", "logs", "input.log"))
+	if _, err := os.Stat(logfile); err == nil {
+		os.Truncate(logfile, 0)
 	}
 	log("Starting...")
 	calculateHipDimensions()
@@ -83,6 +90,13 @@ func log(msg string) {
 	if _, wErr := f.WriteString(msg); wErr != nil {
 		panic(wErr)
 	}
+}
+
+func getXGrab() int {
+	return int(C.xgrab)
+}
+func getYGrab() int {
+	return int(C.ygrab)
 }
 
 // Issue an xdotool command to simulate mouse and keyboard input
@@ -133,22 +147,73 @@ func mouseButtonStr(k termbox.Key) []string {
 		return []string{"mouseup", lastMouseButton}
 	case termbox.MouseWheelUp:
 		if ctrlPressed() {
-			C.magx++
-			C.magy++
+			zoom("in")
 			return []string{"noop"}
 		}
 		return []string{"click", "4"}
 	case termbox.MouseWheelDown:
 		if ctrlPressed() {
-			if C.magx > 1 {
-				C.magx--
-				C.magy--
+			if C.magnification > 1 {
+				zoom("out")
 	    }
 			return []string{"noop"}
 		}
 		return []string{"click", "5"}
 	}
 	return []string{""}
+}
+
+func zoom(direction string) {
+	oldZoom := C.magnification
+
+	// The actual zoom
+	if direction == "in" {
+		C.magnification++
+	} else {
+		C.magnification--
+	}
+  C.width[C.SRC]  = (C.WIDTH + C.magnification - 1) / C.magnification;
+  C.height[C.SRC] = (C.HEIGHT + C.magnification - 1) / C.magnification;
+
+	// Move the viewport so that the mouse is still over the same part of
+	// the desktop.
+	factor := float32(oldZoom) / float32(C.magnification)
+	magnifiedRelativeX := factor * (desktopXFloat - float32(C.xgrab))
+	magnifiedRelativeY := factor * (desktopYFloat - float32(C.ygrab))
+	C.xgrab = C.int(desktopXFloat - magnifiedRelativeX)
+	C.ygrab = C.int(desktopYFloat - magnifiedRelativeY)
+
+	keepViewportInDesktop()
+}
+
+func keepViewportInDesktop() {
+	// Manage the viewport size
+	if C.width[C.SRC] < 1 {
+		C.width[C.SRC] = 1
+	}
+	if C.width[C.SRC] > C.WIDTH {
+		C.width[C.SRC] = C.WIDTH
+	}
+	if C.height[C.SRC] < 1 {
+		C.height[C.SRC] = 1
+	}
+	if C.height[C.SRC] > C.HEIGHT {
+		C.height[C.SRC] = C.HEIGHT
+	}
+
+	// Manage the viewport position
+	if C.xgrab > (C.WIDTH - C.width[C.SRC]) {
+		C.xgrab = C.WIDTH - C.width[C.SRC]
+	}
+	if C.xgrab < 0 {
+		C.xgrab = 0
+	}
+	if C.ygrab > (C.HEIGHT - C.height[C.SRC]) {
+		C.ygrab = C.HEIGHT - C.height[C.SRC]
+	}
+	if C.ygrab < 0 {
+		C.ygrab = 0
+	}
 }
 
 // Auxillary data. Whether the mouse was moving or a mod key like CTRL
@@ -170,27 +235,29 @@ func modStr(m termbox.Modifier) string {
 }
 
 func mouseEvent() {
+	log(
+		fmt.Sprintf(
+			"EventMouse: x: %d, y: %d, b: %s, mod: %s",
+			curev.MouseX, curev.MouseY, mouseButtonStr(curev.Key), modStr(curev.Mod)))
+
 	setCurrentDesktopCoords()
 	// Always move the mouse first so that button presses are correct. This is because we're not constantly
 	// updating the mouse position, *unless* a drag event is happening. This saves bandwidth. Also, mouse
 	// movement isn't supported on all terminals.
 	xdotool("mousemove", fmt.Sprintf("%d", roundedDesktopX), fmt.Sprintf("%d", roundedDesktopY))
 
-	log(
-		fmt.Sprintf(
-			"EventMouse: x: %d, y: %d, b: %s, mod: %s",
-			curev.MouseX, curev.MouseY, mouseButtonStr(curev.Key), modStr(curev.Mod)))
-
 	if ctrlPressed() && mouseMotion() && lastMouseButton == "1" {
-		C.pan = 1
-		if panNeedsSetup == true {
+		panning = true
+		if panNeedsSetup {
 			panCachedXOffset = float32(C.xgrab)
 			panCachedYOffset = float32(C.ygrab)
+			panNeedsSetup = false
 		}
-		panNeedsSetup = false
+		C.xgrab = C.int(desktopXFloat - panCachedXOffset)
+		C.ygrab = C.int(desktopYFloat - panCachedYOffset)
 	} else {
 		panNeedsSetup = true
-		C.pan = 0
+		panning = false
 		if !ctrlPressed() {
 			xdotool(mouseButtonStr(curev.Key)...)
 		}
@@ -207,7 +274,7 @@ func setCurrentDesktopCoords() {
 	eventY := float32(curev.MouseY)
 	width := float32(C.width[C.SRC])
 	height := float32(C.height[C.SRC])
-	if C.pan == 1 {
+	if panning {
 		// When panning starts we want to do it all within the same viewport.
 		// Without the caching here, then the viewport would change for each
 		// mouse movement and panning becomes overly sensitive.
@@ -222,7 +289,7 @@ func setCurrentDesktopCoords() {
 	log(
 		fmt.Sprintf(
 			"setCurrentDesktopCoords: tw: %d, th: %d, dx: %d, dy: %d, mag: %d",
-			hipHeightFloat, hipWidthFloat, desktopXFloat, desktopYFloat, C.magx))
+			hipHeightFloat, hipWidthFloat, eventX, width, C.magnification))
 	roundedDesktopX = roundToInt(desktopXFloat)
 	roundedDesktopY = roundToInt(desktopYFloat)
 }

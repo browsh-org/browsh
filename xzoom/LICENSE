@@ -1,4 +1,7 @@
-This package was maintained by tony mancill <tmancill@debian.org>, for a 
+Although the xzoom code has been heavily modified, I include the original license.
+
+---
+This package was maintained by tony mancill <tmancill@debian.org>, for a
 while, and then picked up by Junichi Uekawa <dancer@debian.org>. Since Sun, 15 Jun 2008 maintained by Anibal Avelar <aavelar@cofradia.org>.
 
 This package was put together by Joey Hess <joeyh@debian.org>, using

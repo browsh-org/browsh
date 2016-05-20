@@ -20,12 +20,12 @@ UDP_URI='udp://127.0.0.1:1234'
 # |              |                |
 # ---------------------------------
 # So xzoom mirrors the desktop and ffmpeg streams the xzoom window.
-Xvfb :0 -screen 0 "$(($DESKTOP_WIDTH * 2))"x"$DESKTOP_HEIGHT"x16 > xvfb.log 2>&1 &
+Xvfb :0 -screen 0 "$(($DESKTOP_WIDTH * 2))"x"$DESKTOP_HEIGHT"x16 > ./logs/xvfb.log 2>&1 &
 
 # TODO: detect X start rather than sleep
 sleep 1
 
-/usr/bin/firefox >> xvfb.log 2>&1 &
+/usr/bin/firefox >> ./logs/xvfb.log 2>&1 &
 
 # Convert the X framebuffer desktop into a video stream, but only stream the
 # right hand side where the xzoom window is.
@@ -37,14 +37,14 @@ ffmpeg \
   -vcodec mpeg2video \
   -f mpegts \
   $UDP_URI \
-  > ffmpeg.log 2>&1 &
+  > ./logs/ffmpeg.log 2>&1 &
 
 # The above ffmpeg can take a while to open the UDP stream, so wait a little
 # TODO: detect the stream's presence rather than sleep
 sleep 1
 
 # Intercept STDIN (mouse and keypresses) and forward to the X framebuffer via xdotool
-(./stdin_forward <&3 > interface.log 2>&1 &) 3<&0
+(./interfacer/interfacer <&3 > ./logs/interface.log 2>&1 &) 3<&0
 
 # Hiptext renders images and videos into text characters displayable in a terminal.
 # It complains unless you specify the exact path to the font, seems like a bug to me.
@@ -52,7 +52,7 @@ sleep 1
 hiptext \
   -font /usr/share/fonts/ttf-dejavu/DejaVuSansMono.ttf \
   $UDP_URI \
-  2> hiptext.log
+  2> ./logs/hiptext.log
 
 # Kill all the subprocesses created in this script if the script itself exits
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT

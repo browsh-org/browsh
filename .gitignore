@@ -2,5 +2,4 @@ build/
 *.log
 *.out
 blank.png
-stdin_forward
-xzoom/xzoom_debug
+interfacer/interfacer
