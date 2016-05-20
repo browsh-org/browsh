@@ -1,7 +1,7 @@
 /*
-   This code largely comes from Itai Nahshon's xzoom, see:
-      http://git.r-36.net/xzoom
- */
+This code largely comes from Itai Nahshon's xzoom, see:
+http://git.r-36.net/xzoom
+*/
 
 #include <stdio.h>
 #include <string.h>
@@ -18,11 +18,9 @@
 
 Display *dpy;
 Screen  *scr;
-Window   win;
+Window   win, root, child;
 Status   status;
-
-Window root, child;
-int    rootX, rootY, winX, winY;
+int    pan, mouseX, mouseY, winX, winY;
 unsigned int mask;
 
 GC gc;
@@ -37,21 +35,19 @@ GC gc;
 #define MAGX MAG    /* horizontal magnification */
 #define MAGY MAG    /* vertical magnification */
 
-int xgrab, ygrab;   /* where do we take the picture from */
+// where do we take the picture from
+int xgrab = 0;
+int ygrab = 0;
 
 int magx = MAGX;
 int magy = MAGY;
-
 int old_magx = MAGX;
-
-int gridx = False;
-int gridy = False;
 
 int width[2] = { 0, WIDTH };
 int height[2] = { 0, HEIGHT };
 unsigned depth = 0;
 
-XImage *ximage[2]; /* Ximage struct. */
+XImage *ximage[2];
 
 int created_images = False;
 
@@ -83,40 +79,28 @@ void destroy_images(void) {
 
   for (i = 0; i < 2; i++) {
     free(ximage[i]->data);
-    ximage[i]->data = NULL;   /* remove refrence to that address */
-    XDestroyImage(ximage[i]); /* and destroy image */
+    ximage[i]->data = NULL;
+    XDestroyImage(ximage[i]);
   }
 
   created_images = False;
 }
 
-/* Resize is called with the dest size.
-   Called when magnification changes or when
-   actual window size is changed */
-void resize(int new_width, int new_height) {
-  destroy_images(); /* we can get rid of these */
+void zoom() {
+  destroy_images();
 
-  /* find new dimensions for source */
-  width[SRC]  = (new_width + magx - 1) / magx;
-  height[SRC] = (new_height + magy - 1) / magy;
+  width[SRC]  = (width[DST] + magx - 1) / magx;
+  height[SRC] = (height[DST] + magy - 1) / magy;
 
   if (width[SRC] < 1) width[SRC] = 1;
   if (width[SRC] > WidthOfScreen(scr)) width[SRC] = WidthOfScreen(scr);
   if (height[SRC] < 1) height[SRC] = 1;
   if (height[SRC] > HeightOfScreen(scr)) height[SRC] = HeightOfScreen(scr);
 
-  /* temporary, the dest image may be larger than the
-     actual window */
   width[DST]  = magx * width[SRC];
   height[DST] = magy * height[SRC];
 
-  allocate_images(); /* allocate new images */
-
-  /* remember actual window size */
-  if (width[DST] > new_width) width[DST] = new_width;
-  if (height[DST] > new_height) height[DST] = new_height;
-
-  // printf("x: %d, y: %d\n", rootX, rootY);
+  allocate_images();
 }
 
 void scale8(void)
@@ -140,16 +124,21 @@ void scale32(void)
 #undef T
 }
 
-void xzoom()
+// Update the zoom window with the current state of the desktop.
+// Happens at 25fps.
+void update_zoom_window_with_desktop()
 {
+  // Get a snapshot of the desktop, or a portion of the desktop
   XGetSubImage(dpy, RootWindowOfScreen(scr),
                xgrab, ygrab, width[SRC], height[SRC], AllPlanes,
                ZPixmap, ximage[SRC], 0, 0);
 
+  // Zoom in on that snapshot
   if (depth == 8) scale8();
   else if (depth <= 8 * sizeof(short)) scale16();
   else if (depth <= 8 * sizeof(int)) scale32();
 
+  // Put the snapshot into the xzoom window
   XPutImage(dpy, win, gc, ximage[DST], 0, 0, 0, 0, width[DST], height[DST]);
   XSync(dpy, 0);
 }
@@ -158,7 +147,6 @@ int xzoom_init() {
   XSetWindowAttributes xswa;
   XGCValues gcv;
   char *dpyname = ":0";
-  int xpos = 0, ypos = 0;
 
   atexit(destroy_images);
 
@@ -194,30 +182,42 @@ int xzoom_init() {
 																 GCBackground,
                                  &gcv);
 
-  resize(width[DST], height[DST]);
+  zoom();
 }
 
-int xzoom_loop()
+void keep_viewport_in_desktop()
 {
-
-  if (old_magx != magx) {
-    XQueryPointer(dpy, DefaultRootWindow(dpy), &root, &child,
-      &mouseX, &mouseY, &winX, &winY, &mask);
-    xgrab = mouseX - (width[SRC] / 2);
-    ygrab = mouseY - (height[SRC] / 2);
-    resize(width[DST], height[DST]);
-  }
-  old_magx = magx;
-
   if (xgrab < 0) xgrab = 0;
 
-  if (xgrab > WidthOfScreen(scr) - width[SRC])
-		xgrab = WidthOfScreen(scr) - width[SRC];
+  // Divide width in half to account for the double desktop width
+  // where the xzoom window is hidden on the right.
+  if (xgrab > (WidthOfScreen(scr) / 2) - width[SRC])
+		xgrab = (WidthOfScreen(scr) / 2) - width[SRC];
 
   if (ygrab < 0) ygrab = 0;
 
   if (ygrab > HeightOfScreen(scr) - height[SRC])
 		ygrab = HeightOfScreen(scr) - height[SRC];
+}
 
-  xzoom();
+void setup_viewport()
+{
+  if (old_magx != magx || pan)
+  {
+    XQueryPointer(dpy, DefaultRootWindow(dpy), &root, &child,
+      &mouseX, &mouseY, &winX, &winY, &mask);
+    // Dividing by 2 gets us from the centre of the viewport to
+    // the top left corner
+    xgrab = mouseX - (width[SRC] / 2);
+    ygrab = mouseY - (height[SRC] / 2);
+  }
+  old_magx = magx;
+}
+
+void loop()
+{
+  setup_viewport();
+  keep_viewport_in_desktop();
+  zoom();
+  update_zoom_window_with_desktop();
 }

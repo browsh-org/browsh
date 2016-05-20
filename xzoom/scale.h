@@ -28,18 +28,6 @@
 			k = magx; do *p1++ = c; while (--k > 0);
 		} while (--i > 0);
 
-		/* draw vertical grid */
-		if (gridy && magx >= 2)
-		{
-			p1 = p1_save - 1;
-			i = magx;
-			k = width[SRC];
-			do {
-				p1 += i;
-				*p1 ^= ~((T)0);
-			} while (--k > 0);
-		}
-
 		/* duplicate that line as needed */
 		if (magy > 1)
 		{
@@ -55,15 +43,6 @@
 				p2 += p2step;
 				memcpy(p2, p1, i);
 			} while (--k > 0);
-
-			/* draw horizontal grid */
-			if (gridx && magy >= 2)
-			{
-				k = width[DST];
-				do {
-					*p2++ ^= ~((T)0);
-				} while (--k > 0);
-			}
 		}
 	} while (--j >= 0);
 }

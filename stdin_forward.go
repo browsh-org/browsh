@@ -43,6 +43,10 @@ var zoomLevel float32
 var viewport map[string] float32
 
 func initialise() {
+	tErr := os.Truncate(logfile, 0)
+	if tErr != nil {
+		panic(tErr)
+	}
 	log("Starting...")
 	calculateHipDimensions()
 	zoomLevel = 1
@@ -79,16 +83,15 @@ func min(a float32, b float32) float32 {
 }
 
 func log(msg string) {
-	msg = msg + "\n"
-	f, err := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		panic(err)
+	f, oErr := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if oErr != nil {
+		panic(oErr)
 	}
-
 	defer f.Close()
 
-	if _, err = f.WriteString(msg); err != nil {
-		panic(err)
+	msg = msg + "\n"
+	if _, wErr := f.WriteString(msg); wErr != nil {
+		panic(wErr)
 	}
 }
 
@@ -119,6 +122,11 @@ func ctrlPressed() bool {
 	return curev.Mod&termbox.ModCtrl != 0
 }
 
+// Whether the mouse is moving
+func mouseMotion() bool {
+	return curev.Mod&termbox.ModMotion != 0
+}
+
 // Convert Termbox symbols to xdotool arguments
 func mouseButtonStr(k termbox.Key) []string {
 	switch k {
@@ -142,8 +150,10 @@ func mouseButtonStr(k termbox.Key) []string {
 		return []string{"click", "4"}
 	case termbox.MouseWheelDown:
 		if ctrlPressed() {
-			C.magx--
-			C.magy--
+			if C.magx > 1 {
+				C.magx--
+				C.magy--
+	    }
 			return []string{"noop"}
 		}
 		return []string{"click", "5"}
@@ -169,100 +179,66 @@ func modStr(m termbox.Modifier) string {
 	return strings.Join(out, " ")
 }
 
+var panNeedsSetup bool
+var panCachedXOffset float32
+var panCachedYOffset float32
+
 func mouseEvent() {
+	setCurrentDesktopCoords()
+	// Always move the mouse first. This is because we're not constantly updating the mouse position,
+	// *unless* a drag event is happening. This saves bandwidth. Also, mouse movement isn't supported
+	// on all terminals.
+	xdotool("mousemove", fmt.Sprintf("%d", roundedDesktopX), fmt.Sprintf("%d", roundedDesktopY))
+
 	log(
 		fmt.Sprintf(
 			"EventMouse: x: %d, y: %d, b: %s, mod: %s",
 			curev.MouseX, curev.MouseY, mouseButtonStr(curev.Key), modStr(curev.Mod)))
 
-	// CTRL allows the user to drag the mouse to pan and zoom the desktop.
-	if !ctrlPressed() {
-		xdotool("keyup", "alt")
-	}
-
-	// Always move the mouse first. This is because we're not constantly updating the mouse position,
-	// *unless* a drag event is happening. This saves bandwidth. Also, mouse movement isn't supported
-	// on all terminals.
-	setCurrentDesktopCoords()
-	xdotool("mousemove", fmt.Sprintf("%d", roundedDesktopX), fmt.Sprintf("%d", roundedDesktopY))
-
-	// Send a button press to X. Note that the "Motion" modifier is sent when the user is doing
-	// a drag event and thus mouse reporting will be constantly streamed.
-	if !strings.Contains(modStr(curev.Mod), "Motion") {
-		xdotool(mouseButtonStr(curev.Key)...)
+	if ctrlPressed() && mouseMotion() && lastMouseButton == "1" {
+		C.pan = 1
+		if panNeedsSetup == true {
+			panCachedXOffset = float32(C.xgrab)
+			panCachedYOffset = float32(C.ygrab)
+		}
+		panNeedsSetup = false
+	} else {
+		panNeedsSetup = true
+		C.pan = 0
+		if !ctrlPressed() {
+			xdotool(mouseButtonStr(curev.Key)...)
+		}
 	}
 }
 
 // Convert terminal coords into desktop coords
 func setCurrentDesktopCoords() {
+	var xOffset float32
+	var yOffset float32
 	hipWidthFloat := float32(hipWidth)
 	hipHeightFloat := float32(hipHeight)
 	eventX := float32(curev.MouseX)
 	eventY := float32(curev.MouseY)
-	desktopXFloat = (eventX * (viewport["xSize"] / hipWidthFloat)) + viewport["xOffset"]
-	desktopYFloat = (eventY * (viewport["ySize"] / hipHeightFloat)) + viewport["yOffset"]
+	width := float32(C.width[C.SRC])
+	height := float32(C.height[C.SRC])
+	if C.pan == 1 {
+		// When panning starts we want to do it all within the same viewport.
+		// Without the caching here then the viewport would change for each
+		// mouse movement and panning becomes overly sensitive.
+		xOffset = panCachedXOffset
+		yOffset = panCachedYOffset
+	} else {
+		xOffset = float32(C.xgrab)
+		yOffset = float32(C.ygrab)
+	}
+	desktopXFloat = (eventX * (width / hipWidthFloat)) + xOffset
+	desktopYFloat = (eventY * (height / hipHeightFloat)) + yOffset
 	log(
 		fmt.Sprintf(
-			"setCurrentDesktopCoords: tw: %d, th: %d, dx: %d, dy: %d",
-			hipHeightFloat, hipWidthFloat, desktopXFloat, desktopYFloat))
+			"setCurrentDesktopCoords: tw: %d, th: %d, dx: %d, dy: %d, mag: %d",
+			hipHeightFloat, hipWidthFloat, desktopXFloat, desktopYFloat, C.magx))
 	roundedDesktopX = roundToInt(desktopXFloat)
 	roundedDesktopY = roundToInt(desktopYFloat)
-}
-
-// XFCE doesn't provide the current zoom, so *we* need to keep track of it.
-// For every zoom level, the terminal coords will be mapped differently onto the X desktop.
-// TODO: support custom desktop sizes.
-func trackZoom(direction string) {
-	xdotool("keydown", "alt")
-
-	if direction == "in" {
-		if zoomLevel <= maxZoom {
-			zoomLevel += zoomFactor
-		} else {
-			return
-		}
-	} else {
-		if zoomLevel >= 1 {
-			zoomLevel -= zoomFactor
-		} else {
-			return
-		}
-	}
-	// Use the existing viewport to get the current coords
-	setCurrentDesktopCoords()
-
-	// The actual zoom
-	viewport["xSize"] = desktopWidth / zoomLevel
-	viewport["ySize"] = desktopHeight / zoomLevel
-	viewport["xOffset"] = desktopXFloat - (viewport["xSize"] / 2)
-	viewport["yOffset"] = desktopYFloat - (viewport["ySize"] / 2)
-
-	keepViewportInDesktop()
-
-	log(fmt.Sprintf("zoom: %s", zoomLevel))
-	log(fmt.Sprintf("viewport: %s", viewport))
-}
-
-// When zooming near the edges of the desktop it is possible that the viewport's edges overlap
-// the desktop's edges. So just limit the possible movement of the viewport.
-func keepViewportInDesktop() {
-	xLeft   := viewport["xOffset"]
-	xRight  := viewport["xOffset"] + viewport["xSize"]
-	yTop    := viewport["yOffset"]
-	yBottom := viewport["yOffset"] + viewport["ySize"]
-
-	if xLeft < 0 {
-		viewport["xOffset"] = 0
-	}
-	if xRight > desktopWidth {
-		viewport["xOffset"] = desktopWidth - viewport["xSize"]
-	}
-	if yTop < 0 {
-		viewport["yOffset"] = 0
-	}
-	if yBottom > desktopHeight {
-		viewport["yOffset"] = desktopHeight - viewport["ySize"]
-	}
 }
 
 // Convert a keyboard event into an xdotool command
@@ -310,7 +286,7 @@ func xzoomBackground(){
 	  for {
 	    select {
 	      default:
-	        C.xzoom_loop()
+	        C.loop()
 					time.Sleep(40 * time.Millisecond) // 25fps
 	      case <-stopchan:
 	        // stop
