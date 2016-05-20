@@ -25,7 +25,7 @@ Xvfb :0 -screen 0 "$(($DESKTOP_WIDTH * 2))"x"$DESKTOP_HEIGHT"x16 > xvfb.log 2>&1
 # TODO: detect X start rather than sleep
 sleep 1
 
-/usr/bin/thunar >> xvfb.log 2>&1 &
+/usr/bin/firefox >> xvfb.log 2>&1 &
 
 # Convert the X framebuffer desktop into a video stream, but only stream the
 # right hand side where the xzoom window is.

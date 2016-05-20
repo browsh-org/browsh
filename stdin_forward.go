@@ -243,19 +243,75 @@ func setCurrentDesktopCoords() {
 
 // Convert a keyboard event into an xdotool command
 func keyEvent() {
-	// I've no idea why this gets picked up by the terminal, or what it refers to. But whatever, we don't
-	// want it passed onto X.
-	if fmt.Sprintf("%s", curev.Ch) == "%!s(int32=0)" {
+	var key string
+	log(fmt.Sprintf("EventKey: k: %d, c: %c, mod: %s", curev.Key, curev.Ch, modStr(curev.Mod)))
+
+	switch curev.Key {
+	case termbox.KeyEnter:
+	    key = "Return"
+	case termbox.KeyBackspace, termbox.KeyBackspace2:
+	    key = "BackSpace"
+	case termbox.KeySpace:
+	    key = "Space"
+	case termbox.KeyF1:
+		key = "F1"
+	case termbox.KeyF2:
+		key = "F2"
+	case termbox.KeyF3:
+		key = "F3"
+	case termbox.KeyF4:
+		key = "F4"
+	case termbox.KeyF5:
+		key = "F5"
+	case termbox.KeyF6:
+		key = "F6"
+	case termbox.KeyF7:
+		key = "F7"
+	case termbox.KeyF8:
+		key = "F8"
+	case termbox.KeyF9:
+		key = "F9"
+	case termbox.KeyF10:
+		key = "F10"
+	case termbox.KeyF11:
+		key = "F11"
+	case termbox.KeyF12:
+		key = "F12"
+	case termbox.KeyInsert:
+		key = "Insert"
+	case termbox.KeyDelete:
+		key = "Delete"
+	case termbox.KeyHome:
+		key = "Home"
+	case termbox.KeyEnd:
+		key = "End"
+	case termbox.KeyPgup:
+		key = "Prior"
+	case termbox.KeyPgdn:
+		key = "Next"
+	case termbox.KeyArrowUp:
+		key = "Up"
+	case termbox.KeyArrowDown:
+		key = "Down"
+	case termbox.KeyArrowLeft:
+		key = "Left"
+	case termbox.KeyArrowRight:
+		key = "Right"
+	}
+
+	if curev.Key == 0 {
+		key = fmt.Sprintf("%c", curev.Ch)
+	}
+
+	// What is this? It always appears when the program starts :/
+	badkey := fmt.Sprintf("%s", curev.Ch) == "%!s(int32=0)" && curev.Key == 0
+
+	if key == "" || badkey {
+		log(fmt.Sprintf("No key found for keycode: %d"))
 		return
 	}
 
-	log(fmt.Sprintf("EventKey: k: %d, c: %c, mod: %s", curev.Key, curev.Ch, modStr(curev.Mod)))
-
-	char := fmt.Sprintf("%c", curev.Ch)
-	if char == " " {
-		char = "space"
-	}
-	xdotool("key", char)
+	xdotool("key", key)
 }
 
 func parseInput() {
@@ -304,13 +360,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer termbox.Close()
+	defer func() {
+		termbox.Close()
+		close(stopchan)
+		<-stoppedchan
+	}()
 	termbox.SetInputMode(termbox.InputMouse)
 	initialise()
 	parseInput()
 
 	data := make([]byte, 0, 64)
-mainloop:
 	for {
 		if cap(data)-len(data) < 32 {
 			newdata := make([]byte, len(data), len(data)+32)
@@ -323,13 +382,6 @@ mainloop:
 		case termbox.EventRaw:
 			data = data[:beg+ev.N]
 			current = fmt.Sprintf("%q", data)
-			// TODO: think of a different way to exit, 'q' will be needed for actual text input.
-			if current == `"q"` {
-				close(stopchan)  // tell it to stop
-				<-stoppedchan    // wait for it to have stopped
-				break mainloop
-			}
-
 			for {
 				ev := termbox.ParseEvent(data)
 				if ev.N == 0 {
