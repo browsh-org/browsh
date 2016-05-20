@@ -89,16 +89,15 @@ void destroy_images(void) {
 void zoom() {
   destroy_images();
 
-  width[SRC]  = (width[DST] + magx - 1) / magx;
-  height[SRC] = (height[DST] + magy - 1) / magy;
+  width[SRC]  = (WIDTH + magx - 1) / magx;
+  height[SRC] = (HEIGHT + magy - 1) / magy;
 
   if (width[SRC] < 1) width[SRC] = 1;
-  if (width[SRC] > WidthOfScreen(scr)) width[SRC] = WidthOfScreen(scr);
+  if (width[SRC] > WIDTH)
+    width[SRC] = WIDTH;
   if (height[SRC] < 1) height[SRC] = 1;
-  if (height[SRC] > HeightOfScreen(scr)) height[SRC] = HeightOfScreen(scr);
-
-  width[DST]  = magx * width[SRC];
-  height[DST] = magy * height[SRC];
+  if (height[SRC] > HEIGHT)
+    height[SRC] = HEIGHT;
 
   allocate_images();
 }
@@ -159,8 +158,6 @@ int xzoom_init() {
 
   depth = DefaultDepthOfScreen(scr);
 
-  // printf("=%dx%d+%d+%d\n", width[DST], height[DST], xpos, ypos);
-
   win = XCreateWindow(dpy, RootWindowOfScreen(scr),
                       WIDTH, 0, width[DST], height[DST], 0,
                       DefaultDepthOfScreen(scr), InputOutput,
@@ -187,17 +184,13 @@ int xzoom_init() {
 
 void keep_viewport_in_desktop()
 {
+  if (xgrab > (WIDTH - width[SRC]))
+		xgrab = WIDTH - width[SRC];
   if (xgrab < 0) xgrab = 0;
 
-  // Divide width in half to account for the double desktop width
-  // where the xzoom window is hidden on the right.
-  if (xgrab > (WidthOfScreen(scr) / 2) - width[SRC])
-		xgrab = (WidthOfScreen(scr) / 2) - width[SRC];
-
+  if (ygrab > (HEIGHT - height[SRC]))
+		ygrab = HEIGHT - height[SRC];
   if (ygrab < 0) ygrab = 0;
-
-  if (ygrab > HeightOfScreen(scr) - height[SRC])
-		ygrab = HeightOfScreen(scr) - height[SRC];
 }
 
 void setup_viewport()
@@ -217,7 +210,7 @@ void setup_viewport()
 void loop()
 {
   setup_viewport();
-  keep_viewport_in_desktop();
   zoom();
+  keep_viewport_in_desktop();
   update_zoom_window_with_desktop();
 }

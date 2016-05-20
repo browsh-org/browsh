@@ -13,7 +13,7 @@ import (
 // Import the xzoom C code that creates an X window that zooms
 // and pans the desktop.
 // It's written in C because it borrows from the original xzoom
-// binary: http://git.r-36.net/xzoom/
+// program: http://git.r-36.net/xzoom/
 // NB: The following comments are parsed by `go build` ...
 
 // #cgo LDFLAGS: -lXext -lX11 -lXt
@@ -30,17 +30,14 @@ var desktopXFloat float32
 var desktopYFloat float32
 var roundedDesktopX int
 var roundedDesktopY int
+
 // Dimensions of hiptext output
 var hipWidth int
 var hipHeight int
 
-// For keeping track of the zoom
-// TODO: look at the XFCE code to accurately determine the factor. It may
-// even be linear.
-var zoomFactor float32 = 0.03
-var maxZoom float32 = 1000000
-var zoomLevel float32
-var viewport map[string] float32
+var panNeedsSetup bool
+var panCachedXOffset float32
+var panCachedYOffset float32
 
 func initialise() {
 	tErr := os.Truncate(logfile, 0)
@@ -49,13 +46,6 @@ func initialise() {
 	}
 	log("Starting...")
 	calculateHipDimensions()
-	zoomLevel = 1
-	viewport = map[string] float32 {
-		"xSize": desktopWidth,
-		"ySize": desktopHeight,
-		"xOffset": 0,
-		"yOffset": 0,
-	}
 }
 
 // Hiptext needs to render the aspect ratio faithfully. So firstly it tries to fill
@@ -179,15 +169,11 @@ func modStr(m termbox.Modifier) string {
 	return strings.Join(out, " ")
 }
 
-var panNeedsSetup bool
-var panCachedXOffset float32
-var panCachedYOffset float32
-
 func mouseEvent() {
 	setCurrentDesktopCoords()
-	// Always move the mouse first. This is because we're not constantly updating the mouse position,
-	// *unless* a drag event is happening. This saves bandwidth. Also, mouse movement isn't supported
-	// on all terminals.
+	// Always move the mouse first so that button presses are correct. This is because we're not constantly
+	// updating the mouse position, *unless* a drag event is happening. This saves bandwidth. Also, mouse
+	// movement isn't supported on all terminals.
 	xdotool("mousemove", fmt.Sprintf("%d", roundedDesktopX), fmt.Sprintf("%d", roundedDesktopY))
 
 	log(
@@ -223,7 +209,7 @@ func setCurrentDesktopCoords() {
 	height := float32(C.height[C.SRC])
 	if C.pan == 1 {
 		// When panning starts we want to do it all within the same viewport.
-		// Without the caching here then the viewport would change for each
+		// Without the caching here, then the viewport would change for each
 		// mouse movement and panning becomes overly sensitive.
 		xOffset = panCachedXOffset
 		yOffset = panCachedYOffset
@@ -242,8 +228,10 @@ func setCurrentDesktopCoords() {
 }
 
 // Convert a keyboard event into an xdotool command
+// See: http://wiki.linuxquestions.org/wiki/List_of_Keysyms_Recognised_by_Xmodmap
 func keyEvent() {
 	var key string
+	var command string
 	log(fmt.Sprintf("EventKey: k: %d, c: %c, mod: %s", curev.Key, curev.Ch, modStr(curev.Mod)))
 
 	switch curev.Key {
@@ -297,10 +285,15 @@ func keyEvent() {
 		key = "Left"
 	case termbox.KeyArrowRight:
 		key = "Right"
+	case termbox.KeyCtrlL:
+		key = "ctrl+l"
 	}
 
 	if curev.Key == 0 {
 		key = fmt.Sprintf("%c", curev.Ch)
+		command = "type"
+	} else {
+		command = "key"
 	}
 
 	// What is this? It always appears when the program starts :/
@@ -311,7 +304,7 @@ func keyEvent() {
 		return
 	}
 
-	xdotool("key", key)
+	xdotool(command, key)
 }
 
 func parseInput() {
