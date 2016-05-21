@@ -8,12 +8,12 @@ or Firefox in your terminal 😲
 ##Why?
 I'm travelling around the world and sometimes I don't have very good Internet. If all I have is a 3kbps connection
 tethered from my phone then it's good to SSH into my server and browse the web through [elinks](http://www.xteddy.org/elinks/).
-That way my server downloads the web pages and uses the limited bandwidth of my SSH connection to display the result. But
+That way my _server_ downloads the web pages and uses the limited bandwidth of my SSH connection to display the result. But
 it lacks JS support and all that other modern HTML5 goodness. Texttop is simply a way to have the power of a remote
 server running a desktop, but interfaced through the simplicity of a terminal and very low bandwidth.
 
 Why not VNC? Well VNC is certainly one solution but it doesn't quite have the same ability to deal with extremely bad
-Internet. Texttop uses MoSH to further reduce the bandwidth and stability of the connection. Mosh offers features like
+Internet. Texttop uses MoSH to further reduce the bandwidth and stability requirements of the connection. Mosh offers features like
 automatic reconnection of dropped connections and diff-only screen updates. Also, other than SSH or MoSH, Texttop doesn't
 require a client like VNC. But of course another big reason for Texttop is that it's just very cool geekery.
 
@@ -40,7 +40,7 @@ docker run --rm -it \
   tombh/texttop sh
 ```
 Note that this assumes you already have SSH setup on your server and that you have your public key there. Password
-logins work fine too.
+logins work fine too. The `60010-60020` port range is for MoSH.
 
 Then on your local machine:
 ```
@@ -50,7 +50,7 @@ mosh user@yourserver:7777
 MoSH is available through most system pacakge managers. SSH can be used exactly the same, just replace `mosh` with `ssh`.
 `user@yourserver` is the normal URI you would use to connect via SSH.
 
-**Exiting**
+**Exiting**    
 At the moment the only way to exit is with MoSH's `CTRL+^ .` or SSH's `ENTER ~ .`
 
 ##Interaction
