@@ -1,7 +1,7 @@
 /*
-This code largely comes from Itai Nahshon's xzoom, see:
-http://git.r-36.net/xzoom
-*/
+   This code largely comes from Itai Nahshon's xzoom, see:
+   http://git.r-36.net/xzoom
+ */
 
 #include <stdio.h>
 #include <string.h>
@@ -20,7 +20,7 @@ Display *dpy;
 Screen  *scr;
 Window   win, root, child;
 Status   status;
-int    winX, winY;
+int      winX, winY;
 unsigned int mask;
 
 GC gc;
@@ -35,7 +35,7 @@ int desktop_height;
 int xgrab = 0;
 int ygrab = 0;
 
-int magnification = 1;
+int magnification     = 1;
 int old_magnification = 1;
 
 int width[2];
@@ -123,7 +123,7 @@ void recreate_images_on_zoom() {
 int xzoom_init() {
   XSetWindowAttributes xswa;
   XGCValues gcv;
-  char *dpyname = ":0";
+  char     *dpyname = ":0";
 
   atexit(destroy_images);
 

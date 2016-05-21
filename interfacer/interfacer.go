@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"strings"
-	"strconv"
-	"path/filepath"
-	"time"
+	"github.com/tombh/termbox-go"
+	"math"
 	"os"
 	"os/exec"
-	"math"
-	"github.com/tombh/termbox-go"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // Import the xzoom C code that creates an X window that zooms
@@ -201,8 +201,8 @@ func zoom(direction string) {
 			C.magnification--
 		}
 	}
-  C.width[C.SRC]  = (C.desktop_width + C.magnification - 1) / C.magnification;
-  C.height[C.SRC] = (C.desktop_height + C.magnification - 1) / C.magnification;
+	C.width[C.SRC] = (C.desktop_width + C.magnification - 1) / C.magnification
+	C.height[C.SRC] = (C.desktop_height + C.magnification - 1) / C.magnification
 
 	moveViewportForZoom(oldZoom)
 	keepViewportInDesktop()
@@ -294,7 +294,6 @@ func mouseEvent() {
 	}
 }
 
-
 func pan() {
 	if panNeedsSetup {
 		panStartingX = desktopXFloat
@@ -302,7 +301,7 @@ func pan() {
 		panNeedsSetup = false
 	}
 	C.xgrab = C.int(float32(C.xgrab) + panStartingX - desktopXFloat)
-  C.ygrab = C.int(float32(C.ygrab) + panStartingY - desktopYFloat)
+	C.ygrab = C.int(float32(C.ygrab) + panStartingY - desktopYFloat)
 	keepViewportInDesktop()
 }
 
@@ -356,11 +355,11 @@ func getSpecialKeyPress() string {
 	var key string
 	switch curev.Key {
 	case termbox.KeyEnter:
-    key = "Return"
+		key = "Return"
 	case termbox.KeyBackspace, termbox.KeyBackspace2:
-    key = "BackSpace"
+		key = "BackSpace"
 	case termbox.KeySpace:
-    key = "Space"
+		key = "Space"
 	case termbox.KeyF1:
 		key = "F1"
 	case termbox.KeyF2:
@@ -427,23 +426,23 @@ func parseInput() {
 }
 
 // Run the xzoom window in a background go routine
-func xzoomBackground(){
-	go func(){
-	  defer close(xZoomStoppedChannel)
-	  for {
-	    select {
-	      default:
-	        C.do_iteration()
-					time.Sleep(40 * time.Millisecond) // 25fps
-	      case <-stopXZoomChannel:
-					// Gracefully close the xzoom go routine
-	        return
-	    }
-	  }
+func xzoomBackground() {
+	go func() {
+		defer close(xZoomStoppedChannel)
+		for {
+			select {
+			default:
+				C.do_iteration()
+				time.Sleep(40 * time.Millisecond) // 25fps
+			case <-stopXZoomChannel:
+				// Gracefully close the xzoom go routine
+				return
+			}
+		}
 	}()
 }
 
-func teardown(){
+func teardown() {
 	termbox.Close()
 	close(stopXZoomChannel)
 	<-xZoomStoppedChannel
