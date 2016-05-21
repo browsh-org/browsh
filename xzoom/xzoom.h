@@ -28,8 +28,8 @@ GC gc;
 #define SRC 0
 #define DST 1
 
-#define WIDTH  1600
-#define HEIGHT 1200
+int desktop_width;
+int desktop_height;
 
 // The top left of the area that we zoom in on
 int xgrab = 0;
@@ -38,8 +38,8 @@ int ygrab = 0;
 int magnification = 1;
 int old_magnification = 1;
 
-int width[2] = { WIDTH, WIDTH };
-int height[2] = { HEIGHT, HEIGHT };
+int width[2];
+int height[2];
 unsigned depth = 0;
 
 XImage *ximage[2];
@@ -137,7 +137,7 @@ int xzoom_init() {
   depth = DefaultDepthOfScreen(scr);
 
   win = XCreateWindow(dpy, RootWindowOfScreen(scr),
-                      WIDTH, 0, width[DST], height[DST], 0,
+                      desktop_width, 0, width[DST], height[DST], 0,
                       DefaultDepthOfScreen(scr), InputOutput,
                       DefaultVisualOfScreen(scr),
                       CWEventMask | CWBackPixel, &xswa);

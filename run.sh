@@ -4,7 +4,14 @@ export LC_ALL=C
 export LANG=C
 
 export DESKTOP_WIDTH='1600'
-export DESKTOP_HEIGHT='1200'
+export TTY_WIDTH=$(( $(stty size | cut -d' ' -f2) - 1))
+export TTY_HEIGHT=$(( $(stty size | cut -d' ' -f1) - 1))
+# Hiptext uses a row to represent twice as much as a column in order
+# to more faithfully project the aspect ratio of the image/video.
+ratio=$(echo "scale=5; $TTY_HEIGHT * 2 / $TTY_WIDTH" | bc)
+height_float=$(echo "scale=5; $ratio*$DESKTOP_WIDTH" | bc)
+export DESKTOP_HEIGHT=$(printf "%.0f\n" "$height_float")
+
 export DISPLAY=:0
 DESKTOP_RES="$DESKTOP_WIDTH"x"$DESKTOP_HEIGHT"
 UDP_URI='udp://127.0.0.1:1234'

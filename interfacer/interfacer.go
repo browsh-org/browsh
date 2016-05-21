@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"strconv"
 	"path/filepath"
 	"time"
 	"os"
@@ -25,8 +26,13 @@ var logfile string
 var current string
 var curev termbox.Event
 var lastMouseButton string
-var desktopWidth = float32(C.WIDTH)
-var desktopHeight = float32(C.HEIGHT)
+
+var hipWidth int
+var hipHeight int
+var envDesktopWidth int
+var envDesktopHeight int
+var desktopWidth float32
+var desktopHeight float32
 var desktopXFloat float32
 var desktopYFloat float32
 var roundedDesktopX int
@@ -36,10 +42,6 @@ var roundedDesktopY int
 var stopXZoomChannel = make(chan struct{})
 var xZoomStoppedChannel = make(chan struct{})
 
-// Dimensions of hiptext output, can be slightly different from terminal dimensions
-var hipWidth int
-var hipHeight int
-
 var panNeedsSetup bool
 var panStartingX float32
 var panStartingY float32
@@ -48,9 +50,34 @@ func initialise() {
 	setupLogging()
 	log("Starting...")
 	setupTermbox()
-	calculateHipDimensions()
+	setupDimensions()
 	C.xzoom_init()
 	xzoomBackground()
+}
+
+func parseENVVar(variable string) int {
+	value, err := strconv.Atoi(os.Getenv(variable))
+	if err != nil {
+		panic(err)
+	}
+	return value
+}
+
+func setupDimensions() {
+	hipWidth = parseENVVar("TTY_WIDTH")
+	hipHeight = parseENVVar("TTY_HEIGHT")
+	envDesktopWidth = parseENVVar("DESKTOP_WIDTH")
+	envDesktopHeight = parseENVVar("DESKTOP_HEIGHT")
+	C.desktop_width = C.int(envDesktopWidth)
+	C.width[C.SRC] = C.desktop_width
+	C.width[C.DST] = C.desktop_width
+	C.desktop_height = C.int(envDesktopHeight)
+	C.height[C.SRC] = C.desktop_height
+	C.height[C.DST] = C.desktop_height
+	desktopWidth = float32(envDesktopWidth)
+	desktopHeight = float32(envDesktopHeight)
+	log(fmt.Sprintf("Desktop dimensions: W: %d, H: %d", envDesktopWidth, envDesktopHeight))
+	log(fmt.Sprintf("Term dimensions: W: %d, H: %d", hipWidth, hipHeight))
 }
 
 func setupTermbox() {
@@ -84,23 +111,6 @@ func log(msg string) {
 	if _, wErr := f.WriteString(msg); wErr != nil {
 		panic(wErr)
 	}
-}
-
-// Hiptext needs to render the aspect ratio faithfully. So firstly it tries to fill
-// the terminal as much as it can. And secondly it treats a row as representing twice
-// as much as a column - thus why there are some multiplications/divisions by 2.
-func calculateHipDimensions() {
-	_tw, _th := termbox.Size()
-	tw := float32(_tw)
-	th := float32(_th * 2)
-	ratio := desktopWidth / desktopHeight
-	bestHeight := min(th, (tw / ratio))
-  bestWidth := min(tw, (bestHeight * ratio))
-	// Not sure why the +1 and -1 are needed, but they are.
-  hipWidth = roundToInt(bestWidth) + 1
-  hipHeight = roundToInt(bestHeight / 2) - 1
-	log(fmt.Sprintf("Term dimensions: W: %d, H: %d", _tw, _th))
-	log(fmt.Sprintf("Hiptext dimensions: W: %d, H: %d", hipWidth, hipHeight))
 }
 
 func min(a float32, b float32) float32 {
@@ -191,8 +201,8 @@ func zoom(direction string) {
 			C.magnification--
 		}
 	}
-  C.width[C.SRC]  = (C.WIDTH + C.magnification - 1) / C.magnification;
-  C.height[C.SRC] = (C.HEIGHT + C.magnification - 1) / C.magnification;
+  C.width[C.SRC]  = (C.desktop_width + C.magnification - 1) / C.magnification;
+  C.height[C.SRC] = (C.desktop_height + C.magnification - 1) / C.magnification;
 
 	moveViewportForZoom(oldZoom)
 	keepViewportInDesktop()
@@ -217,26 +227,26 @@ func manageViewportSize() {
 	if C.width[C.SRC] < 1 {
 		C.width[C.SRC] = 1
 	}
-	if C.width[C.SRC] > C.WIDTH {
-		C.width[C.SRC] = C.WIDTH
+	if C.width[C.SRC] > C.desktop_width {
+		C.width[C.SRC] = C.desktop_width
 	}
 	if C.height[C.SRC] < 1 {
 		C.height[C.SRC] = 1
 	}
-	if C.height[C.SRC] > C.HEIGHT {
-		C.height[C.SRC] = C.HEIGHT
+	if C.height[C.SRC] > C.desktop_height {
+		C.height[C.SRC] = C.desktop_height
 	}
 }
 
 func manageViewportPosition() {
-	if C.xgrab > (C.WIDTH - C.width[C.SRC]) {
-		C.xgrab = C.WIDTH - C.width[C.SRC]
+	if C.xgrab > (C.desktop_width - C.width[C.SRC]) {
+		C.xgrab = C.desktop_width - C.width[C.SRC]
 	}
 	if C.xgrab < 0 {
 		C.xgrab = 0
 	}
-	if C.ygrab > (C.HEIGHT - C.height[C.SRC]) {
-		C.ygrab = C.HEIGHT - C.height[C.SRC]
+	if C.ygrab > (C.desktop_height - C.height[C.SRC]) {
+		C.ygrab = C.desktop_height - C.height[C.SRC]
 	}
 	if C.ygrab < 0 {
 		C.ygrab = 0

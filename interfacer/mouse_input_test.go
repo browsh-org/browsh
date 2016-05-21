@@ -5,6 +5,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"testing"
+
+	"os"
 )
 
 func TestMouseInput(t *testing.T) {
@@ -14,13 +16,13 @@ func TestMouseInput(t *testing.T) {
 
 var _ = Describe("Mouse Input", func() {
 	BeforeEach(func() {
-    err := termbox.Init()
-  	if err != nil {
-  		panic(err)
-  	}
-  	initialise()
-  	hipWidth = 90
-  	hipHeight = 30
+		os.Setenv("DESKTOP_WIDTH", "1600")
+		os.Setenv("DESKTOP_HEIGHT", "1200")
+		os.Setenv("TTY_WIDTH", "90")
+		os.Setenv("TTY_HEIGHT", "30")
+		setupLogging()
+		termbox.Init()
+		setupDimensions()
   	setCurrentDesktopCoords()
 	})
 
@@ -74,6 +76,8 @@ var _ = Describe("Mouse Input", func() {
     	zoom("in")
     	setCurrentDesktopCoords()
 			zoom("out")
+			// Shouldn't need to do this a second time, but this test helped me
+			// figure out a different bug, so I'm leaving it like this for now.
 			zoom("out")
 			setCurrentDesktopCoords()
 			Expect(getXGrab()).To(Equal(0))
