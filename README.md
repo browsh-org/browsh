@@ -1,7 +1,7 @@
 #Texttop
-A fully interactive X linux desktop rendered to ASCII and streamed over SSH
+**A fully interactive X Linux desktop rendered to ASCII and streamed over SSH**
 
-or Firefox in your terminal
+or Firefox in your terminal 😲
 
 [gif here]
 
@@ -63,3 +63,6 @@ Currently, only Firefox is installed on this extremely minimal Alpine Linux dist
 with [apk](https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management). Just remember that you will lose any
 system changes once you restart the docker container. I'm thinking about ways to save state. You may experiment with
 mounting certain system directories.
+
+##Contributions
+Yes please.

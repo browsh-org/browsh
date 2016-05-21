@@ -3,7 +3,7 @@ FROM alpine
 RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 
 # Main dependencies
-RUN apk add --no-cache bc xvfb xdotool@testing ffmpeg openssh mosh firefox
+RUN apk add --no-cache bc xvfb ttf-dejavu xdotool@testing ffmpeg openssh mosh firefox dbus
 
 # Generate host keys
 RUN ssh-keygen -A
