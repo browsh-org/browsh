@@ -3,7 +3,7 @@
 
 or Firefox in your terminal 😲
 
-[![asciicast](https://asciinema.org/a/8euhwm1xz6o4btzoz4ckdwt3q.png)](https://asciinema.org/a/8euhwm1xz6o4btzoz4ckdwt3q)
+![Alt Text](https://i.imgur.com/sWqhmBp.gif)
 
 ##Why?
 I'm travelling around the world and sometimes I don't have very good Internet. If all I have is a 3kbps connection
@@ -26,7 +26,7 @@ docker run --rm -it tombh/texttop sh
 
 ##Installation
 You can either pull from the Docker Registry:
-`docker pull tombh/textop`
+`docker pull tombh/texttop`
 or, build yourself:
 ```
 git clone git@github.com:tombh/texttop.git
