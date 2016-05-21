@@ -120,11 +120,6 @@ void recreate_images_on_zoom() {
   old_magnification = magnification;
 }
 
-void loop() {
-  recreate_images_on_zoom();
-  update_zoom_window_with_desktop();
-}
-
 int xzoom_init() {
   XSetWindowAttributes xswa;
   XGCValues gcv;
@@ -162,4 +157,9 @@ int xzoom_init() {
                                  GCBackground,
                                  &gcv);
   allocate_images();
+}
+
+void do_iteration() {
+  recreate_images_on_zoom();
+  update_zoom_window_with_desktop();
 }

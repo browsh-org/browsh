@@ -9,7 +9,7 @@ export DISPLAY=:0
 DESKTOP_RES="$DESKTOP_WIDTH"x"$DESKTOP_HEIGHT"
 UDP_URI='udp://127.0.0.1:1234'
 
-# Create an X desktop in memory without actually displaying it on a real screen
+# Create an X desktop in memory without actually displaying it on a real screen.
 # Double the width to make room for the xzoom window, which is actually what
 # ffmpeg will stream;
 # ---------------------------------
@@ -29,6 +29,7 @@ sleep 1
 
 # Convert the X framebuffer desktop into a video stream, but only stream the
 # right hand side where the xzoom window is.
+# TODO: Can latency be reduced further? Can flicker be reduced, in order to reduce bandwidth?
 ffmpeg \
   -f x11grab \
   -s $DESKTOP_RES \
@@ -44,11 +45,11 @@ ffmpeg \
 sleep 1
 
 # Intercept STDIN (mouse and keypresses) and forward to the X framebuffer via xdotool
-(./interfacer/interfacer <&3 > ./logs/interface.log 2>&1 &) 3<&0
+(./interfacer/interfacer <&3 > ./logs/interfacer.log 2>&1 &) 3<&0
 
 # Hiptext renders images and videos into text characters displayable in a terminal.
 # It complains unless you specify the exact path to the font, seems like a bug to me.
-# TODO: support variable width, ideally dynamic sizing
+# TODO: support dynamic sizing
 hiptext \
   -font /usr/share/fonts/ttf-dejavu/DejaVuSansMono.ttf \
   $UDP_URI \

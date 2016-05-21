@@ -32,7 +32,11 @@ var desktopYFloat float32
 var roundedDesktopX int
 var roundedDesktopY int
 
-// Dimensions of hiptext output
+// Channels to control the background xzoom go routine
+var stopXZoomChannel = make(chan struct{})
+var xZoomStoppedChannel = make(chan struct{})
+
+// Dimensions of hiptext output, can be slightly different from terminal dimensions
 var hipWidth int
 var hipHeight int
 
@@ -41,6 +45,23 @@ var panStartingX float32
 var panStartingY float32
 
 func initialise() {
+	setupLogging()
+	log("Starting...")
+	setupTermbox()
+	calculateHipDimensions()
+	C.xzoom_init()
+	xzoomBackground()
+}
+
+func setupTermbox() {
+	err := termbox.Init()
+	if err != nil {
+		panic(err)
+	}
+	termbox.SetInputMode(termbox.InputMouse)
+}
+
+func setupLogging() {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		panic(err)
@@ -50,8 +71,19 @@ func initialise() {
 	if _, err := os.Stat(logfile); err == nil {
 		os.Truncate(logfile, 0)
 	}
-	log("Starting...")
-	calculateHipDimensions()
+}
+
+func log(msg string) {
+	f, oErr := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if oErr != nil {
+		panic(oErr)
+	}
+	defer f.Close()
+
+	msg = msg + "\n"
+	if _, wErr := f.WriteString(msg); wErr != nil {
+		panic(wErr)
+	}
 }
 
 // Hiptext needs to render the aspect ratio faithfully. So firstly it tries to fill
@@ -76,19 +108,6 @@ func min(a float32, b float32) float32 {
 		return a
 	}
 	return b
-}
-
-func log(msg string) {
-	f, oErr := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if oErr != nil {
-		panic(oErr)
-	}
-	defer f.Close()
-
-	msg = msg + "\n"
-	if _, wErr := f.WriteString(msg); wErr != nil {
-		panic(wErr)
-	}
 }
 
 func getXGrab() int {
@@ -121,6 +140,7 @@ func roundToInt(value32 float32) int {
 }
 
 // Whether the current input event includes a depressed CTRL key.
+// Waiting for this PR: https://github.com/nsf/termbox-go/pull/126
 func ctrlPressed() bool {
 	return curev.Mod&termbox.ModCtrl != 0
 }
@@ -152,9 +172,7 @@ func mouseButtonStr(k termbox.Key) []string {
 		return []string{"click", "4"}
 	case termbox.MouseWheelDown:
 		if ctrlPressed() {
-			if C.magnification > 1 {
-				zoom("out")
-	    }
+			zoom("out")
 			return []string{"noop"}
 		}
 		return []string{"click", "5"}
@@ -169,24 +187,33 @@ func zoom(direction string) {
 	if direction == "in" {
 		C.magnification++
 	} else {
-		C.magnification--
+		if C.magnification > 1 {
+			C.magnification--
+		}
 	}
   C.width[C.SRC]  = (C.WIDTH + C.magnification - 1) / C.magnification;
   C.height[C.SRC] = (C.HEIGHT + C.magnification - 1) / C.magnification;
 
-	// Move the viewport so that the mouse is still over the same part of
-	// the desktop.
+	moveViewportForZoom(oldZoom)
+	keepViewportInDesktop()
+}
+
+// Move the viewport so that the mouse is still over the same part of
+// the desktop.
+func moveViewportForZoom(oldZoom C.int) {
 	factor := float32(oldZoom) / float32(C.magnification)
 	magnifiedRelativeX := factor * (desktopXFloat - float32(C.xgrab))
 	magnifiedRelativeY := factor * (desktopYFloat - float32(C.ygrab))
 	C.xgrab = C.int(desktopXFloat - magnifiedRelativeX)
 	C.ygrab = C.int(desktopYFloat - magnifiedRelativeY)
-
-	keepViewportInDesktop()
 }
 
 func keepViewportInDesktop() {
-	// Manage the viewport size
+	manageViewportSize()
+	manageViewportPosition()
+}
+
+func manageViewportSize() {
 	if C.width[C.SRC] < 1 {
 		C.width[C.SRC] = 1
 	}
@@ -199,8 +226,9 @@ func keepViewportInDesktop() {
 	if C.height[C.SRC] > C.HEIGHT {
 		C.height[C.SRC] = C.HEIGHT
 	}
+}
 
-	// Manage the viewport position
+func manageViewportPosition() {
 	if C.xgrab > (C.WIDTH - C.width[C.SRC]) {
 		C.xgrab = C.WIDTH - C.width[C.SRC]
 	}
@@ -219,41 +247,43 @@ func keepViewportInDesktop() {
 // is being pressed at the same time.
 func modStr(m termbox.Modifier) string {
 	var out []string
-	if m&termbox.ModAlt != 0 {
-		out = append(out, "Alt")
-	}
-	if m&termbox.ModMotion != 0 {
+	if mouseMotion() {
 		out = append(out, "Motion")
 	}
-	// Depends on this PR: https://github.com/nsf/termbox-go/pull/126
-	if m&termbox.ModCtrl != 0 {
+	if ctrlPressed() {
 		out = append(out, "Ctrl")
 	}
-
 	return strings.Join(out, " ")
 }
 
-func mouseEvent() {
-	log(
-		fmt.Sprintf(
-			"EventMouse: x: %d, y: %d, b: %s, mod: %s",
-			curev.MouseX, curev.MouseY, mouseButtonStr(curev.Key), modStr(curev.Mod)))
+func isPanning() bool {
+	return ctrlPressed() && mouseMotion() && lastMouseButton == "1"
+}
 
+func mouseEvent() {
+	// Figure out where the mouse is on the actual real desktop.
+	// Note that the zomming and panning code effectively keep the mouse in the exact same position relative
+	// to the desktop, so mousemove *should* have no effect.
 	setCurrentDesktopCoords()
+
 	// Always move the mouse first so that button presses are correct. This is because we're not constantly
 	// updating the mouse position, *unless* a drag event is happening. This saves bandwidth. Also, mouse
 	// movement isn't supported on all terminals.
 	xdotool("mousemove", fmt.Sprintf("%d", roundedDesktopX), fmt.Sprintf("%d", roundedDesktopY))
 
-	if ctrlPressed() && mouseMotion() && lastMouseButton == "1" {
+	if isPanning() {
 		pan()
 	} else {
 		panNeedsSetup = true
+		// Pressing of CTRL indicates that the user is panning or zooming, so there is no need to send
+		// button presses.
+		// TODO: What about CTRL+leftbutton to open new tab!?
 		if !ctrlPressed() {
 			xdotool(mouseButtonStr(curev.Key)...)
 		}
 	}
 }
+
 
 func pan() {
 	if panNeedsSetup {
@@ -268,40 +298,59 @@ func pan() {
 
 // Convert terminal coords into desktop coords
 func setCurrentDesktopCoords() {
-	var xOffset float32
-	var yOffset float32
 	hipWidthFloat := float32(hipWidth)
 	hipHeightFloat := float32(hipHeight)
 	eventX := float32(curev.MouseX)
 	eventY := float32(curev.MouseY)
 	width := float32(C.width[C.SRC])
 	height := float32(C.height[C.SRC])
-	xOffset = float32(C.xgrab)
-	yOffset = float32(C.ygrab)
+	xOffset := float32(C.xgrab)
+	yOffset := float32(C.ygrab)
 	desktopXFloat = (eventX * (width / hipWidthFloat)) + xOffset
 	desktopYFloat = (eventY * (height / hipHeightFloat)) + yOffset
+	roundedDesktopX = roundToInt(desktopXFloat)
+	roundedDesktopY = roundToInt(desktopYFloat)
 	log(
 		fmt.Sprintf(
 			"setCurrentDesktopCoords: tw: %d, th: %d, dx: %d, dy: %d, mag: %d",
-			hipHeightFloat, hipWidthFloat, eventX, width, C.magnification))
-	roundedDesktopX = roundToInt(desktopXFloat)
-	roundedDesktopY = roundToInt(desktopYFloat)
+			hipHeightFloat, hipWidthFloat, desktopXFloat, desktopYFloat, C.magnification))
 }
 
 // Convert a keyboard event into an xdotool command
 // See: http://wiki.linuxquestions.org/wiki/List_of_Keysyms_Recognised_by_Xmodmap
 func keyEvent() {
-	var key string
 	var command string
 	log(fmt.Sprintf("EventKey: k: %d, c: %c, mod: %s", curev.Key, curev.Ch, modStr(curev.Mod)))
 
+	key := getSpecialKeyPress()
+
+	if curev.Key == 0 {
+		key = fmt.Sprintf("%c", curev.Ch)
+		command = "type"
+	} else {
+		command = "key"
+	}
+
+	// What is this? It always appears when the program starts :/
+	badkey := fmt.Sprintf("%s", curev.Ch) == "%!s(int32=0)" && curev.Key == 0
+
+	if key == "" || badkey {
+		log(fmt.Sprintf("No key found for keycode: %d"))
+		return
+	}
+
+	xdotool(command, key)
+}
+
+func getSpecialKeyPress() string {
+	var key string
 	switch curev.Key {
 	case termbox.KeyEnter:
-	    key = "Return"
+    key = "Return"
 	case termbox.KeyBackspace, termbox.KeyBackspace2:
-	    key = "BackSpace"
+    key = "BackSpace"
 	case termbox.KeySpace:
-	    key = "Space"
+    key = "Space"
 	case termbox.KeyF1:
 		key = "F1"
 	case termbox.KeyF2:
@@ -349,23 +398,7 @@ func keyEvent() {
 	case termbox.KeyCtrlL:
 		key = "ctrl+l"
 	}
-
-	if curev.Key == 0 {
-		key = fmt.Sprintf("%c", curev.Ch)
-		command = "type"
-	} else {
-		command = "key"
-	}
-
-	// What is this? It always appears when the program starts :/
-	badkey := fmt.Sprintf("%s", curev.Ch) == "%!s(int32=0)" && curev.Key == 0
-
-	if key == "" || badkey {
-		log(fmt.Sprintf("No key found for keycode: %d"))
-		return
-	}
-
-	xdotool(command, key)
+	return key
 }
 
 func parseInput() {
@@ -373,56 +406,42 @@ func parseInput() {
 	case termbox.EventKey:
 		keyEvent()
 	case termbox.EventMouse:
+		log(
+			fmt.Sprintf(
+				"EventMouse: x: %d, y: %d, b: %s, mod: %s",
+				curev.MouseX, curev.MouseY, mouseButtonStr(curev.Key), modStr(curev.Mod)))
 		mouseEvent()
 	case termbox.EventNone:
 		log("EventNone")
 	}
 }
 
-// a channel to tell it to stop
-var stopchan = make(chan struct{})
-// a channel to signal that it's stopped
-var stoppedchan = make(chan struct{})
-
+// Run the xzoom window in a background go routine
 func xzoomBackground(){
-	go func(){ // work in background
-	  // close the stoppedchan when this func
-	  // exits
-	  defer close(stoppedchan)
-	  // TODO: do setup work
-	  defer func(){
-	    // TODO: do teardown work
-	  }()
+	go func(){
+	  defer close(xZoomStoppedChannel)
 	  for {
 	    select {
 	      default:
-	        C.loop()
+	        C.do_iteration()
 					time.Sleep(40 * time.Millisecond) // 25fps
-	      case <-stopchan:
-	        // stop
+	      case <-stopXZoomChannel:
+					// Gracefully close the xzoom go routine
 	        return
 	    }
 	  }
 	}()
 }
 
-func main() {
-	C.xzoom_init()
-	xzoomBackground()
+func teardown(){
+	termbox.Close()
+	close(stopXZoomChannel)
+	<-xZoomStoppedChannel
+}
 
-	err := termbox.Init()
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		termbox.Close()
-		close(stopchan)
-		<-stoppedchan
-	}()
-	termbox.SetInputMode(termbox.InputMouse)
-	initialise()
-	parseInput()
-
+// I'm afraid I don't understand most of what this does :/
+// TODO: if anyone can shed some light on this. Add some comments, refactor it...
+func mainLoop() {
 	data := make([]byte, 0, 64)
 	for {
 		if cap(data)-len(data) < 32 {
@@ -450,4 +469,12 @@ func main() {
 		}
 		parseInput()
 	}
+}
+
+func main() {
+	initialise()
+	defer func() {
+		teardown()
+	}()
+	mainLoop()
 }
