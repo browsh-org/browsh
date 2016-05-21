@@ -3,14 +3,14 @@ FROM alpine
 RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 
 # Main dependencies
-RUN apk add --no-cache busybox xvfb xdotool@testing ffmpeg openssh mosh firefox
+RUN apk add --no-cache bc xvfb xdotool@testing ffmpeg openssh mosh firefox
 
 # Generate host keys
 RUN ssh-keygen -A
 
 # Installing Hiptext, video to text renderer and our own interfacer.go
 RUN apk --no-cache add --virtual build-dependencies \
-  build-base git go freetype-dev jpeg-dev ffmpeg-dev ragel libx11-dev libxt-dev
+  build-base git go freetype-dev jpeg-dev ffmpeg-dev ragel libx11-dev libxt-dev libxext-dev
 RUN apk --no-cache add libgflags-dev@testing glog-dev@testing
 RUN mkdir -p build \
   && cd build \
@@ -28,13 +28,18 @@ RUN mkdir -p build \
   && make \
   # Alpine's version of `install` doesn't support the `--mode=` format
   && install -m 0755 hiptext /usr/local/bin \
-  && cd ../.. && rm -rf build \
-
-  && apk --no-cache del build-dependencies
+  && cd ../.. && rm -rf build
 
 COPY . /app
 
-RUN export GOPATH=/go && export GOBIN=$GOPATH/bin && export PATH=$PATH:$GOBIN
-RUN cd interfacer && go build
+RUN export GOPATH=/go && export GOBIN=/app/interfacer/ && \
+    cd /app/interfacer && go get && go build
 
-EXPOSE 7777
+RUN mkdir -p /app/logs
+
+RUN apk --no-cache del build-dependencies
+
+RUN sed -i 's/#Port 22/Port 7777/' /etc/ssh/sshd_config
+
+WORKDIR /app
+CMD ["/usr/sbin/sshd", "-D"]
