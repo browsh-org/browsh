@@ -3,7 +3,7 @@
 
 or Firefox in your terminal 😲
 
-[gif here]
+[![asciicast](https://asciinema.org/a/8euhwm1xz6o4btzoz4ckdwt3q.png)](https://asciinema.org/a/8euhwm1xz6o4btzoz4ckdwt3q)
 
 ##Why?
 I'm travelling around the world and sometimes I don't have very good Internet. If all I have is a 3kbps connection
