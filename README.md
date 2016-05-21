@@ -35,12 +35,12 @@ docker build -t texttop .
 ```
 
 ##Usage
-On your remote server:
+On your remote server (this will pull the docker image the first time you issue it):
 ```
 docker run --rm -it \
   -p 7777:7777 -p 60010-60020:60010-60020/udp \
   -v ~/.ssh/authorized_keys:/root/.ssh/authorized_keys \
-  texttop sh
+  tombh/texttop sh
 ```
 Note that this assumes you already have SSH setup on your server and that you have your public key there. Password
 logins work fine too.
@@ -52,6 +52,9 @@ mosh user@yourserver:7777
 ```
 MoSH is available through most system pacakge managers. SSH can be used exactly the same, just replace `mosh` with `ssh`.
 `user@yourserver` is the normal URI you would use to connect via SSH.
+
+**Exiting**
+At the moment the only way to exit is with MoSH's `CTRL+^ .` or SSH's `ENTER ~ .`
 
 ##Interaction
 Most mouse and keyboard input is exactly the same as a normal desktop. If your terminal is active then you can click,
@@ -66,3 +69,6 @@ mounting certain system directories.
 
 ##Contributions
 Yes please.
+
+##License
+GNU General Public License v3.0
