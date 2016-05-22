@@ -65,8 +65,8 @@ system changes once you restart the docker container. I'm thinking about ways to
 mounting certain system directories.
 
 ##Known Issues
-The Docker Hub version is built against Intel CPU archcitectures, this causes hiptext to fail. If you are on AMD
-then most likely you will need to build texttop yourself:
+The Docker Hub version is built against Intel CPU architectures, this causes hiptext to fail on AMD chips. In which
+case you will need to build texttop yourself:
 ```
 git clone https://github.com/tombh/texttop.git
 cd texttop
