@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/nsf/termbox-go"
+	"github.com/tombh/termbox-go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"testing"

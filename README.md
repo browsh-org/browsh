@@ -38,10 +38,10 @@ The docker image is only ~275MB.
 ##Usage
 On your remote server (this will pull the docker image the first time you issue it):
 ```
-docker run --rm -it -d \
+docker run -d \
   -p 7777:7777 -p 60000-60020:60000-60020/udp \
   -v ~/.ssh/authorized_keys:/root/.ssh/authorized_keys \
-  tombh/texttop true
+  tombh/texttop
 ```
 Note that this assumes you already have SSH setup on your server and that you have your public key there. Password
 logins work fine too. The `60000-60020` port range is for MoSH.
