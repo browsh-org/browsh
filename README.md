@@ -30,6 +30,7 @@ git clone https://github.com/tombh/texttop.git
 cd texttop
 docker build -t texttop .
 ```
+The docker image is only ~275MB.
 
 ##Usage
 On your remote server (this will pull the docker image the first time you issue it):
