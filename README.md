@@ -1,9 +1,9 @@
 #Texttop
-**A fully interactive X Linux desktop rendered to ASCII and streamed over SSH**
+**A fully interactive X Linux desktop rendered to TTY and streamed over SSH**
 
 or Firefox in your terminal 😲
 
-![Alt Text](https://i.imgur.com/sWqhmBp.gif)
+![Alt Text](https://i.imgur.com/jX3vhO4.gif)
 
 ##Why?
 I'm travelling around the world and sometimes I don't have very good Internet. If all I have is a 3kbps connection
