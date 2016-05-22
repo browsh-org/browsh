@@ -34,13 +34,13 @@ docker build -t texttop .
 ##Usage
 On your remote server (this will pull the docker image the first time you issue it):
 ```
-docker run --rm -it \
-  -p 7777:7777 -p 60010-60020:60010-60020/udp \
+docker run --rm -it -d \
+  -p 7777:7777 -p 60000-60020:60000-60020/udp \
   -v ~/.ssh/authorized_keys:/root/.ssh/authorized_keys \
-  tombh/texttop sh
+  tombh/texttop true
 ```
 Note that this assumes you already have SSH setup on your server and that you have your public key there. Password
-logins work fine too. The `60010-60020` port range is for MoSH.
+logins work fine too. The `60000-60020` port range is for MoSH.
 
 Then on your local machine:
 ```

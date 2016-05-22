@@ -1,18 +1,19 @@
 FROM alpine
+COPY . /app
 
-RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+RUN echo "http://mirror1.hs-esslingen.de/pub/Mirrors/alpine/v3.3/main" > /etc/apk/repositories
+RUN echo "http://mirror1.hs-esslingen.de/pub/Mirrors/alpine/v3.3/community" >> /etc/apk/repositories
+RUN echo "@testing http://mirror1.hs-esslingen.de/pub/Mirrors/alpine/edge/testing" >> /etc/apk/repositories
 
 # Main dependencies
 RUN apk add --no-cache bc xvfb ttf-dejavu xdotool@testing ffmpeg openssh mosh firefox dbus
 
-# Generate host keys
-RUN ssh-keygen -A
-
 # Installing Hiptext, video to text renderer and our own interfacer.go
+# Keep this all in one RUN command so that the resulting Docker image is smaller.
 RUN apk --no-cache add --virtual build-dependencies \
-  build-base git go freetype-dev jpeg-dev ffmpeg-dev ragel libx11-dev libxt-dev libxext-dev
-RUN apk --no-cache add libgflags-dev@testing glog-dev@testing
-RUN mkdir -p build \
+  build-base git go freetype-dev jpeg-dev ffmpeg-dev ragel libx11-dev libxt-dev libxext-dev \
+  && apk --no-cache add libgflags-dev@testing glog-dev@testing \
+  && mkdir -p build \
   && cd build \
 
   # Need glibc for locale support
@@ -28,18 +29,20 @@ RUN mkdir -p build \
   && make \
   # Alpine's version of `install` doesn't support the `--mode=` format
   && install -m 0755 hiptext /usr/local/bin \
-  && cd ../.. && rm -rf build
+  && cd ../.. && rm -rf build \
 
-COPY . /app
+  # Build the interfacer.go/xzoom code
+  && export GOPATH=/go && export GOBIN=/app/interfacer \
+  && cd /app/interfacer && go get && go build \
 
-RUN export GOPATH=/go && export GOBIN=/app/interfacer/ && \
-    cd /app/interfacer && go get && go build
+  && apk --no-cache del build-dependencies
 
-RUN mkdir -p /app/logs
-
-RUN apk --no-cache del build-dependencies
+# Generate host keys
+RUN ssh-keygen -A
 
 RUN sed -i 's/#Port 22/Port 7777/' /etc/ssh/sshd_config
+
+RUN mkdir -p /app/logs
 
 WORKDIR /app
 CMD ["/usr/sbin/sshd", "-D"]
