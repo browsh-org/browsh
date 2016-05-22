@@ -5,6 +5,8 @@ or Firefox in your terminal 😲
 
 ![Alt Text](https://i.imgur.com/jX3vhO4.gif)
 
+This [Youtube video](https://www.youtube.com/watch?v=TE_D_fx_ut8) gives a more faithful rendition of the experience.
+
 ##Why?
 I'm travelling around the world and sometimes I don't have very good Internet. If all I have is a 3kbps connection
 tethered from my phone then it's good to SSH into my server and browse the web through [elinks](http://www.xteddy.org/elinks/).
