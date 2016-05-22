@@ -26,7 +26,7 @@ You can either pull from the Docker Registry:
 `docker pull tombh/texttop`
 or, build yourself:
 ```
-git clone git@github.com:tombh/texttop.git
+git clone https://github.com/tombh/texttop.git
 cd texttop
 docker build -t texttop .
 ```
@@ -63,6 +63,15 @@ Currently, only Firefox is installed on this extremely minimal Alpine Linux dist
 with [apk](https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management). Just remember that you will lose any
 system changes once you restart the docker container. I'm thinking about ways to save state. You may experiment with
 mounting certain system directories.
+
+##Known Issues
+The Docker Hub version is built against Intel CPU archcitectures, this causes hiptext to fail. If you are on AMD
+then most likely you will need to build texttop yourself:
+```
+git clone https://github.com/tombh/texttop.git
+cd texttop
+docker build -t texttop .
+```
 
 ##Contributions
 Yes please.
