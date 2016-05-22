@@ -359,7 +359,7 @@ func getSpecialKeyPress() string {
 	case termbox.KeyBackspace, termbox.KeyBackspace2:
 		key = "BackSpace"
 	case termbox.KeySpace:
-		key = "Space"
+		key = "space"
 	case termbox.KeyF1:
 		key = "F1"
 	case termbox.KeyF2:
