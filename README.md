@@ -19,7 +19,10 @@ require a client like VNC. But of course another big reason for Texttop is that 
 
 ##Quickstart
 If you just want to have a play on your local machine:
-`docker run --rm -it tombh/texttop ./run.sh`
+```
+docker run --rm -it tombh/texttop sh
+./run.sh
+```
 
 ##Installation
 You can either pull from the Docker Registry:
