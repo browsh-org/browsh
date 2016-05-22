@@ -59,6 +59,7 @@ sleep 1
 # TODO: support dynamic sizing
 hiptext \
   -font /usr/share/fonts/ttf-dejavu/DejaVuSansMono.ttf \
+  --xterm256unicode \
   -bgprint=true \
   $UDP_URI \
   2> ./logs/hiptext.log
