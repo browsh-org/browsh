@@ -60,15 +60,24 @@ MoSH is available through most system pacakge managers. SSH can be used exactly 
 At the moment the only way to exit is with MoSH's `CTRL+^ .` or SSH's `ENTER ~ .`
 
 ##Interaction
+  * `CTRL + mousewheel` to zoom
+  * `CTRL + click/drag` to pan
+
 Most mouse and keyboard input is exactly the same as a normal desktop. If your terminal is active then you can click,
 type, scroll, use arrow keys and drag things around. However there are still some things not available, like copy and
-paste. The main difference from a normal desktop is that you can zoom and pan the desktop by using `CTRL+mousewheel` and
-`CTRL+drag`. This is very handy as it's hard to see what's what when you're zoomed right out.
+paste. The main difference from a normal desktop is that you can zoom and pan the desktop by using `CTRL + mousewheel` and
+`CTRL + drag`. This is very handy as it's hard to see what's what when you're zoomed right out.
 
 Currently, only Firefox is installed on this extremely minimal Alpine Linux distro. However you can add new packages
 with [apk](https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management). Just remember that you will lose any
 system changes once you restart the docker container. I'm thinking about ways to save state. You may experiment with
-mounting certain system directories.
+mounting certain system directories. Example;
+```
+# Login with a seperate session
+apk --no-cache add xterm
+export DISPLAY=:0
+xterm &
+```
 
 ##Known Issues
 The Docker Hub version is built against Intel CPU architectures, this causes hiptext to fail on AMD chips. In which
@@ -78,6 +87,15 @@ git clone https://github.com/tombh/texttop.git
 cd texttop
 docker build -t texttop .
 ```
+
+**Working terminals**
+  * [Tilda](https://github.com/lanoxx/tilda)
+  * [Terminal](https://launchpad.net/pantheon-terminal)
+
+**Problematic terminals**
+  * konsole: neither `CTRL+click/drag` nor `CTRL+mousewheel` are forwarded (perhaps mouse reporting is disabled by default)
+  * xterm: `CTRL+click/drag` is intercepted by the GUI window
+  * rxvt: rendering issues
 
 ##Contributions
 Yes please.
