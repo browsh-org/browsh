@@ -53,7 +53,8 @@ Then on your local machine:
 mosh user@yourserver:7777
 ./run.sh
 ```
-MoSH is available through most system pacakge managers. SSH can be used exactly the same, just replace `mosh` with `ssh`.
+MoSH is available through most system package managers. SSH can be used exactly the same, just replace `mosh` with `ssh`.
+
 `user@yourserver` is the normal URI you would use to connect via SSH.
 
 **Exiting**    
@@ -69,15 +70,15 @@ paste. The main difference from a normal desktop is that you can zoom and pan th
 `CTRL + drag`. This is very handy as it's hard to see what's what when you're zoomed right out.
 
 Currently, only Firefox is installed on this extremely minimal Alpine Linux distro. However you can add new packages
-with [apk](https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management). Just remember that you will lose any
-system changes once you restart the docker container. I'm thinking about ways to save state. You may experiment with
-mounting certain system directories. Example;
+with [apk](https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management). Example;
 ```
 # Login with a seperate session
 apk --no-cache add xterm
 export DISPLAY=:0
 xterm &
 ```
+Just remember that you will lose any system changes once you restart the docker container. I'm thinking about ways to
+save state. You may experiment with mounting certain system directories.
 
 ##Known Issues
 The Docker Hub version is built against Intel CPU architectures, this causes hiptext to fail on AMD chips. In which
@@ -94,7 +95,7 @@ docker build -t texttop .
 
 **Problematic terminals**
   * konsole: neither `CTRL+click/drag` nor `CTRL+mousewheel` are forwarded (perhaps mouse reporting is disabled by default)
-  * xterm: `CTRL+click/drag` is intercepted by the GUI window
+  * xterm: `CTRL+click/drag` is intercepted by the GUI menu
   * rxvt: rendering issues
 
 ##Contributions
