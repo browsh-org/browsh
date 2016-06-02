@@ -42,7 +42,7 @@ On your remote server (this will pull the docker image the first time you issue 
 ```
 docker run -d \
   -p 7777:7777 -p 60000-60020:60000-60020/udp \
-  -v ~/.ssh/authorized_keys:/root/.ssh/authorized_keys \
+  -v ${HOME}/.ssh:/root/.ssh:ro \
   tombh/texttop
 ```
 Note that this assumes you already have SSH setup on your server and that you have your public key there. Password
@@ -78,7 +78,14 @@ export DISPLAY=:0
 xterm &
 ```
 Just remember that you will lose any system changes once you restart the docker container. I'm thinking about ways to
-save state. You may experiment with mounting certain system directories.
+save state. You may experiment with mounting certain system directories. Eg;
+```
+docker run -d \
+  -p 7777:7777 -p 60000-60020:60000-60020/udp \
+  -v ${HOME}/.ssh:/root/.ssh:ro \
+  -v ${HOME}/.texttop/var:/var \
+  tombh/texttop
+```
 
 ##Known Issues
 The Docker Hub version is built against Intel CPU architectures, this causes hiptext to fail on AMD chips. In which
