@@ -70,5 +70,6 @@ hiptext \
   -font /usr/share/fonts/ttf-dejavu/DejaVuSansMono.ttf \
   --xterm256unicode \
   -bgprint=true \
+  -fast \
   $UDP_URI \
   2> ./logs/hiptext.log
