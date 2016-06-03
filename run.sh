@@ -52,7 +52,16 @@ ffmpeg \
 sleep 1
 
 # Intercept STDIN (mouse and keypresses) and forward to the X framebuffer via xdotool
-(./interfacer/interfacer <&3 > ./logs/interfacer.log 2>&1 &) 3<&0
+(
+  # Kill all the processes in this script when the interfacer exits
+  trap '
+    trap - EXIT
+    killall Xvfb firefox ffmpeg hiptext
+    exit
+  ' EXIT INT TERM
+
+  ./interfacer/interfacer <&3 > ./logs/interfacer.log 2>&1
+) 3<&0 &
 
 # Hiptext renders images and videos into text characters displayable in a terminal.
 # It complains unless you specify the exact path to the font, seems like a bug to me.
@@ -63,6 +72,3 @@ hiptext \
   -bgprint=true \
   $UDP_URI \
   2> ./logs/hiptext.log
-
-# Kill all the subprocesses created in this script if the script itself exits
-trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT

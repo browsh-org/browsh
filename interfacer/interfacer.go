@@ -46,28 +46,38 @@ var panNeedsSetup bool
 var panStartingX float32
 var panStartingY float32
 
+var debugMode = parseENVVar("DEBUG") == 1
+
 func initialise() {
 	setupLogging()
 	log("Starting...")
 	setupTermbox()
 	setupDimensions()
-	C.xzoom_init()
-	xzoomBackground()
+	if !debugMode {
+		C.xzoom_init()
+		xzoomBackground()
+	}
 }
 
 func parseENVVar(variable string) int {
 	value, err := strconv.Atoi(os.Getenv(variable))
 	if err != nil {
-		panic(err)
+		return 0
 	}
 	return value
 }
 
 func setupDimensions() {
-	hipWidth = parseENVVar("TTY_WIDTH")
-	hipHeight = parseENVVar("TTY_HEIGHT")
-	envDesktopWidth = parseENVVar("DESKTOP_WIDTH")
-	envDesktopHeight = parseENVVar("DESKTOP_HEIGHT")
+	if debugMode {
+		hipWidth, hipHeight = termbox.Size()
+		envDesktopWidth = 1200
+		envDesktopHeight = 900
+	} else {
+		hipWidth = parseENVVar("TTY_WIDTH")
+		hipHeight = parseENVVar("TTY_HEIGHT")
+		envDesktopWidth = parseENVVar("DESKTOP_WIDTH")
+		envDesktopHeight = parseENVVar("DESKTOP_HEIGHT")
+	}
 	C.desktop_width = C.int(envDesktopWidth)
 	C.width[C.SRC] = C.desktop_width
 	C.width[C.DST] = C.desktop_width
@@ -85,7 +95,7 @@ func setupTermbox() {
 	if err != nil {
 		panic(err)
 	}
-	termbox.SetInputMode(termbox.InputMouse)
+	termbox.SetInputMode(termbox.InputAlt | termbox.InputMouse)
 }
 
 func setupLogging() {
@@ -100,6 +110,14 @@ func setupLogging() {
 	}
 }
 
+func printXY(x, y int, s string) {
+	for _, r := range s {
+		termbox.SetCell(x, y, r, termbox.ColorWhite, termbox.ColorDefault)
+		x++
+	}
+	termbox.Flush()
+}
+
 func log(msg string) {
 	f, oErr := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if oErr != nil {
@@ -110,6 +128,10 @@ func log(msg string) {
 	msg = msg + "\n"
 	if _, wErr := f.WriteString(msg); wErr != nil {
 		panic(wErr)
+	}
+
+	if debugMode {
+		printXY(0, 0, msg)
 	}
 }
 
@@ -130,6 +152,9 @@ func getYGrab() int {
 // Issue an xdotool command to simulate mouse and keyboard input
 func xdotool(args ...string) {
 	log(strings.Join(args, " "))
+	if debugMode {
+		return
+	}
 	if args[0] == "noop" {
 		return
 	}
@@ -153,6 +178,10 @@ func roundToInt(value32 float32) int {
 // Waiting for this PR: https://github.com/nsf/termbox-go/pull/126
 func ctrlPressed() bool {
 	return curev.Mod&termbox.ModCtrl != 0
+}
+
+func altPressed() bool {
+	return curev.Mod&termbox.ModAlt != 0
 }
 
 // Whether the mouse is moving
@@ -442,10 +471,20 @@ func xzoomBackground() {
 	}()
 }
 
+func needToExit() bool {
+	// CTRL+ALT+Q
+	if (curev.Key == termbox.KeyCtrlQ) && altPressed() {
+		return true
+	}
+	return false
+}
+
 func teardown() {
 	termbox.Close()
-	close(stopXZoomChannel)
-	<-xZoomStoppedChannel
+	if !debugMode {
+		close(stopXZoomChannel)
+		<-xZoomStoppedChannel
+	}
 }
 
 // I'm afraid I don't understand most of what this does :/
@@ -470,6 +509,9 @@ func mainLoop() {
 					break
 				}
 				curev = ev
+				if needToExit() {
+					return
+				}
 				copy(data, data[curev.N:])
 				data = data[:len(data)-curev.N]
 			}

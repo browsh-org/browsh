@@ -58,7 +58,9 @@ MoSH is available through most system package managers. SSH can be used exactly 
 `user@yourserver` is the normal URI you would use to connect via SSH.
 
 **Exiting**    
-At the moment the only way to exit is with MoSH's `CTRL+^ .` or SSH's `ENTER ~ .`
+`CTRL+ALT+Q` will drop you back to the docker container's CLI. You can start again with `./run.sh`
+
+If MoSH or SSH become unresponsive you can exit MoSH with `CTRL+^ .` or SSH with `ENTER ~ .`
 
 ##Interaction
   * `CTRL + mousewheel` to zoom
