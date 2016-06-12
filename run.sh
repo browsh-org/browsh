@@ -16,6 +16,7 @@ export DISPLAY=:0
 DESKTOP_RES="$DESKTOP_WIDTH"x"$DESKTOP_HEIGHT"
 UDP_URI='udp://127.0.0.1:1234'
 
+
 # Create an X desktop in memory without actually displaying it on a real screen.
 # Double the width to make room for the xzoom window, which is actually what
 # ffmpeg will stream;
@@ -27,16 +28,19 @@ UDP_URI='udp://127.0.0.1:1234'
 # |              |                |
 # ---------------------------------
 # So xzoom mirrors the desktop and ffmpeg streams the xzoom window.
+echo "Starting Xvfb..."
 Xvfb :0 -screen 0 "$(($DESKTOP_WIDTH * 2))"x"$DESKTOP_HEIGHT"x16 > ./logs/xvfb.log 2>&1 &
 
 # TODO: detect X start rather than sleep
 sleep 1
 
+echo "Starting Firefox..."
 /usr/bin/firefox >> ./logs/xvfb.log 2>&1 &
 
 # Convert the X framebuffer desktop into a video stream, but only stream the
 # right hand side where the xzoom window is.
 # TODO: Can latency be reduced further? Can flicker be reduced, in order to reduce bandwidth?
+echo "Starting ffmpeg video stream of desktop..."
 ffmpeg \
   -f x11grab \
   -s $DESKTOP_RES \
@@ -51,7 +55,6 @@ ffmpeg \
 # TODO: detect the stream's presence rather than sleep
 sleep 1
 
-# Intercept STDIN (mouse and keypresses) and forward to the X framebuffer via xdotool
 (
   # Kill all the processes in this script when the interfacer exits
   trap '
@@ -60,6 +63,9 @@ sleep 1
     exit
   ' EXIT INT TERM
 
+  # Intercept STDIN (mouse and keypresses) and forward to the X framebuffer via xdotool.
+  # This also starts the xzoom window.
+  echo "Starting mouse and keyboard interface..."
   ./interfacer/interfacer <&3 > ./logs/interfacer.log 2>&1
 ) 3<&0 &
 
