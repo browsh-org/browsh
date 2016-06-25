@@ -46,6 +46,13 @@ var panNeedsSetup bool
 var panStartingX float32
 var panStartingY float32
 
+// Keyboard mode is for interacting with the desktop with the keyboard
+// instead of the mouse.
+var keyboardMode = false
+var kbCursorX int
+var kbCursorY int
+var char string
+
 var debugMode = parseENVVar("DEBUG") == 1
 
 func initialise() {
@@ -78,6 +85,8 @@ func setupDimensions() {
 		envDesktopWidth = parseENVVar("DESKTOP_WIDTH")
 		envDesktopHeight = parseENVVar("DESKTOP_HEIGHT")
 	}
+	kbCursorX = int(hipWidth / 2)
+	kbCursorY = int(hipHeight / 2)
 	C.desktop_width = C.int(envDesktopWidth)
 	C.width[C.SRC] = C.desktop_width
 	C.width[C.DST] = C.desktop_width
@@ -110,8 +119,25 @@ func setupLogging() {
 	}
 }
 
-func printXY(x, y int, s string) {
+// Render text. This doesn't play very nice with hiptext, it can cause
+// random tearing and flickering :( I suspect there are ways to overcome
+// this for rendering outside of hiptext's area. But to render over hiptext
+// it will probably mean patching hiptext.
+func printXY(x, y int, s string, force bool) {
 	for _, r := range s {
+
+		// It seems termbox keeps an internal representation of the TTY
+		// and won't try updating the cell unless it thinks it has changed.
+		// This is only relevant because we're in competition with the
+		// rapid screen updates from hiptext. This means that unless we
+		// "remove -> flush -> redraw" everything hiptext removes whatever
+		// we render.
+		if force {
+			// 32 is the space character
+			termbox.SetCell(x, y, 32, termbox.ColorWhite, termbox.ColorDefault)
+			termbox.Flush()
+		}
+
 		termbox.SetCell(x, y, r, termbox.ColorWhite, termbox.ColorDefault)
 		x++
 	}
@@ -131,7 +157,7 @@ func log(msg string) {
 	}
 
 	if debugMode {
-		printXY(0, 0, msg)
+		printXY(0, hipHeight - 1, msg, true)
 	}
 }
 
@@ -190,8 +216,8 @@ func mouseMotion() bool {
 }
 
 // Convert Termbox symbols to xdotool arguments
-func mouseButtonStr(k termbox.Key) []string {
-	switch k {
+func mouseButtonStr() []string {
+	switch curev.Key {
 	case termbox.MouseLeft:
 		lastMouseButton = "1"
 		return []string{"mousedown", lastMouseButton}
@@ -296,7 +322,9 @@ func modStr(m termbox.Modifier) string {
 }
 
 func isPanning() bool {
-	return ctrlPressed() && mouseMotion() && lastMouseButton == "1"
+	mousePanning := ctrlPressed() && mouseMotion() && lastMouseButton == "1"
+	kbPanning := (char == "U" || char == "K" || char == "N" || char == "H") && keyboardMode
+	return mousePanning || kbPanning
 }
 
 func mouseEvent() {
@@ -317,8 +345,8 @@ func mouseEvent() {
 		// Pressing of CTRL indicates that the user is panning or zooming, so there is no need to send
 		// button presses.
 		// TODO: What about CTRL+leftbutton to open new tab!?
-		if !ctrlPressed() {
-			xdotool(mouseButtonStr(curev.Key)...)
+		if !keyboardMode && !ctrlPressed() {
+			xdotool(mouseButtonStr()...)
 		}
 	}
 }
@@ -338,8 +366,8 @@ func pan() {
 func setCurrentDesktopCoords() {
 	hipWidthFloat := float32(hipWidth)
 	hipHeightFloat := float32(hipHeight)
-	eventX := float32(curev.MouseX)
-	eventY := float32(curev.MouseY)
+	eventX := float32(getCursorX())
+	eventY := float32(getCursorY())
 	width := float32(C.width[C.SRC])
 	height := float32(C.height[C.SRC])
 	xOffset := float32(C.xgrab)
@@ -354,6 +382,20 @@ func setCurrentDesktopCoords() {
 			hipHeightFloat, hipWidthFloat, desktopXFloat, desktopYFloat, C.magnification))
 }
 
+func getCursorX() int {
+	if keyboardMode {
+		return kbCursorX
+	}
+	return curev.MouseX
+}
+
+func getCursorY() int {
+	if keyboardMode {
+		return kbCursorY
+	}
+	return curev.MouseY
+}
+
 // Convert a keyboard event into an xdotool command
 // See: http://wiki.linuxquestions.org/wiki/List_of_Keysyms_Recognised_by_Xmodmap
 func keyEvent() {
@@ -364,6 +406,7 @@ func keyEvent() {
 
 	if curev.Key == 0 {
 		key = fmt.Sprintf("%c", curev.Ch)
+		char = key
 		command = "type"
 	} else {
 		command = "key"
@@ -377,7 +420,61 @@ func keyEvent() {
 		return
 	}
 
+	if (curev.Key == termbox.KeyCtrlM) && altPressed() {
+		keyboardMode = !keyboardMode
+	}
+
+	if keyboardMode {
+		mouseEvent()
+		handleKeyboardMode(key)
+		renderCursor()
+		printXY(0, hipHeight, "KB ON ", true)
+		return
+	}
+
+	printXY(0, hipHeight, "KB OFF", true)
+
 	xdotool(command, key)
+}
+
+func handleKeyboardMode(key string) {
+	switch key {
+	case "u", "U":
+		kbCursorY--
+		if kbCursorY < 0 {
+			kbCursorY = 0
+		}
+	case "n", "N":
+		kbCursorY++
+		if kbCursorY > hipHeight {
+			kbCursorY = hipHeight
+		}
+	case "h", "H":
+		kbCursorX--
+		if kbCursorX < 0 {
+			kbCursorX = 0
+		}
+	case "k", "K":
+		kbCursorX++
+		if kbCursorX > hipWidth {
+			kbCursorX = hipWidth
+		}
+	case "ctrl+u":
+		zoom("in")
+	case "ctrl+n":
+		zoom("out")
+	case "j":
+		xdotool("click", "1")
+	case "r":
+		xdotool("click", "2")
+	case "t":
+		xdotool("click", "3")
+	}
+
+}
+
+func renderCursor() {
+	printXY(kbCursorX, kbCursorY, "+", false)
 }
 
 func getSpecialKeyPress() string {
@@ -433,8 +530,12 @@ func getSpecialKeyPress() string {
 		key = "Left"
 	case termbox.KeyArrowRight:
 		key = "Right"
+	case termbox.KeyCtrlU:
+		key = "ctrl+u"
 	case termbox.KeyCtrlL:
 		key = "ctrl+l"
+	case termbox.KeyCtrlN:
+		key = "ctrl+n"
 	}
 	return key
 }
@@ -447,7 +548,7 @@ func parseInput() {
 		log(
 			fmt.Sprintf(
 				"EventMouse: x: %d, y: %d, b: %s, mod: %s",
-				curev.MouseX, curev.MouseY, mouseButtonStr(curev.Key), modStr(curev.Mod)))
+				getCursorX(), getCursorY(), mouseButtonStr(), modStr(curev.Mod)))
 		mouseEvent()
 	case termbox.EventNone:
 		log("EventNone")
@@ -510,6 +611,7 @@ func mainLoop() {
 				}
 				curev = ev
 				if needToExit() {
+					log("Exit requested by user")
 					return
 				}
 				copy(data, data[curev.N:])
@@ -520,6 +622,7 @@ func mainLoop() {
 		}
 		parseInput()
 	}
+
 }
 
 func main() {

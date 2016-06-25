@@ -71,6 +71,28 @@ type, scroll, use arrow keys and drag things around. However there are still som
 paste. The main difference from a normal desktop is that you can zoom and pan the desktop by using `CTRL + mousewheel` and
 `CTRL + drag`. This is very handy as it's hard to see what's what when you're zoomed right out.
 
+###Keyboard Mode
+If your terminal doesn't support mouse input then you can switch in and out of keyboard mode with `CTRL+ALT+M`.
+This will give you the following shortcuts:
+
+`u` mouse up    
+`n` mouse down    
+`h` mouse left    
+`k` mouse right    
+
+`SHIFT+u` pan up    
+`SHIFT+n` pan down    
+`SHIFT+h` pan left    
+`SHIFT+k` pan right    
+
+`CTRL+u` zoom in    
+`CTRL+n` zoom out    
+
+`j` left-click    
+`r` right-click    
+`t` middle-click    
+
+###Adding new applications
 Currently, only Firefox is installed on this extremely minimal Alpine Linux distro. However you can add new packages
 with [apk](https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management). Example;
 ```
