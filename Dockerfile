@@ -16,14 +16,6 @@ RUN apk --no-cache add --virtual build-dependencies \
   && mkdir -p build \
   && cd build \
 
-  # Need glibc for locale support, not that any UTF8 locales work :/
-  # This PR seems to be the most relevant: https://github.com/andyshinn/alpine-pkg-glibc/issues/13
-  # Note that we're currently having to use this hack in hiptext because of alpine's poor locale support:
-  # https://github.com/tombh/hiptext/commit/bc502af5f6e3b622a9b53d1ffb9a40e74d968ae3
-  && wget -q -O /etc/apk/keys/andyshinn.rsa.pub https://raw.githubusercontent.com/andyshinn/alpine-pkg-glibc/master/andyshinn.rsa.pub \
-  && wget https://github.com/andyshinn/alpine-pkg-glibc/releases/download/2.23-r1/glibc-2.23-r1.apk \
-  && apk --no-cache add glibc-2.23-r1.apk \
-
   # Currently need to use a patched vesion of hiptext that supports video streams and ffmpeg v3
   # Watch: https://github.com/jart/hiptext/pull/27
   && git clone https://github.com/tombh/hiptext \
