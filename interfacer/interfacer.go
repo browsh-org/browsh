@@ -422,6 +422,7 @@ func keyEvent() {
 
 	if (curev.Key == termbox.KeyCtrlM) && altPressed() {
 		keyboardMode = !keyboardMode
+		printXY(0, hipHeight, "     ", true)
 	}
 
 	if keyboardMode {
@@ -431,8 +432,6 @@ func keyEvent() {
 		printXY(0, hipHeight, "KB ON ", true)
 		return
 	}
-
-	printXY(0, hipHeight, "KB OFF", true)
 
 	xdotool(command, key)
 }
