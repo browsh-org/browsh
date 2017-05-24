@@ -1,4 +1,4 @@
-#Texttop
+# Texttop
 **A fully interactive X Linux desktop rendered to TTY and streamed over SSH**
 
 or Firefox in your terminal 😲
@@ -7,7 +7,7 @@ or Firefox in your terminal 😲
 
 This [Youtube video](https://www.youtube.com/watch?v=TE_D_fx_ut8) gives a more faithful rendition of the experience.
 
-##Why?
+## Why?
 I'm travelling around the world and sometimes I don't have very good Internet. If all I have is a 3kbps connection
 tethered from my phone then it's good to SSH into my server and browse the web through [elinks](http://www.xteddy.org/elinks/).
 That way my _server_ downloads the web pages and uses the limited bandwidth of my SSH connection to display the result. But
@@ -19,14 +19,14 @@ Internet. Texttop uses MoSH to further reduce the bandwidth and stability requir
 automatic reconnection of dropped connections and diff-only screen updates. Also, other than SSH or MoSH, Texttop doesn't
 require a client like VNC. But of course another big reason for Texttop is that it's just very cool geekery.
 
-##Quickstart
+## Quickstart
 If you just want to have a play on your local machine:
 ```
 docker run --rm -it tombh/texttop sh
 ./run.sh
 ```
 
-##Installation
+## Installation
 You can either pull from the Docker Registry:
 `docker pull tombh/texttop`
 or, build yourself:
@@ -37,7 +37,7 @@ docker build -t texttop .
 ```
 The docker image is only ~275MB.
 
-##Usage
+## Usage
 On your remote server (this will pull the docker image the first time you issue it):
 ```
 docker run -d \
@@ -62,7 +62,7 @@ MoSH is available through most system package managers. SSH can be used exactly 
 
 If MoSH or SSH become unresponsive you can exit MoSH with `CTRL+^ .` or SSH with `ENTER ~ .`
 
-##Interaction
+## Interaction
   * `CTRL + mousewheel` to zoom
   * `CTRL + click/drag` to pan
 
@@ -71,7 +71,7 @@ type, scroll, use arrow keys and drag things around. However there are still som
 paste. The main difference from a normal desktop is that you can zoom and pan the desktop by using `CTRL + mousewheel` and
 `CTRL + drag`. This is very handy as it's hard to see what's what when you're zoomed right out.
 
-###Keyboard Mode
+### Keyboard Mode
 If your terminal doesn't support mouse input then you can switch in and out of keyboard mode with `CTRL+ALT+M`.
 This will give you the following shortcuts:
 
@@ -92,7 +92,7 @@ This will give you the following shortcuts:
 `r` right-click    
 `t` middle-click    
 
-###Adding new applications
+### Adding new applications
 Currently, only Firefox is installed on this extremely minimal Alpine Linux distro. However you can add new packages
 with [apk](https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management). Example;
 ```
@@ -111,7 +111,7 @@ docker run -d \
   tombh/texttop
 ```
 
-##Known Issues
+## Known Issues
 The Docker Hub version is built against Intel CPU architectures, this causes hiptext to fail on AMD chips. In which
 case you will need to build texttop yourself:
 ```
@@ -129,8 +129,8 @@ docker build -t texttop .
   * xterm: `CTRL+click/drag` is intercepted by the GUI menu
   * rxvt: rendering issues
 
-##Contributions
+## Contributions
 Yes please.
 
-##License
+## License
 GNU General Public License v3.0
