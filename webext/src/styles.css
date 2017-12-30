@@ -1,0 +1,9 @@
+html * {
+  font-family: monospace !important;
+  font-size: 15px !important;
+  line-height: 20px !important;
+}
+
+sup, sub {
+  vertical-align: baseline !important;
+}

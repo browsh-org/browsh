@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "test": "NODE_PATH=src:test mocha"
+  },
+  "babel": {
+    "presets": ["es2015"]
+  },
+  "devDependencies": {
+    "babel-preset-es2015": "^6.24.1",
+    "babel-register": "^6.26.0",
+    "chai": "^4.1.2",
+    "mocha": "^4.1.0",
+    "sinon": "^4.1.3",
+    "webpack": "^3.10.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.4"
+  }
+}

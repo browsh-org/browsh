@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+  "name": "Browsh",
+  "version": "0.1",
+
+  "description": "Renders the browser as realtime, interactive, TTY-compatible text",
+
+  "icons": {
+    "48": "icons/browsh-48.png",
+    "96": "icons/browsh-96.png"
+  },
+
+  "background": {
+    "scripts": ["dist/background.js"]
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["dist/content.js"],
+      "css": ["src/styles.css"],
+      "run_at": "document_start"
+    }
+  ],
+
+  "permissions": [
+    "<all_urls>"
+  ]
+}
