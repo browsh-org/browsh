@@ -51,8 +51,9 @@ setInterval(() => {
 }, 1000);
 
 function resizeBrowserWindow() {
-  const width = tty_width * 9;
-  const height = tty_height * 19.5; // this is actually line-height
+  // Does this include scrollbars???
+  const width = parseInt(Math.round(tty_width * 9)) + 4;
+  const height = parseInt(Math.round(tty_height * 20)) + 4; // this is actually line-height
   var getting = browser.windows.getCurrent();
   getting.then(
     (windowInfo) => {

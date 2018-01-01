@@ -5,3 +5,4 @@ blank.png
 interfacer/target
 webext/web-ext-artifacts
 webext/node_modules
+webext/dist

@@ -3,48 +3,62 @@ import GraphicsBuilder from 'graphics_builder';
 import TextBuilder from 'text_builder';
 
 // Takes the graphics and text from the current viewport, combines them, then
-// sends it to the background process where the the rest of the UI, like tabs,
+// sends it to the background process where the rest of the UI, like tabs,
 // address bar, etc will be added.
 export default class FrameBuilder extends BaseBuilder{
   constructor() {
     super();
     // ID for element we place in the DOM to measure the size of a single monospace
     // character.
-    this.measuring_box_id = 'browsh_em_measuring_box';
+    this._measuring_box_id = 'browsh_em_measuring_box';
     this.graphics_builder = new GraphicsBuilder();
-    this.text_builder = new TextBuilder();
+    this.text_builder = new TextBuilder(this, this.graphics_builder);
+    this._setupInit();
+  }
 
+  sendFrame(tty_width, tty_height) {
+    this._setupDimensions(tty_width, tty_height);
+    this._compileFrame();
+    this._buildFrame();
+    this._sendMessage(this.frame);
+    this.is_first_frame_finished = true;
+  }
+
+  _sendMessage(message) {
+    this.channel.postMessage(message);
+  }
+
+  _setupInit() {
     document.addEventListener("DOMContentLoaded", () => {
-      this.init();
+      this._init();
     }, false);
-
     // Whilst developing this webextension the auto reload only reloads this code,
     // not the page, so we don't get the `DOMContentLoaded` event to kick everything off.
-    if (this.isWindowAlreadyLoaded()) this.init(100);
+    if (this._isWindowAlreadyLoaded()) this._init(100);
   }
 
-  isWindowAlreadyLoaded() {
-    return !!this.findMeasuringBox();
+  _isWindowAlreadyLoaded() {
+    return !!this._findMeasuringBox();
   }
 
-  init(delay = 0) {
-    console.log('Browsh init()');
-    this.calculateMonospaceDimensions();
+  _init(delay = 0) {
+    this._log('Browsh init()');
+    this._calculateMonospaceDimensions();
     // When the webext devtools auto reloads this code the background process
     // can sometimes still be loading, in which case we need to wait.
-    setTimeout(() => this.registerWithBackground(), delay);
+    setTimeout(() => this._registerWithBackground(), delay);
   }
 
-  registerWithBackground() {
+  _registerWithBackground() {
     let sending = browser.runtime.sendMessage('/register');
     sending.then(
-      (r) => this.registrationSuccess(r),
-      (e) => this.registrationError(e)
+      (r) => this._registrationSuccess(r),
+      (e) => this._registrationError(e)
     );
   }
 
   // The background process tells us when it wants a frame.
-  registrationSuccess(registered) {
+  _registrationSuccess(registered) {
     this.channel = browser.runtime.connect({
       // We need to give ourselves a unique channel name, so the background
       // process can identify us amongst other tabs.
@@ -61,8 +75,8 @@ export default class FrameBuilder extends BaseBuilder{
     });
   }
 
-  registrationError(error) {
-    console.error(error);
+  _registrationError(error) {
+    this._log(error);
   }
 
   // This is critical in order for the terminal to match the browser as closely as possible.
@@ -78,46 +92,36 @@ export default class FrameBuilder extends BaseBuilder{
   // the same browser may have subtle differences in how they render text. Furthermore we can
   // actually get floating point accuracy if we use `Element.getBoundingClientRect()` which
   // further helps as calculations are compounded during our rendering processes.
-  calculateMonospaceDimensions() {
-    const element = this.getOrCreateMeasuringBox();
+  _calculateMonospaceDimensions() {
+    const element = this._getOrCreateMeasuringBox();
     const dom_rect = element.getBoundingClientRect();
     this.char_width = dom_rect.width;
-    this.char_height = dom_rect.height;
+    this.char_height = 18.1;
     this.text_builder.char_width = this.char_width;
     this.text_builder.char_height = this.char_height;
     console.log('char dimensions', this.char_width, this.char_height);
   }
 
-  getOrCreateMeasuringBox() {
-    let measuring_box = this.findMeasuringBox();
+  // Back when printing was done by physical stamps, it was convention to measure the
+  // font-size using the letter 'M', thus where we get the unit 'em' from. Not that it
+  // should make any difference to us, but it's nice to keep a tradition.
+  _getOrCreateMeasuringBox() {
+    let measuring_box = this._findMeasuringBox();
     if (measuring_box) return measuring_box;
     measuring_box = document.createElement('span');
-    measuring_box.id = this.measuring_box_id;
+    measuring_box.id = this._measuring_box_id;
     measuring_box.style.visibility = 'hidden';
-    // Back when printing was done by physical stamps, it was convention to measure the
-    // font-size using the letter 'M', thus where we get the unit 'em' from. Not that it
-    // should make any difference to us, but it's nice to keep a tradition.
     var M = document.createTextNode('M');
     measuring_box.appendChild(M);
     document.body.appendChild(measuring_box);
     return measuring_box;
   }
 
-  findMeasuringBox() {
-    return document.getElementById(this.measuring_box_id);
+  _findMeasuringBox() {
+    return document.getElementById(this._measuring_box_id);
   }
 
-  sendFrame(tty_width, tty_height) {
-    this.setupDimensions(tty_width, tty_height);
-    this.compileFrame();
-    this.logPerformance(() => {
-      this.buildFrame();
-    }, 'build frame');
-    this.channel.postMessage(this.screen);
-    this.is_first_frame_finished = true;
-  }
-
-  setupDimensions(tty_width, tty_height) {
+  _setupDimensions(tty_width, tty_height) {
     this.tty_width = tty_width;
     this.tty_height = tty_height;
     this.frame_width = tty_width;
@@ -126,53 +130,46 @@ export default class FrameBuilder extends BaseBuilder{
     this.frame_height = tty_height * 2;
   }
 
-  compileFrame() {
-    this.logPerformance(() => {
-      this.pixels_with_text = this.graphics_builder.getSnapshotWithText(
-        this.frame_width,
-        this.frame_height
-      );
-    }, 'get snapshot with text');
-    this.logPerformance(() => {
-      this.pixels_without_text = this.graphics_builder.getSnapshotWithoutText(
+  _compileFrame() {
+    this.graphics_builder.getSnapshotWithText();
+    this.graphics_builder.getSnapshotWithoutText();
+    this.graphics_builder.getScaledSnapshot(
       this.frame_width,
       this.frame_height
     );
-    }, 'get snapshot without text');
-    this.formatted_text = this.text_builder.getFormattedText(
-      this,
-      this.graphics_builder
-    );
+    this.formatted_text = this.text_builder.getFormattedText();
   }
 
-  buildFrame() {
-    this.screen = "";
-    this.bg_row = [];
-    this.fg_row = [];
+  _buildFrame() {
+    this._logPerformance(() => {
+      this.__buildFrame();
+    }, 'build frame');
+  }
+
+  __buildFrame() {
+    this.frame = "";
+    this._bg_row = [];
+    this._fg_row = [];
     for (let y = 0; y < this.frame_height; y++) {
       for (let x = 0; x < this.frame_width; x++) {
-        this.buildPixel(x, y);
+        this._buildPixel(x, y);
       }
     }
   }
 
   // Note how we have to keep track of 2 rows of pixels in order to create 1 row of
   // the terminal.
-  buildPixel(x, y) {
-    let pixel_data_start, r, g, b;
-    pixel_data_start = y * (this.frame_width * 4) + (x * 4);
-    r = this.pixels_without_text[pixel_data_start + 0];
-    g = this.pixels_without_text[pixel_data_start + 1];
-    b = this.pixels_without_text[pixel_data_start + 2];
-    if (this.bg_row.length < this.frame_width) {
-      this.bg_row.push([r, g, b]);
+  _buildPixel(x, y) {
+    const colour = this.graphics_builder.getScaledPixelAt(x, y);
+    if (this._bg_row.length < this.frame_width) {
+      this._bg_row.push(colour);
     } else {
-      this.fg_row.push([r, g, b]);
+      this._fg_row.push(colour);
     }
-    if (this.fg_row.length === this.frame_width) {
-      this.screen += this.buildTtyRow(this.bg_row, this.fg_row, y);
-      this.bg_row = [];
-      this.fg_row = [];
+    if (this._fg_row.length === this.frame_width) {
+      this.frame += this._buildTtyRow(this._bg_row, this._fg_row, y);
+      this._bg_row = [];
+      this._fg_row = [];
     }
   }
 
@@ -183,17 +180,17 @@ export default class FrameBuilder extends BaseBuilder{
   // colour, namely the colour of the text.
   // However we can't just write random pixels to a TTY screen, we must collate 2 rows
   // of native pixels for every row of the terminal.
-  buildTtyRow(bg_row, fg_row, y) {
+  _buildTtyRow(bg_row, fg_row, y) {
     let tty_index, char;
     let row = "";
     const tty_row = parseInt(y / 2);
     for (let x = 0; x < this.frame_width; x++) {
       tty_index = (tty_row * this.frame_width) + x;
-      if (this.doesCellHaveACharacter(tty_index)) {
+      if (this._doesCellHaveACharacter(tty_index)) {
         char = this.formatted_text[tty_index];
-        row += this.ttyPixel(char[1], char[2], char[0]);
+        row += this._ttyPixel(char[1], char[2], char[0]);
       } else {
-        row += this.ttyPixel(fg_row[x], bg_row[x], '▄');
+        row += this._ttyPixel(fg_row[x], bg_row[x], '▄');
       }
     }
     if (tty_row + 1 < this.tty_height) {
@@ -203,7 +200,7 @@ export default class FrameBuilder extends BaseBuilder{
   }
 
   // We need to know this because we want all empty cells to be 'transparent'
-  doesCellHaveACharacter(index) {
+  _doesCellHaveACharacter(index) {
     if (this.formatted_text[index] === undefined) return false;
     const char = this.formatted_text[index][0];
     const is_undefined = char === undefined;
@@ -214,7 +211,7 @@ export default class FrameBuilder extends BaseBuilder{
   }
 
   // Display a single character in true colour
-  ttyPixel(fg, bg, character) {
+  _ttyPixel(fg, bg, character) {
     let fg_code = `\x1b[38;2;${fg[0]};${fg[1]};${fg[2]}m`;
     let bg_code = `\x1b[48;2;${bg[0]};${bg[1]};${bg[2]}m`;
     return `${fg_code}${bg_code}${character}`;

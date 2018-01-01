@@ -1,92 +1,157 @@
 import BaseBuilder from 'base_builder';
 
-// Converts an instance of the viewport into a scaled array of pixel values.
+// Converts an instance of the viewport into a an array of pixel values.
 // Note, that it does this both with and without the text visible in order
-// to aid in a clean seperation of the graphics and text in the final frame
-// renderd in the terminal.
+// to aid in a clean separation of the graphics and text in the final frame
+// rendered in the terminal.
 export default class GraphicsBuilder extends BaseBuilder {
-  // Note that `frame_height` is twice the height of our TTY's height
-  // because of the special UTF8 half-block trick that gets us 2 'pixels'
-  // per character cell.
   constructor() {
     super();
     this.off_screen_canvas = document.createElement('canvas');
     this.ctx = this.off_screen_canvas.getContext('2d');
-    this.updateCurrentViewportDimensions();
+    this._updateCurrentViewportDimensions();
   }
 
-  getSnapshotWithoutText(frame_width, frame_height) {
+  getPixelsAt(x, y) {
+    const pixel_data_start = parseInt(
+      (y * (this.viewport.width * 4)) + (x * 4)
+    );
+    let fg_colour = this.pixels_with_text.slice(
+      pixel_data_start, pixel_data_start + 3
+    );
+    let bg_colour = this.pixels_without_text.slice(
+      pixel_data_start, pixel_data_start + 3
+    );
+    return [fg_colour, bg_colour];
+  }
+
+  getScaledPixelAt(x, y) {
+    const pixel_data_start = (y * this.frame_width * 4) + (x * 4);
+    return this.scaled_pixels.slice(pixel_data_start, pixel_data_start + 3);
+  }
+
+  getSnapshotWithText() {
+    this._logPerformance(() => {
+      this._getSnapshotWithText();
+    }, 'get snapshot with text');
+  }
+
+  getSnapshotWithoutText() {
+    this._logPerformance(() => {
+      this._getSnapshotWithoutText();
+    }, 'get snapshot without text');
+  }
+
+  getScaledSnapshot(frame_width, frame_height) {
+    this._logPerformance(() => {
+      this._getScaledSnapshot(frame_width, frame_height);
+    }, 'get scaled snapshot');
+  }
+
+  _getSnapshotWithoutText() {
+    this._hideText();
+    this.pixels_without_text = this._getSnapshot();
+    this._showText();
+    return this.pixels_without_text;
+  }
+
+  _getSnapshotWithText() {
+    this.pixels_with_text = this._getSnapshot();
+    return this.pixels_with_text;
+  }
+
+  _getScaledSnapshot(frame_width, frame_height) {
     this.frame_width = frame_width;
     this.frame_height = frame_height;
-    this.hideText();
-    let snapshot = this.getSnapshot();
-    this.showText();
-    return snapshot;
+    this._scaleCanvas();
+    this.scaled_pixels = this._getSnapshot();
+    this._unScaleCanvas();
+    this._is_first_frame_finished = true;
+    return this.scaled_pixels;
   }
 
-  hideText() {
+  _hideText() {
     this.styles = document.createElement("style");
     document.head.appendChild(this.styles);
     this.styles.sheet.insertRule(
-      'html * { color: transparent !important; }'
+      'html * {' +
+      '  color: transparent !important;' +
+      // Note the disabling of transition effects here. Some websites have a fancy fade
+      // animation when changing colours, which we don't have time for in taking a snapshot.
+      // However, a drawback here is that, when we remove this style the transition actually
+      // kicks in - not that the terminal sees it because, by the nature of this style change
+      // here, we only ever capture the screen when text is invisible. However, I wonder if
+      // triggering color transitions for every frame might add some unnecessary load? What
+      // about permanently disabling color transitions in the global stylesheet?
+      '  transition: color 0s !important;' +
+      '}'
     );
   }
 
-  showText() {
+  _showText() {
     this.styles.parentNode.removeChild(this.styles);
   }
 
-
-  getSnapshotWithText(frame_width, frame_height) {
-    this.frame_width = frame_width;
-    this.frame_height = frame_height;
-    return this.getSnapshot();
-  }
-
-  getSnapshot() {
-    this.updateCurrentViewportDimensions()
-    this.scaleCanvas();
-    let pixel_data = this.getPixelData();
-    this.is_first_frame_finished = true;
+  _getSnapshot() {
+    this._updateCurrentViewportDimensions()
+    let pixel_data = this._getPixelData();
     return pixel_data;
   }
 
-  // Perhaps the window has been resized to better accomodate text-sizing, or to try
+  // Deal with page scrolling and other viewport changes.
+  // Perhaps the window has been resized to better accommodate text-sizing, or to try
   // to trigger some mobile responsive CSS.
-  // And of course also the page may have been scrolled.
-  updateCurrentViewportDimensions() {
-    this.viewport_width = window.innerWidth;
-    this.viewport_height = window.innerHeight;
-    this.page_x_position = window.scrollX;
-    this.page_y_position = window.scrollY;
-    // Resize our canvas to match the viewport. I guess this makes for efficient
-    // use of memory?
-    this.off_screen_canvas.width = this.viewport_width;
-    this.off_screen_canvas.height = this.viewport_height;
+  _updateCurrentViewportDimensions() {
+    this.viewport = {
+      x_scroll: window.scrollX,
+      y_scroll: window.scrollY,
+      width: window.innerWidth,
+      height: window.innerHeight
+    }
+    if (!this.is_scaled) {
+      // Resize our canvas to match the viewport. I guess this makes for efficient
+      // use of memory?
+      this.off_screen_canvas.width = this.viewport.width;
+      this.off_screen_canvas.height = this.viewport.height;
+    }
   }
 
-  // Scale the screenshot so that 1 pixel approximates one TTY cell.
-  // TODO: Allow one of these to be manually adjusted in realtime through the Browsh client
-  // in order for the user to set the correct aspect ratio for their particular terminal
-  // setup.
-  scaleCanvas() {
-    let scale_x = this.frame_width / this.viewport_width;
-    let scale_y = this.frame_height / this.viewport_height;
+  // Scale the screenshot so that 1 pixel approximates half a TTY cell.
+  _scaleCanvas() {
+    this.is_scaled = true;
+    const scale_x = this.frame_width / this.viewport.width;
+    const scale_y = this.frame_height / this.viewport.height;
+    this._hideText();
+    this.ctx.save();
     this.ctx.scale(scale_x, scale_y);
+  }
+
+  _unScaleCanvas() {
+    this.ctx.restore();
+    this._showText();
+    this.is_scaled = false;
   }
 
   // Get an array of RGB values.
   // This is Firefox-only. Chrome has a nicer MediaStream for this.
-  getPixelData() {
+  _getPixelData() {
+    let width, height;
     let background_colour = 'rgb(255,255,255)';
+    if (this.is_scaled) {
+      width = this.frame_width;
+      height = this.frame_height;
+    } else {
+      width = this.viewport.width;
+      height = this.viewport.height;
+    }
     this.ctx.drawWindow(
       window,
-      this.page_x_position,
-      this.page_y_position,
-      this.viewport_width,
-      this.viewport_height,
+      this.viewport.x_scroll,
+      this.viewport.y_scroll,
+      this.viewport.width,
+      this.viewport.height,
       background_colour
     );
-    return this.ctx.getImageData(0, 0, this.frame_width, this.frame_height).data;
+    return this.ctx.getImageData(0, 0, width, height).data;
   }
 }

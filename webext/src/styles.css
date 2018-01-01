@@ -1,7 +1,22 @@
+@font-face {
+  /* A special font that only has unicode full blocks in it, so we can detect */
+  /* font colors and text visibility more easily. */
+  font-family: 'BlockCharMono';
+  src: url('/BlockCharMono.ttf') format('truetype');
+}
+
 html * {
-  font-family: monospace !important;
+  font-family: 'BlockCharMono' !important;
   font-size: 15px !important;
   line-height: 20px !important;
+  letter-spacing: 0px !important;
+  font-style: normal !important;
+  font-weight: normal !important;
+}
+
+/* Simulate emphasis because terminals don't usually support bold, italic, etc */
+b, em, strong {
+  filter: brightness(10%);
 }
 
 sup, sub {

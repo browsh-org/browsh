@@ -6,7 +6,8 @@
     "mocha": true
   },
   "globals": {
-    "BUILD_ENV": true
+    "DEVELOPMENT": true,
+    "PRODUCTION": true
   },
   "parserOptions": {
     "ecmaVersion": 6,

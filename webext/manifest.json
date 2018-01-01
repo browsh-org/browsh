@@ -23,6 +23,10 @@
     }
   ],
 
+  "web_accessible_resources": [
+    "BlockCharMono.ttf"
+  ],
+
   "permissions": [
     "<all_urls>"
   ]

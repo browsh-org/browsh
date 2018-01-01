@@ -19,7 +19,8 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       // TODO: For production use a different webpack.config.js
-      BUILD_ENV: 'development'
+      DEVELOPMENT: JSON.stringify(true),
+      PRODUCTION: JSON.stringify(false)
     })
   ]
 };
