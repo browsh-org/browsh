@@ -1,3 +1,9 @@
+Hello newcomers. This has suddenly got some unplanned exposure. I'm actually in the middle of a complete rewrite on the [webext-rewrite branch](https://github.com/tombh/texttop/tree/webext-rewrite). You can get an idea of my approach with this function: https://github.com/tombh/texttop/blob/webext-rewrite/webext/...
+
+After the success of hitting the front page of Hacker News last year, I really wanted to sit down and turn this proof of concept into something solid. So not only am I working on real text support (that you can of course copy and paste without even zooming). But I've removed the dependencies on `ffmpeg`, Xorg (for Firefox at least - Chrome strangely doesn't support webextensions in headless mode), `docker` AND it will work on all webextension-compatible browsers. It's going to be a single cross-platform, static Go binary, that launches your preferred browser in the background.
+
+Generally it's bad luck to talk about something before it's finished, but seeing as it's suddenly getting attention again I wanted to let all those interested know that I'm making this 10 times better.
+
 # Texttop
 **A fully interactive X Linux desktop rendered to TTY and streamed over SSH**
 

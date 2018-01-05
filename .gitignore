@@ -2,4 +2,8 @@ build/
 *.log
 *.out
 blank.png
-interfacer/interfacer
+interfacer/target
+webext/web-ext-artifacts
+webext/node_modules
+webext/dist
+
