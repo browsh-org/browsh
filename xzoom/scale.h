@@ -17,11 +17,11 @@
     int p2step;
     T  *p1_save;
 
-    /* p1 point to begining of scanline j*magnification in DST */
+    /* p1 point to beginning of scanline j*magnification in DST */
     p1      = getP(DST, 0, j * magnification);
     p1_save = p1;
 
-    /* p2 point to begining of scanline j in SRC */
+    /* p2 point to beginning of scanline j in SRC */
     p2 = getP(SRC, 0, j);
 
     i = width[SRC];
@@ -36,10 +36,10 @@
     /* duplicate that line as needed */
     if (magnification > 1)
     {
-      /* p1 point to begining of scanline j*magnification in DST */
+      /* p1 point to beginning of scanline j*magnification in DST */
       p1 = p1_save;
 
-      /* p2 points to begining of next line */
+      /* p2 points to beginning of next line */
       p2     = p1;
       p2step = ximage[DST]->bytes_per_line / sizeof(T);
 
