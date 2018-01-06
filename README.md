@@ -102,7 +102,7 @@ This will give you the following shortcuts:
 Currently, only Firefox is installed on this extremely minimal Alpine Linux distro. However you can add new packages
 with [apk](https://wiki.alpinelinux.org/wiki/Alpine_Linux_package_management). Example;
 ```
-# Login with a seperate session
+# Login with a separate session
 apk --no-cache add xterm
 export DISPLAY=:0
 xterm &
