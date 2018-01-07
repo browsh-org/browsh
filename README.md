@@ -57,6 +57,7 @@ logins work fine too. The `60000-60020` port range is for MoSH.
 Then on your local machine:
 ```
 mosh user@yourserver:7777
+cd /app
 ./run.sh
 ```
 MoSH is available through most system package managers. SSH can be used exactly the same, just replace `mosh` with `ssh`.
