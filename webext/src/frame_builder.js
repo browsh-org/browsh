@@ -21,7 +21,7 @@ export default class FrameBuilder extends BaseBuilder{
     this._compileFrame();
     this._buildFrame();
     this._sendMessage(this.frame);
-    this.is_first_frame_finished = true;
+    this._is_first_frame_finished = true;
   }
 
   _sendMessage(message) {
@@ -44,7 +44,7 @@ export default class FrameBuilder extends BaseBuilder{
   _init(delay = 0) {
     this._log('Browsh init()');
     this._calculateMonospaceDimensions();
-    // When the webext devtools auto reloads this code the background process
+    // When the webext devtools auto reloads this code, the background process
     // can sometimes still be loading, in which case we need to wait.
     setTimeout(() => this._registerWithBackground(), delay);
   }
@@ -71,6 +71,8 @@ export default class FrameBuilder extends BaseBuilder{
       const tty_height = parseInt(parts[2]);
       if (command === '/send_frame') {
         this.sendFrame(tty_width, tty_height);
+      } else {
+        console.log(message);
       }
     });
   }

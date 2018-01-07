@@ -3,6 +3,7 @@ build/
 *.out
 blank.png
 interfacer/target
+interfacer/vendor
 webext/web-ext-artifacts
 webext/node_modules
 webext/dist

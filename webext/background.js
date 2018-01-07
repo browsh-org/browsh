@@ -1,7 +1,7 @@
 let tty_width, tty_height;
 
 // Create WebSocket connection.
-const socket = new WebSocket('ws://localhost:2794');
+const socket = new WebSocket('ws://localhost:3334');
 
 // Connection opened
 socket.addEventListener('open', function (_event) {
@@ -16,6 +16,8 @@ socket.addEventListener('message', (event) => {
   if (command === '/tty_size') {
     tty_width = parts[1];
     tty_height = parts[2];
+  } else {
+    tabs[active_tab_id].postMessage(event.data);
   }
 });
 
