@@ -15,7 +15,7 @@ This [Youtube video](https://www.youtube.com/watch?v=TE_D_fx_ut8) gives a more f
 
 ## Why?
 I'm travelling around the world and sometimes I don't have very good Internet. If all I have is a 3kbps connection
-tethered from my phone then it's good to SSH into my server and browse the web through [elinks](http://www.xteddy.org/elinks/).
+tethered from my phone then it's good to SSH into my server and browse the web through [elinks](https://github.com/tombh/texttop/issues/17).
 That way my _server_ downloads the web pages and uses the limited bandwidth of my SSH connection to display the result. But
 it lacks JS support and all that other modern HTML5 goodness. Texttop is simply a way to have the power of a remote
 server running a desktop, but interfaced through the simplicity of a terminal and very low bandwidth.
