@@ -1,4 +1,4 @@
-import BaseBuilder from 'base_builder';
+import BaseBuilder from 'dom/base_builder';
 
 // Converts an instance of the viewport into a an array of pixel values.
 // Note, that it does this both with and without the text visible in order

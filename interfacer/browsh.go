@@ -3,30 +3,29 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 	"net/http"
-  "path/filepath"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/gorilla/websocket"
 
 	// Termbox seems to be one of the best projects in any language for handling terminal input.
 	// It's cross-platform and the maintainer is disciplined about supporting the baseline of escape
 	// codes that work across the majority of terminals.
-  "github.com/nsf/termbox-go"
+	"github.com/nsf/termbox-go"
 )
 
-
 var (
-	logfile string
+	logfile           string
 	websocketAddresss = flag.String("addr", ":3334", "Web socket service address")
-	upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool { return true },
+	upgrader          = websocket.Upgrader{
+		CheckOrigin:     func(r *http.Request) bool { return true },
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
 	stdinChannel = make(chan string)
 )
-
 
 func setupLogging() {
 	dir, err := os.Getwd()
@@ -57,7 +56,7 @@ func log(msg string) {
 
 func initialise() {
 	setupTermbox()
-	setupLogging();
+	setupLogging()
 }
 
 func setupTermbox() {
@@ -70,13 +69,11 @@ func setupTermbox() {
 
 func sendTtySize() {
 	x, y := termbox.Size()
-	log(fmt.Sprintf("%d,%d", x, y))
 	stdinChannel <- fmt.Sprintf("/tty_size,%d,%d", x, y)
 }
 
-
 func readStdin() {
-	var event string;
+	var event string
 	defer termbox.Close()
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
@@ -100,28 +97,54 @@ func socketReader(ws *websocket.Conn) {
 	defer ws.Close()
 	for {
 		_, message, err := ws.ReadMessage()
-		termbox.SetCursor(0, 0)
-		os.Stdout.Write([]byte(message))
-		termbox.Flush()
+		parts := strings.Split(string(message), ",")
+		command := parts[0]
+		if command == "/frame" {
+			termbox.SetCursor(0, 0)
+			os.Stdout.Write([]byte(strings.Join(parts[1:], ",")))
+			termbox.Flush()
+		} else {
+			log("WEBEXT: " + string(message))
+		}
 		if err != nil {
+			if websocket.IsCloseError(err, websocket.CloseGoingAway) {
+				log("Socket reader detected that the browser closed the websocket")
+				triggerSocketWriterClose()
+				return
+			}
 			panic(err)
 		}
 	}
+}
+
+// When the socket reader attempts to read from a closed websocket it quickly and
+// simply closes its associated Go routine. However the socket writer won't
+// automatically notice until it actually needs to send something. So we force that
+// by sending this NOOP text.
+// TODO: There's a potential race condition because new connections share the same
+//       Go channel. So we need to setup a new channel for every connection.
+func triggerSocketWriterClose() {
+	stdinChannel <- "BROWSH CLIENT FORCING CLOSE OF WEBSOCKET WRITER"
 }
 
 func socketWriter(ws *websocket.Conn) {
 	var message string
 	defer ws.Close()
 	for {
-		message = <- stdinChannel
-		log(fmt.Sprintf("sending ... %s", message))
+		message = <-stdinChannel
+		log(fmt.Sprintf("TTY sending: %s", message))
 		if err := ws.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
+			if err == websocket.ErrCloseSent {
+				log("Socket writer detected that the browser closed the websocket")
+				return
+			}
 			panic(err)
 		}
 	}
 }
 
 func socketServer(w http.ResponseWriter, r *http.Request) {
+	log("Incoming web request from browser")
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		panic(err)
@@ -135,9 +158,11 @@ func socketServer(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	initialise()
+	log("Starting Browsh CLI client")
 	go readStdin()
 	http.HandleFunc("/", socketServer)
 	if err := http.ListenAndServe(*websocketAddresss, nil); err != nil {
 		panic(err)
 	}
+	log("Exiting at end of main()")
 }

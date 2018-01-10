@@ -1,8 +1,9 @@
 import sandbox from 'helper';
 import {expect} from 'chai';
 
-import TextBuilder from 'text_builder';
-import GraphicsBuilder from 'graphics_builder';
+import FrameBuilder from 'dom/frame_builder';
+import TextBuilder from 'dom/text_builder';
+import GraphicsBuilder from 'dom/graphics_builder';
 import text_nodes from 'fixtures/text_nodes';
 import {with_text, without_text, scaled} from 'fixtures/canvas_pixels';
 
@@ -14,19 +15,16 @@ let text_builder;
 window.innerWidth = 3;
 window.innerHeight = 4;
 
-const frame = {
-  tty_width: 3,
-  tty_height: 2,
-  char_width: 1,
-  char_height: 2
-}
-
 function setup() {
-  let graphics_builder = new GraphicsBuilder();
-  graphics_builder.getSnapshotWithText();
-  graphics_builder.getSnapshotWithoutText();
-  graphics_builder.getScaledSnapshot(frame.width, frame.height);
-  text_builder = new TextBuilder(frame, graphics_builder);
+  let frame_builder = new FrameBuilder();
+  frame_builder.tty_width = 3
+  frame_builder.tty_height = 2
+  frame_builder.char_width = 1
+  frame_builder.char_height = 2
+  frame_builder.graphics_builder.getSnapshotWithText();
+  frame_builder.graphics_builder.getSnapshotWithoutText();
+  frame_builder.graphics_builder.getScaledSnapshot();
+  text_builder = new TextBuilder(frame_builder);
 }
 
 describe('Text Builder', ()=> {

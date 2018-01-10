@@ -1,13 +1,13 @@
 import _ from 'lodash';
 
-import BaseBuilder from 'base_builder';
+import BaseBuilder from 'dom/base_builder';
 
 // Convert the text on the page into a snapped 2-dimensional grid to be displayed directly
 // in the terminal.
 export default class TextBuillder extends BaseBuilder {
-  constructor(frame_builder, graphics_builder) {
+  constructor(frame_builder) {
     super();
-    this.graphics_builder = graphics_builder;
+    this.graphics_builder = frame_builder.graphics_builder;
     this.frame_builder = frame_builder;
     this._updateState();
   }

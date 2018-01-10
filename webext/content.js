@@ -1,4 +1,4 @@
-import FrameBuilder from 'frame_builder';
+import FrameBuilder from 'dom/frame_builder';
 
 new FrameBuilder();
 

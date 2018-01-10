@@ -1,10 +1,19 @@
 export default class BaseBuilder {
+  _sendMessage(message) {
+    this.channel.postMessage(message);
+  }
+
   _snap(number) {
     return parseInt(Math.round(number));
   }
 
   _log(...messages) {
-    console.log(messages);
+    if (messages.length == 1 && messages instanceof String) {
+      messages = messages[0];
+    } else {
+      messages = JSON.stringify(messages);
+    }
+    this._sendMessage(`/log,${messages}`);
   }
 
   _logPerformance(work, reference) {

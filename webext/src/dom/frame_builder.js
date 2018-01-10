@@ -1,6 +1,6 @@
-import BaseBuilder from 'base_builder';
-import GraphicsBuilder from 'graphics_builder';
-import TextBuilder from 'text_builder';
+import BaseBuilder from 'dom/base_builder';
+import GraphicsBuilder from 'dom/graphics_builder';
+import TextBuilder from 'dom/text_builder';
 
 // Takes the graphics and text from the current viewport, combines them, then
 // sends it to the background process where the rest of the UI, like tabs,
@@ -8,24 +8,20 @@ import TextBuilder from 'text_builder';
 export default class FrameBuilder extends BaseBuilder{
   constructor() {
     super();
+    this.graphics_builder = new GraphicsBuilder();
+    this.text_builder = new TextBuilder(this);
     // ID for element we place in the DOM to measure the size of a single monospace
     // character.
     this._measuring_box_id = 'browsh_em_measuring_box';
-    this.graphics_builder = new GraphicsBuilder();
-    this.text_builder = new TextBuilder(this, this.graphics_builder);
     this._setupInit();
   }
 
-  sendFrame(tty_width, tty_height) {
-    this._setupDimensions(tty_width, tty_height);
+  sendFrame() {
+    this._setupDimensions();
     this._compileFrame();
     this._buildFrame();
-    this._sendMessage(this.frame);
+    this._sendMessage(`/frame,${this.frame}`);
     this._is_first_frame_finished = true;
-  }
-
-  _sendMessage(message) {
-    this.channel.postMessage(message);
   }
 
   _setupInit() {
@@ -42,8 +38,6 @@ export default class FrameBuilder extends BaseBuilder{
   }
 
   _init(delay = 0) {
-    this._log('Browsh init()');
-    this._calculateMonospaceDimensions();
     // When the webext devtools auto reloads this code, the background process
     // can sometimes still be loading, in which case we need to wait.
     setTimeout(() => this._registerWithBackground(), delay);
@@ -57,28 +51,52 @@ export default class FrameBuilder extends BaseBuilder{
     );
   }
 
-  // The background process tells us when it wants a frame.
   _registrationSuccess(registered) {
     this.channel = browser.runtime.connect({
       // We need to give ourselves a unique channel name, so the background
       // process can identify us amongst other tabs.
       name: registered.id.toString()
     });
+    this._postCommsInit();
+  }
+
+  _postCommsInit() {
+    this._log('Webextension postCommsInit()');
+    this._calculateMonospaceDimensions();
+    this.graphics_builder.channel = this.channel;
+    this.text_builder.channel = this.channel;
+    this._requestInitialTTYSize();
+    this._listenForBackgroundMessages();
+  }
+
+  _listenForBackgroundMessages() {
     this.channel.onMessage.addListener((message) => {
       const parts = message.split(',');
       const command = parts[0];
-      const tty_width = parseInt(parts[1]);
-      const tty_height = parseInt(parts[2]);
-      if (command === '/send_frame') {
-        this.sendFrame(tty_width, tty_height);
-      } else {
-        console.log(message);
+      switch (command) {
+        case '/request_frame':
+          this.sendFrame();
+          break;
+        case '/tty_size':
+          this.tty_width = parseInt(parts[1]);
+          this.tty_height = parseInt(parts[2]);
+          this._log(`Tab received TTY size: ${this.tty_width}x${this.tty_height}`);
+          break;
+        default:
+          this._log('Unknown command sent to tab', message);
       }
     });
   }
 
   _registrationError(error) {
     this._log(error);
+  }
+
+  // The background process can't send the TTY size as soon as it gets it because maybe
+  // the a tab doesn't exist yet. So we request it ourselves - because we'd have to be
+  // ready in order to request.
+  _requestInitialTTYSize() {
+    this._sendMessage('/request_tty_size');
   }
 
   // This is critical in order for the terminal to match the browser as closely as possible.
@@ -98,10 +116,11 @@ export default class FrameBuilder extends BaseBuilder{
     const element = this._getOrCreateMeasuringBox();
     const dom_rect = element.getBoundingClientRect();
     this.char_width = dom_rect.width;
-    this.char_height = 18.1;
+    this.char_height = dom_rect.height + 2;
     this.text_builder.char_width = this.char_width;
     this.text_builder.char_height = this.char_height;
-    console.log('char dimensions', this.char_width, this.char_height);
+    this._sendMessage(`/char_size,${this.char_width},${this.char_height}`);
+    this._log(`Tab char dimensions: ${this.char_width}x${this.char_height}`);
   }
 
   // Back when printing was done by physical stamps, it was convention to measure the
@@ -123,13 +142,14 @@ export default class FrameBuilder extends BaseBuilder{
     return document.getElementById(this._measuring_box_id);
   }
 
-  _setupDimensions(tty_width, tty_height) {
-    this.tty_width = tty_width;
-    this.tty_height = tty_height;
-    this.frame_width = tty_width;
+  _setupDimensions() {
+    if (!this.tty_width || !this.tty_height) {
+      throw new Error("Frame Builder doesn't have the TTY dimensions");
+    }
+    this.frame_width = this.tty_width;
     // A frame is 'taller' than the TTY because of the special UTF8 half-block
     // trick.
-    this.frame_height = tty_height * 2;
+    this.frame_height = this.tty_height * 2;
   }
 
   _compileFrame() {
