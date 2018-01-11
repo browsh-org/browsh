@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"encoding/json"
 
 	"github.com/gorilla/websocket"
 
@@ -73,7 +74,6 @@ func sendTtySize() {
 }
 
 func readStdin() {
-	var event string
 	defer termbox.Close()
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
@@ -82,8 +82,14 @@ func readStdin() {
 				termbox.Close()
 				os.Exit(0)
 			}
-			event = fmt.Sprintf("EventKey: k: %d, c: %c, mod: %s", ev.Key, ev.Ch, ev.Mod)
-			stdinChannel <- event
+			log(fmt.Sprintf("EventKey: k: %d, c: %c, mod: %s", ev.Key, ev.Ch, ev.Mod))
+			eventMap := map[string]interface{}{
+				"key": int(ev.Key),
+				"char": string(ev.Ch),
+				"mod": int(ev.Mod),
+			}
+			marshalled, _ := json.Marshal(eventMap)
+			stdinChannel <- "/stdin," + string(marshalled)
 		case termbox.EventResize:
 			sendTtySize()
 		case termbox.EventMouse:

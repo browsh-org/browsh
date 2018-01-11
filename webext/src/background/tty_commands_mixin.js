@@ -42,7 +42,7 @@ export default (MixinBase) => class extends MixinBase {
       {
         width: width,
         height: height,
-        focussed: false
+        focused: false
       }
     );
     updating(

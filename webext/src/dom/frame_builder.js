@@ -71,6 +71,7 @@ export default class FrameBuilder extends BaseBuilder{
 
   _listenForBackgroundMessages() {
     this.channel.onMessage.addListener((message) => {
+      let input;
       const parts = message.split(',');
       const command = parts[0];
       switch (command) {
@@ -82,10 +83,26 @@ export default class FrameBuilder extends BaseBuilder{
           this.tty_height = parseInt(parts[2]);
           this._log(`Tab received TTY size: ${this.tty_width}x${this.tty_height}`);
           break;
+        case '/stdin':
+          input = JSON.parse(parts.slice(1).join(','));
+          this._handleUserInput(input);
+          break;
         default:
           this._log('Unknown command sent to tab', message);
       }
     });
+  }
+
+  _handleUserInput(input) {
+    this._log(input.key);
+    switch (input.key) {
+      case 65517:
+        window.scrollBy(0, -20);
+        break;
+      case 65516:
+        window.scrollBy(0, 20);
+       break;
+    }
   }
 
   _registrationError(error) {
