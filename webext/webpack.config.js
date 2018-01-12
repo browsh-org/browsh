@@ -22,19 +22,5 @@ module.exports = {
       DEVELOPMENT: JSON.stringify(true),
       PRODUCTION: JSON.stringify(false)
     })
-  ],
-  module: {
-    rules: [
-      {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            plugins: [require('babel-plugin-transform-decorators-legacy').default]
-          }
-        }
-      }
-    ]
-  }
+  ]
 };

@@ -2,7 +2,7 @@
 // the background process, tabs and the terminal.
 export default (Base) => class extends Base {
   sendToCurrentTab(message) {
-    this.tabs[this.active_tab_id].postMessage(message);
+    this.currentTab().channel.postMessage(message);
   }
 
   sendToTerminal(message) {
@@ -12,5 +12,9 @@ export default (Base) => class extends Base {
   log(...message) {
     if (message.length === 1) message = message[0];
     this.sendToTerminal(message);
+  }
+
+  currentTab() {
+    return this.tabs[this.active_tab_id];
   }
 }

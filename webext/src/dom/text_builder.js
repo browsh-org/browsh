@@ -9,7 +9,6 @@ export default class TextBuillder extends BaseBuilder {
     super();
     this.graphics_builder = frame_builder.graphics_builder;
     this.frame_builder = frame_builder;
-    this._updateState();
   }
 
   getFormattedText() {
@@ -22,8 +21,9 @@ export default class TextBuillder extends BaseBuilder {
 
   _updateState() {
     this.tty_grid = [];
-    this.tty_width = this.frame_builder.tty_width;
-    this.tty_height = this.frame_builder.tty_height;
+    this.tty_dom_width = this.frame_builder.tty_width;
+    // For Tabs and URL bar.
+    this.tty_dom_height = this.frame_builder.tty_height - 2;
     this.char_width = this.frame_builder.char_width;
     this.char_height = this.frame_builder.char_height;
     this.pixels_with_text = this.graphics_builder.pixels_with_text;
@@ -212,7 +212,7 @@ export default class TextBuillder extends BaseBuilder {
   }
 
   _placeCharacterOnTTYGrid(col, row, original_position, character) {
-    const index = (row * this.tty_width) + col;
+    const index = (row * this.tty_dom_width) + col;
     if (this._isExistingCharacter(index)) return;
     if (this._isCharOutsideGrid(col, row)) return;
     const colours = this._getCharacterColours(original_position);
@@ -255,7 +255,7 @@ export default class TextBuillder extends BaseBuilder {
   // Theoretically this should only be needed for DOM rectangles that _straddle_ the
   // viewport.
   _isCharOutsideGrid(col, row) {
-    return col >= this.tty_width || row >= this.tty_height;
+    return col >= this.tty_dom_width || row >= this.tty_dom_height;
   }
 
   // This is somewhat of a, hopefully elegant, hack. So, imagine that situation where you're

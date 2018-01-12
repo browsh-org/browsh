@@ -1,3 +1,4 @@
+import utils from 'utils';
 import BaseBuilder from 'dom/base_builder';
 import GraphicsBuilder from 'dom/graphics_builder';
 import TextBuilder from 'dom/text_builder';
@@ -20,6 +21,7 @@ export default class FrameBuilder extends BaseBuilder{
     this._setupDimensions();
     this._compileFrame();
     this._buildFrame();
+    this._sendTabInfo();
     this._sendMessage(`/frame,${this.frame}`);
     this._is_first_frame_finished = true;
   }
@@ -71,7 +73,7 @@ export default class FrameBuilder extends BaseBuilder{
 
   _listenForBackgroundMessages() {
     this.channel.onMessage.addListener((message) => {
-      let input;
+      let input, url;
       const parts = message.split(',');
       const command = parts[0];
       switch (command) {
@@ -84,8 +86,12 @@ export default class FrameBuilder extends BaseBuilder{
           this._log(`Tab received TTY size: ${this.tty_width}x${this.tty_height}`);
           break;
         case '/stdin':
-          input = JSON.parse(parts.slice(1).join(','));
+          input = JSON.parse(utils.rebuildArgsToSingleArg(parts));
           this._handleUserInput(input);
+          break;
+        case '/url':
+          url = utils.rebuildArgsToSingleArg(parts);
+          document.location.href = url;
           break;
         default:
           this._log('Unknown command sent to tab', message);
@@ -94,7 +100,6 @@ export default class FrameBuilder extends BaseBuilder{
   }
 
   _handleUserInput(input) {
-    this._log(input.key);
     switch (input.key) {
       case 65517:
         window.scrollBy(0, -20);
@@ -165,8 +170,8 @@ export default class FrameBuilder extends BaseBuilder{
     }
     this.frame_width = this.tty_width;
     // A frame is 'taller' than the TTY because of the special UTF8 half-block
-    // trick.
-    this.frame_height = this.tty_height * 2;
+    // trick. Also we need to reserve 2 lines at the top for the tabs and URL bar.
+    this.frame_height = (this.tty_height - 2) * 2;
   }
 
   _compileFrame() {
@@ -194,6 +199,14 @@ export default class FrameBuilder extends BaseBuilder{
         this._buildPixel(x, y);
       }
     }
+  }
+
+  _sendTabInfo() {
+    let info = {
+      url: document.location.href,
+      title: document.getElementsByTagName("title")[0].innerHTML
+    }
+    this._sendMessage(`/tab_info,${JSON.stringify(info)}`);
   }
 
   // Note how we have to keep track of 2 rows of pixels in order to create 1 row of
@@ -227,13 +240,10 @@ export default class FrameBuilder extends BaseBuilder{
       tty_index = (tty_row * this.frame_width) + x;
       if (this._doesCellHaveACharacter(tty_index)) {
         char = this.formatted_text[tty_index];
-        row += this._ttyPixel(char[1], char[2], char[0]);
+        row += utils.ttyPixel(char[1], char[2], char[0]);
       } else {
-        row += this._ttyPixel(fg_row[x], bg_row[x], '▄');
+        row += utils.ttyPixel(fg_row[x], bg_row[x], '▄');
       }
-    }
-    if (tty_row + 1 < this.tty_height) {
-      row += "\n";
     }
     return row;
   }
@@ -247,12 +257,5 @@ export default class FrameBuilder extends BaseBuilder{
     const is_space = /^\s+$/.test(char);
     const is_not_worth_printing = is_empty || is_space || is_undefined;
     return !is_not_worth_printing;
-  }
-
-  // Display a single character in true colour
-  _ttyPixel(fg, bg, character) {
-    let fg_code = `\x1b[38;2;${fg[0]};${fg[1]};${fg[2]}m`;
-    let bg_code = `\x1b[48;2;${bg[0]};${bg[1]};${bg[2]}m`;
-    return `${fg_code}${bg_code}${character}`;
   }
 }

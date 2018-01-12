@@ -91,6 +91,10 @@ func readStdin() {
 			marshalled, _ := json.Marshal(eventMap)
 			stdinChannel <- "/stdin," + string(marshalled)
 		case termbox.EventResize:
+			// Need to flush STDOUT before getting the new TTY size because there
+			// can be a discrepancy between the "internal buffer" size and the
+			// actual size.
+			termbox.Flush()
 			sendTtySize()
 		case termbox.EventMouse:
 		case termbox.EventError:
@@ -108,6 +112,7 @@ func socketReader(ws *websocket.Conn) {
 		if command == "/frame" {
 			termbox.SetCursor(0, 0)
 			os.Stdout.Write([]byte(strings.Join(parts[1:], ",")))
+			termbox.HideCursor();
 			termbox.Flush()
 		} else {
 			log("WEBEXT: " + string(message))

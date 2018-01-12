@@ -1,3 +1,5 @@
+import utils from 'utils';
+
 // Handle commands from tabs, like sending a frame or information about
 // the current character dimensions .
 export default (MixinBase) => class extends MixinBase {
@@ -6,8 +8,10 @@ export default (MixinBase) => class extends MixinBase {
     const command = parts[0];
     switch (command) {
       case '/frame':
-        // TODO: Add UI, tabs, etc
-        this.sendToTerminal(`/frame,${parts.slice(1).join(',')}`);
+        this._applyUI(utils.rebuildArgsToSingleArg(parts));
+        break;
+      case '/tab_info':
+        this.currentTab().info = JSON.parse(utils.rebuildArgsToSingleArg(parts));
         break;
       case '/char_size':
         this.char_width = parts[1];
@@ -27,5 +31,36 @@ export default (MixinBase) => class extends MixinBase {
 
   sendTTYSizeToBrowser() {
     this.sendToCurrentTab(`/tty_size,${this.tty_width},${this.tty_height}`);
+  }
+
+  _applyUI(dom_frame) {
+    const tabs = this._buildTTYRow(this.currentTab().info.title);
+    const urlBar = this._buildURLBar();
+    const full_frame = tabs + urlBar + dom_frame;
+    this.sendToTerminal(`/frame,${full_frame}`);
+  }
+
+  _buildTTYRow(text) {
+    let char;
+    let row = "";
+    for (let index = 0; index < this.tty_width; index++) {
+      if (index < text.length) {
+        char = text[index];
+      } else {
+        char = " "
+      }
+      row += utils.ttyPixel([255, 255, 255], [0, 0, 0], char);
+    }
+    return row;
+  }
+
+  _buildURLBar() {
+    let content;
+    if (this.isURLBarFocused) {
+      content = this.urlBarUserContent;
+    } else {
+      content = this.currentTab().info.url;
+    }
+    return this._buildTTYRow(content);
   }
 };
