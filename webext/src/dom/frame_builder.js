@@ -1,3 +1,5 @@
+import charWidthInTTY from 'string-width';
+
 import utils from 'utils';
 import BaseBuilder from 'dom/base_builder';
 import GraphicsBuilder from 'dom/graphics_builder';
@@ -233,19 +235,45 @@ export default class FrameBuilder extends BaseBuilder{
   // However we can't just write random pixels to a TTY screen, we must collate 2 rows
   // of native pixels for every row of the terminal.
   _buildTtyRow(bg_row, fg_row, y) {
-    let tty_index, char;
+    let tty_index, char, x_shoved;
     let row = "";
+    let char_width_debt = 0;
     const tty_row = parseInt(y / 2);
     for (let x = 0; x < this.frame_width; x++) {
+      if (x + char_width_debt >= this.frame_width) {
+        // Ideally this shouldn't happen because the CSS 'should' deal with wide
+        // characters.
+        break;
+      }
       tty_index = (tty_row * this.frame_width) + x;
       if (this._doesCellHaveACharacter(tty_index)) {
         char = this.formatted_text[tty_index];
+        char_width_debt = this._calculateCharWidthDebt(char_width_debt, char[0]);
+        // Don't display a wide character in the final column
+        if (x + char_width_debt >= this.frame_width) char[0] = ' ';
         row += utils.ttyPixel(char[1], char[2], char[0]);
       } else {
-        row += utils.ttyPixel(fg_row[x], bg_row[x], '▄');
+        // Wide characters take up more than one cell, so we might not always be
+        // iterating by 1.
+        x_shoved = x + char_width_debt;
+        row += utils.ttyPixel(fg_row[x_shoved], bg_row[x_shoved], '▄');
       }
     }
     return row;
+  }
+
+  // Deal with UTF8 characters that take up more than a single cell in the TTY.
+  // TODO:
+  //   1. Do all terminals deal with wide characters the same?
+  //   2. Use CSS or JS so that wide characters actually flow in the DOM as 2
+  //      monospaced characters. This will allow pages of nothing but wide
+  //      characters to properly display.
+  _calculateCharWidthDebt(current_debt, char) {
+    const char_width_in_tty = charWidthInTTY(char);
+    if (char_width_in_tty > 1) {
+      current_debt += char_width_in_tty - 1;
+    }
+    return current_debt;
   }
 
   // We need to know this because we want all empty cells to be 'transparent'

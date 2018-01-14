@@ -1,3 +1,5 @@
+import charWidthInTTY from 'string-width';
+
 import utils from 'utils';
 
 // Handle commands from tabs, like sending a frame or information about
@@ -43,13 +45,15 @@ export default (MixinBase) => class extends MixinBase {
   _buildTTYRow(text) {
     let char;
     let row = "";
-    for (let index = 0; index < this.tty_width; index++) {
+    let index = 0;
+    while (index < this.tty_width) {
       if (index < text.length) {
         char = text[index];
       } else {
         char = " "
       }
       row += utils.ttyPixel([255, 255, 255], [0, 0, 0], char);
+      index += charWidthInTTY(char);
     }
     return row;
   }
