@@ -106,6 +106,6 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
       if (this._is_intial_window_pending) this._initialWindowResize();
       if (!this.tabs.hasOwnProperty(this.active_tab_id)) return;
       this.sendToCurrentTab('/request_frame');
-    }, 300);
+    }, 1000);
   }
 }

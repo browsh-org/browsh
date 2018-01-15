@@ -8,7 +8,7 @@ export default class BaseBuilder {
   }
 
   _log(...messages) {
-    if (messages.length == 1 && messages instanceof String) {
+    if (messages.length === 1) {
       messages = messages[0];
     } else {
       messages = JSON.stringify(messages);
@@ -20,7 +20,7 @@ export default class BaseBuilder {
     let start = performance.now();
     work();
     let end = performance.now();
-    this._firstFrameLog(reference, end - start);
+    this._firstFrameLog(`${reference}: ${end - start}ms`);
   }
 
   // If you're logging large objects and using a high-ish FPS (<1000ms) then you might

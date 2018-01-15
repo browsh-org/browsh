@@ -83,7 +83,8 @@ export default class TextBuillder extends BaseBuilder {
       this._fixJustifiedText(node);
       this._formatTextForTTYGrid(
         this._normaliseWhitespace(node.textContent, node.parentElement),
-        range.getClientRects()
+        range.getClientRects(),
+        node.parentElement
       );
     }
   }
@@ -170,7 +171,7 @@ export default class TextBuillder extends BaseBuilder {
   // the snapping.
   // Use `this.addClientRectsOverlay(dom_rects, text);` to see DOM rectangle outlines in a
   // real browser.
-  _formatTextForTTYGrid(text, dom_rects) {
+  _formatTextForTTYGrid(text, dom_rects, parent_element) {
     let col, tty_box, step, character, previous_box, origin;
     this.char_width_debt = 0
     let character_index = 0;
@@ -188,7 +189,7 @@ export default class TextBuillder extends BaseBuilder {
       }
       for (step = 0; step < tty_box.width; step++) {
         character = text.charAt(character_index);
-        this._placeCharacterOnTTYGrid(col, tty_box.row, origin, character);
+        this._placeCharacterOnTTYGrid(col, tty_box.row, origin, character, parent_element);
         origin.x = origin.x + this.char_width;
         character_index++;
         col++
@@ -212,19 +213,48 @@ export default class TextBuillder extends BaseBuilder {
     }
   }
 
-  _placeCharacterOnTTYGrid(col, row, original_position, character) {
+  _placeCharacterOnTTYGrid(col, row, original_position, character, parent_element) {
     const index = (row * this.tty_dom_width) + col;
+    if (this._isExistingCharacter(index)) {
+      if (!this._isHighestLayer(index, parent_element)) return;
+    }
     if (this._isCharOutsideGrid(col, row)) return;
     const colours = this._getCharacterColours(original_position);
     if (!colours) return;
     if (this._isCharObscured(colours)) return;
-    this.tty_grid[index] = [character, ...colours];
+    this.tty_grid[index] = [character, ...colours, parent_element];
   }
 
   // Don't clobber - for now at least.
   // TODO: Use `getComputedStyles()` and save for the whole parent element.
   _isExistingCharacter(index) {
     return !!this.tty_grid[index];
+  }
+
+  // When a character clobbers another character in the grid, we can't use our
+  // text show/hide trick to know if the character is visible in the final DOM. So we have
+  // to use standard CSS inspection instead. Hopefully this doesn't happen often because
+  // it's expensive.
+  // TODO: Make comprehensive
+  _isHighestLayer(index_of_tenant, parent_element_of_challenger) {
+    const tenant_styles = this._getStyles(this.tty_grid[index_of_tenant][3]);
+    const challenger_styles = this._getStyles(parent_element_of_challenger);
+    if (
+      challenger_styles.visibility === 'hidden' ||
+      challenger_styles.display === 'none'
+    ) {
+      return false;
+    }
+    return tenant_styles.zIndex < challenger_styles.zIndex;
+  }
+
+  // Get or cache the total cascaded calculated styles for an element
+  _getStyles(element) {
+    if (!element.browsh_calculated_styles) {
+      let styles = window.getComputedStyle(element);
+      element.browsh_calculated_styles = styles;
+    }
+    return element.browsh_calculated_styles;
   }
 
   // Get the colours right in the middle of the character's font. Returns both the colour
