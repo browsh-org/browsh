@@ -64,7 +64,7 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   _applyUI() {
-    const tabs = this._buildTTYRow(this.currentTab().info.title);
+    const tabs = this._buildTTYRow(this._buildTabs());
     const urlBar = this._buildURLBar();
     this._current_frame = tabs.concat(urlBar).concat(this._current_frame);
   }
@@ -78,6 +78,10 @@ export default (MixinBase) => class extends MixinBase {
         this._current_frame[start + i] = cell;
       }
     }
+  }
+
+  _buildTabs() {
+    return this.currentTab().info.title.trim();
   }
 
   _buildTTYRow(text) {
@@ -103,6 +107,7 @@ export default (MixinBase) => class extends MixinBase {
     } else {
       content = this.currentTab().info.url;
     }
+    content = ' ← | x | ' + content;
     return this._buildTTYRow(content);
   }
 };

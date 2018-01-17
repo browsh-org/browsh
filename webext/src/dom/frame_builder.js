@@ -83,7 +83,18 @@ export default class FrameBuilder extends BaseBuilder{
 
   _listenForBackgroundMessages() {
     this.channel.onMessage.addListener((message) => {
-      let input, url;
+      try {
+        this._handleBackgroundMessage(message);
+      }
+      catch(error) {
+        this._log(error);
+        this._log(error.stack);
+      }
+    });
+  }
+
+  _handleBackgroundMessage(message) {
+    let input, url;
       const parts = message.split(',');
       const command = parts[0];
       switch (command) {
@@ -103,26 +114,34 @@ export default class FrameBuilder extends BaseBuilder{
           url = utils.rebuildArgsToSingleArg(parts);
           document.location.href = url;
           break;
+        case '/location_back':
+          history.go(-1);
+          break;
+        case '/window_stop':
+          window.stop();
+          break;
         default:
           this._log('Unknown command sent to tab', message);
       }
-    });
   }
 
   _handleUserInput(input) {
     switch (input.key) {
-      case 65517:
+      case 65517: // up arow
         window.scrollBy(0, -20);
         break;
-      case 65516:
+      case 65516: // down arrow
         window.scrollBy(0, 20);
         break;
-      case 65512:
+      case 65512: // mousedown
         this._mouseAction('click', input.mouse_x, input.mouse_y);
         this._mouseAction('mousedown', input.mouse_x, input.mouse_y);
         break;
-      case 65509:
+      case 65509: //mouseup
         this._mouseAction('mouseup', input.mouse_x, input.mouse_y);
+        break;
+      case 18: // CTRL+R
+        window.location.reload();
         break;
     }
   }

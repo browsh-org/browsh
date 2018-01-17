@@ -38,35 +38,64 @@ export default (MixinBase) => class extends MixinBase {
       return true;
     }
     switch (input.key) {
-      case 12:
+      case 12: // CTRL+L
         this.isURLBarFocused = true;
+        this.urlBarUserContent = "";
         return true;
+    }
+    if (input.key === 65512 && input.mouse_y === 1) {
+      const x = input.mouse_x;
+      switch (true) {
+        case x > 0 && x < 3:
+          this.sendToCurrentTab('/location_back');
+          break;
+        case x > 3 && x < 6:
+          this.sendToCurrentTab('/window_stop');
+          break;
+        default:
+          this.isURLBarFocused = true;
+      }
+      return true;
     }
     return false;
   }
 
   _handleURLBarInput(input) {
-    let url;
-    const search_engine = 'https://www.google.com/search?q=';
     let char = input.char;
     switch (input.key) {
-      case 12:
+      case 12: // CTRL+L
         this.isURLBarFocused = false;
         return;
-      case 13:
-        url = this.urlBarUserContent;
-        this.urlBarUserContent = "";
+      case 13: // enter
+        this.sendToCurrentTab(`/url,${this._getURLfromUserInput()}`);
         this.isURLBarFocused = false;
-        this.sendToCurrentTab(`/url,${search_engine}${url}`);
         return;
-      case 32:
+      case 32: // spacebar
         char = " ";
         break;
-      case 127:
+      case 127: // backspace
         this.urlBarUserContent = this.urlBarUserContent.slice(0, -1);
         return;
     }
     this.urlBarUserContent += char;
+  }
+
+  _getURLfromUserInput() {
+    let url;
+    const search_engine = 'https://www.google.com/search?q=';
+    let input = this.urlBarUserContent;
+    // Basically just check to see if there is text either side of a dot
+    const is_url = RegExp(/^[^\s]+\.[^\s]+/);
+    if (is_url.test(input)) {
+      url = input;
+      if (!url.startsWith('http')) {
+        url = 'http://' + url;
+      }
+    } else {
+      url = `${search_engine}${input}`;
+    }
+    this.urlBarUserContent = url;
+    return url;
   }
 
   resizeBrowserWindow() {
