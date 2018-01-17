@@ -10,7 +10,9 @@ export default (MixinBase) => class extends MixinBase {
     const command = parts[0];
     switch (command) {
       case '/frame':
-        this._applyUI(utils.rebuildArgsToSingleArg(parts));
+        this._current_frame = JSON.parse(message.slice(7));
+        this._applyUI();
+        this._sendCurrentFrame();
         break;
       case '/tab_info':
         this.currentTab().info = JSON.parse(utils.rebuildArgsToSingleArg(parts));
@@ -22,6 +24,9 @@ export default (MixinBase) => class extends MixinBase {
         break;
       case '/request_tty_size':
         this.sendTTYSizeToBrowser();
+        break;
+      case '/status':
+        this._updateStatus(parts[1]);
         break;
       case `/log`:
         this.log(parts[1]);
@@ -35,16 +40,49 @@ export default (MixinBase) => class extends MixinBase {
     this.sendToCurrentTab(`/tty_size,${this.tty_width},${this.tty_height}`);
   }
 
-  _applyUI(dom_frame) {
+  _sendCurrentFrame() {
+    const raw_frame = this._current_frame.join('');
+    this.sendToTerminal(`/frame,${raw_frame}`);
+  }
+
+  _updateStatus(status) {
+    switch (status) {
+      case 'page_init':
+        this._page_status = `Loading ${this.currentTab().info.url}`;
+        break;
+      case 'parsing_complete':
+        this._page_status = '';
+        break;
+      case 'window_unload':
+        this._page_status = 'Loading...';
+        break;
+      default:
+        this._page_status = status;
+    }
+    this._applyStatus();
+    this._sendCurrentFrame();
+  }
+
+  _applyUI() {
     const tabs = this._buildTTYRow(this.currentTab().info.title);
     const urlBar = this._buildURLBar();
-    const full_frame = tabs + urlBar + dom_frame;
-    this.sendToTerminal(`/frame,${full_frame}`);
+    this._current_frame = tabs.concat(urlBar).concat(this._current_frame);
+  }
+
+  _applyStatus() {
+    let cell;
+    const start = (this.tty_height - 1) * this.tty_width;
+    for (let i = 0; i < this.tty_width; i++) {
+      if (this._page_status[i] !== undefined) {
+        cell = utils.ttyPixel([255, 255, 255], [0, 0, 0], this._page_status[i]);
+        this._current_frame[start + i] = cell;
+      }
+    }
   }
 
   _buildTTYRow(text) {
     let char;
-    let row = "";
+    let row = [];
     let index = 0;
     while (index < this.tty_width) {
       if (index < text.length) {
@@ -52,7 +90,7 @@ export default (MixinBase) => class extends MixinBase {
       } else {
         char = " "
       }
-      row += utils.ttyPixel([255, 255, 255], [0, 0, 0], char);
+      row.push(utils.ttyPixel([255, 255, 255], [0, 0, 0], char));
       index += charWidthInTTY(char);
     }
     return row;

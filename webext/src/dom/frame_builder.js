@@ -24,7 +24,10 @@ export default class FrameBuilder extends BaseBuilder{
     this._compileFrame();
     this._buildFrame();
     this._sendTabInfo();
-    this._sendMessage(`/frame,${this.frame}`);
+    if (!this._is_first_frame_finished) {
+      this._sendMessage('/status,parsing_complete');
+    }
+    this._sendMessage(`/frame,${JSON.stringify(this.frame)}`);
     this._is_first_frame_finished = true;
   }
 
@@ -32,6 +35,9 @@ export default class FrameBuilder extends BaseBuilder{
     document.addEventListener("DOMContentLoaded", () => {
       this._init();
     }, false);
+    window.addEventListener("unload", () => {
+      this._sendMessage('/status,window_unload')
+    });
     // Whilst developing this webextension the auto reload only reloads this code,
     // not the page, so we don't get the `DOMContentLoaded` event to kick everything off.
     if (this._isWindowAlreadyLoaded()) this._init(100);
@@ -66,6 +72,8 @@ export default class FrameBuilder extends BaseBuilder{
 
   _postCommsInit() {
     this._log('Webextension postCommsInit()');
+    this._sendTabInfo();
+    this._sendMessage('/status,page_init');
     this._calculateMonospaceDimensions();
     this.graphics_builder.channel = this.channel;
     this.text_builder.channel = this.channel;
@@ -108,8 +116,50 @@ export default class FrameBuilder extends BaseBuilder{
         break;
       case 65516:
         window.scrollBy(0, 20);
-       break;
+        break;
+      case 65512:
+        this._mouseAction('click', input.mouse_x, input.mouse_y);
+        this._mouseAction('mousedown', input.mouse_x, input.mouse_y);
+        break;
+      case 65509:
+        this._mouseAction('mouseup', input.mouse_x, input.mouse_y);
+        break;
     }
+  }
+
+  _mouseAction(type, x, y) {
+    const [dom_x, dom_y] = this._getDOMCoordsFromMouseCoords(x, y);
+    const element = document.elementFromPoint(dom_x, dom_y);
+    const event = new MouseEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      clientX: dom_x,
+      clientY: dom_y
+    });
+    element.dispatchEvent(event);
+  }
+
+  _getDOMCoordsFromMouseCoords(x, y) {
+    let dom_x, dom_y, char, original_position;
+    y = y - 2; // Because of the UI header bar
+    const index = (y * this.tty_width) + x;
+    if (this.text_builder.tty_grid[index] !== undefined) {
+      char = this.text_builder.tty_grid[index][0];
+    } else {
+      char = false;
+    }
+    if (!char || char === '▄') {
+      dom_x = (x * this.char_width);
+      dom_y = (y * this.char_height);
+    } else {
+      original_position = this.text_builder.tty_grid[index][4];
+      dom_x = original_position.x;
+      dom_y = original_position.y;
+    }
+    return [
+      dom_x + (this.char_width / 2),
+      dom_y + (this.char_height / 2)
+    ];
   }
 
   _registrationError(error) {
@@ -193,7 +243,7 @@ export default class FrameBuilder extends BaseBuilder{
   }
 
   __buildFrame() {
-    this.frame = "";
+    this.frame = [];
     this._bg_row = [];
     this._fg_row = [];
     for (let y = 0; y < this.frame_height; y++) {
@@ -214,6 +264,7 @@ export default class FrameBuilder extends BaseBuilder{
   // Note how we have to keep track of 2 rows of pixels in order to create 1 row of
   // the terminal.
   _buildPixel(x, y) {
+    let row;
     const colour = this.graphics_builder.getScaledPixelAt(x, y);
     if (this._bg_row.length < this.frame_width) {
       this._bg_row.push(colour);
@@ -221,7 +272,8 @@ export default class FrameBuilder extends BaseBuilder{
       this._fg_row.push(colour);
     }
     if (this._fg_row.length === this.frame_width) {
-      this.frame += this._buildTtyRow(this._bg_row, this._fg_row, y);
+      row = this._buildTtyRow(this._bg_row, this._fg_row, y);
+      this.frame = this.frame.concat(row);
       this._bg_row = [];
       this._fg_row = [];
     }
@@ -236,7 +288,7 @@ export default class FrameBuilder extends BaseBuilder{
   // of native pixels for every row of the terminal.
   _buildTtyRow(bg_row, fg_row, y) {
     let tty_index, char, x_shoved;
-    let row = "";
+    let row = [];
     let char_width_debt = 0;
     const tty_row = parseInt(y / 2);
     for (let x = 0; x < this.frame_width; x++) {
@@ -251,12 +303,12 @@ export default class FrameBuilder extends BaseBuilder{
         char_width_debt = this._calculateCharWidthDebt(char_width_debt, char[0]);
         // Don't display a wide character in the final column
         if (x + char_width_debt >= this.frame_width) char[0] = ' ';
-        row += utils.ttyPixel(char[1], char[2], char[0]);
+        row.push(utils.ttyPixel(char[1], char[2], char[0]));
       } else {
         // Wide characters take up more than one cell, so we might not always be
         // iterating by 1.
         x_shoved = x + char_width_debt;
-        row += utils.ttyPixel(fg_row[x_shoved], bg_row[x_shoved], '▄');
+        row.push(utils.ttyPixel(fg_row[x_shoved], bg_row[x_shoved], '▄'));
       }
     }
     return row;

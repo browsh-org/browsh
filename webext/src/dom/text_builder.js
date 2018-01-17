@@ -222,7 +222,12 @@ export default class TextBuillder extends BaseBuilder {
     const colours = this._getCharacterColours(original_position);
     if (!colours) return;
     if (this._isCharObscured(colours)) return;
-    this.tty_grid[index] = [character, ...colours, parent_element];
+    this.tty_grid[index] = [
+      character,
+      ...colours,
+      parent_element,
+      _.clone(original_position)
+    ];
   }
 
   // Don't clobber - for now at least.

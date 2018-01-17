@@ -77,11 +77,14 @@ export default (MixinBase) => class extends MixinBase {
       return;
     }
     // Does this include scrollbars???
-    const window_width = parseInt(Math.round(this.tty_width * this.char_width)) + 4;
+    const window_width = parseInt(Math.round(this.tty_width * this.char_width));
     // Leave room for tabs and URL bar. TODO: globally refactor TTY DOM height
     const tty_dom_height = this.tty_height - 2;
-    // This is actually line-height
-    const window_height = parseInt(Math.round((tty_dom_height) * this.char_height)) + 4;
+    // I don't know why we have to add 4 more lines to the window height?? But without
+    // it text doesn't fill the bottom of the TTY.
+    const window_height = parseInt(Math.round(
+      (tty_dom_height + 4) * this.char_height
+    ));
     const current_window = browser.windows.getCurrent();
     current_window.then(
       (active_window) => {
