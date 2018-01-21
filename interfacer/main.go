@@ -1,31 +1,41 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
-	"encoding/json"
-
-	"github.com/gorilla/websocket"
+	"time"
 
 	// Termbox seems to be one of the best projects in any language for handling terminal input.
 	// It's cross-platform and the maintainer is disciplined about supporting the baseline of escape
 	// codes that work across the majority of terminals.
 	"github.com/nsf/termbox-go"
+
+	"github.com/gorilla/websocket"
 )
 
 var (
-	logfile           string
-	websocketAddresss = flag.String("addr", ":3334", "Web socket service address")
-	upgrader          = websocket.Upgrader{
+	logfile              string
+	webSocketAddresss    = flag.String("port", ":3334", "Web socket service address")
+	firefoxBinary        = flag.String("firefox", "firefox", "Path to Firefox executable")
+	isFFGui              = flag.Bool("with-gui", false, "Don't use headless Firefox")
+	isUseExistingFirefox = flag.Bool("use-existing-ff", false, "Use an existing Firefox process")
+	upgrader             = websocket.Upgrader{
 		CheckOrigin:     func(r *http.Request) bool { return true },
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
-	stdinChannel = make(chan string)
+	stdinChannel   = make(chan string)
+	marionette     net.Conn
+	ffCommandCount = 0
 )
 
 func setupLogging() {
@@ -56,6 +66,7 @@ func log(msg string) {
 }
 
 func initialise() {
+	flag.Parse()
 	setupTermbox()
 	setupLogging()
 }
@@ -79,14 +90,17 @@ func readStdin() {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyCtrlQ {
+				if (!*isUseExistingFirefox) {
+					sendFirefoxCommand("quitApplication", map[string]interface{}{})
+				}
 				termbox.Close()
 				os.Exit(0)
 			}
 			log(fmt.Sprintf("EventKey: k: %d, c: %c, mod: %s", ev.Key, ev.Ch, ev.Mod))
 			eventMap := map[string]interface{}{
-				"key": int(ev.Key),
+				"key":  int(ev.Key),
 				"char": string(ev.Ch),
-				"mod": int(ev.Mod),
+				"mod":  int(ev.Mod),
 			}
 			marshalled, _ := json.Marshal(eventMap)
 			stdinChannel <- "/stdin," + string(marshalled)
@@ -99,10 +113,10 @@ func readStdin() {
 		case termbox.EventMouse:
 			log(fmt.Sprintf("Mouse: k: %d, x: %d, y: %d, mod: %s", ev.Key, ev.MouseX, ev.MouseY, ev.Mod))
 			eventMap := map[string]interface{}{
-				"key": int(ev.Key),
+				"key":     int(ev.Key),
 				"mouse_x": int(ev.MouseX),
 				"mouse_y": int(ev.MouseY),
-				"mod": int(ev.Mod),
+				"mod":     int(ev.Mod),
 			}
 			marshalled, _ := json.Marshal(eventMap)
 			stdinChannel <- "/stdin," + string(marshalled)
@@ -112,7 +126,7 @@ func readStdin() {
 	}
 }
 
-func socketReader(ws *websocket.Conn) {
+func webSocketReader(ws *websocket.Conn) {
 	defer ws.Close()
 	for {
 		_, message, err := ws.ReadMessage()
@@ -121,7 +135,7 @@ func socketReader(ws *websocket.Conn) {
 		if command == "/frame" {
 			termbox.SetCursor(0, 0)
 			os.Stdout.Write([]byte(strings.Join(parts[1:], ",")))
-			termbox.HideCursor();
+			termbox.HideCursor()
 			termbox.Flush()
 		} else {
 			log("WEBEXT: " + string(message))
@@ -147,7 +161,7 @@ func triggerSocketWriterClose() {
 	stdinChannel <- "BROWSH CLIENT FORCING CLOSE OF WEBSOCKET WRITER"
 }
 
-func socketWriter(ws *websocket.Conn) {
+func webSocketWriter(ws *websocket.Conn) {
 	var message string
 	defer ws.Close()
 	for {
@@ -163,25 +177,106 @@ func socketWriter(ws *websocket.Conn) {
 	}
 }
 
-func socketServer(w http.ResponseWriter, r *http.Request) {
+func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	log("Incoming web request from browser")
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		panic(err)
 	}
 
-	go socketWriter(ws)
-	go socketReader(ws)
+	go webSocketWriter(ws)
+	go webSocketReader(ws)
 
 	sendTtySize()
 }
 
+func startHeadlessFirefox() {
+	println("Starting...")
+	log("Starting Firefox in headless mode")
+	args := []string{"--marionette", "--new-instance", "-P", "browsh2"}
+	if !*isFFGui {
+		args = append(args, "--headless")
+	}
+	firefoxProcess := exec.Command(*firefoxBinary, args...)
+	defer firefoxProcess.Process.Kill()
+	_, err := firefoxProcess.Output()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func firefoxMarionette() {
+	log("Attempting to connect to Firefox Marionette")
+	conn, err := net.Dial("tcp", "127.0.0.1:2828")
+	marionette = conn
+	readMarionette()
+	if err != nil {
+		panic(err)
+	}
+	sendFirefoxCommand("newSession", map[string]interface{}{})
+}
+
+func installWebextension() {
+	data, err := Asset("webext/dist/web-ext-artifacts/browsh.xpi")
+	if err != nil {
+		panic(err)
+	}
+	file, err := ioutil.TempFile(os.TempDir(), "prefix")
+	defer os.Remove(file.Name())
+	ioutil.WriteFile(file.Name(), []byte(data), 0644)
+	args := map[string]interface{}{ "path": file.Name() }
+	sendFirefoxCommand("addon:install", args)
+}
+
+func readMarionette() {
+	buffer := make([]byte, 4096)
+	count, err := marionette.Read(buffer)
+	if err != nil {
+		if err != io.EOF {
+			log(fmt.Sprintf("FF-MRNT: read error: %s", err))
+		}
+	}
+	log("FF-MRNT: " + string(buffer[:count]))
+}
+
+func sendFirefoxCommand(command string, args map[string]interface{}) {
+	log("Sending `" + command + "` to Firefox Marionette")
+	fullCommand := []interface{}{0, ffCommandCount, command, args}
+	marshalled, _ := json.Marshal(fullCommand)
+	message := fmt.Sprintf("%d:%s", len(marshalled), marshalled)
+	fmt.Fprintf(marionette, message)
+	ffCommandCount++
+	readMarionette()
+}
+
+func loadHomePage() {
+	// Wait for the CLI websocket server to start listening
+	time.Sleep(200 * time.Millisecond)
+	args := map[string]interface{}{
+		"url": "https://google.com",
+	}
+	sendFirefoxCommand("get", args)
+}
+
+func setupFirefox() {
+	go startHeadlessFirefox()
+	time.Sleep(2 * time.Second)
+	firefoxMarionette()
+	installWebextension()
+	go loadHomePage()
+}
+
 func main() {
 	initialise()
+	if !*isUseExistingFirefox {
+		setupFirefox()
+	} else {
+		println("Waiting for a Firefox instance to connect...")
+	}
 	log("Starting Browsh CLI client")
 	go readStdin()
-	http.HandleFunc("/", socketServer)
-	if err := http.ListenAndServe(*websocketAddresss, nil); err != nil {
+	http.HandleFunc("/", webSocketServer)
+	if err := http.ListenAndServe(*webSocketAddresss, nil); err != nil {
 		panic(err)
 	}
 	log("Exiting at end of main()")

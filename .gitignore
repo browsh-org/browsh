@@ -1,11 +1,10 @@
 build/
 *.log
 *.out
-blank.png
 node_modules
 interfacer/target
 interfacer/vendor
-webext/web-ext-artifacts
+interfacer/webextension.go
 webext/node_modules
 webext/dist
 

@@ -2,7 +2,7 @@
   /* A special font that only has unicode full blocks in it, so we can detect */
   /* font colors and text visibility more easily. */
   font-family: 'BlockCharMono';
-  src: url('/BlockCharMono.ttf') format('truetype');
+  src: url('/assets/BlockCharMono.ttf') format('truetype');
 }
 
 html * {
