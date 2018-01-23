@@ -1,0 +1,37 @@
+language: node_js
+addons:
+  firefox: "58.0"
+env:
+  global:
+    - GOLANG_VERSION=1.9
+    - GOPATH=$HOME/gopath
+    - REPO_ROOT=$GOPATH/src
+    - PATH=$PATH:/$HOME/bin:$GOPATH/bin
+
+before_install:
+  - ./interfacer/contrib/setup_go.sh
+  - cd $REPO_ROOT/webext
+install:
+  - npm run get-gobindata
+  - npm install
+  - npm run build
+script:
+  - npm test
+after_failure:
+  - cat $REPO_ROOT/interfacer/debug.log
+  - cat $REPO_ROOT/interfacer/spec.log
+deploy:
+  - provider: releases
+    api_key:
+      secure: <your key>
+    file:
+      - linux
+      - linux.sha
+      - os
+      - os.sha
+      - windows
+      - windows.sha
+    skip_cleanup: true
+    on:
+     tags: true
+

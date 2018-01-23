@@ -2,7 +2,7 @@ import sinon from 'sinon';
 
 import GraphicsBuilder from 'dom/graphics_builder';
 import FrameBuilder from 'dom/frame_builder';
-import MockRange from 'mocks/range'
+import MockRange from 'unitish/mocks/range'
 
 var sandbox = sinon.sandbox.create();
 
@@ -21,6 +21,11 @@ afterEach(() => {
 global.document = {
   addEventListener: () => {},
   getElementById: () => {},
+  getElementsByTagName: () => {
+    return [{
+      innerHTML: 'Google'
+    }]
+  },
   createRange: () => {
     return new MockRange()
   },
@@ -28,13 +33,16 @@ global.document = {
     return {
       getContext: () => {}
     }
+  },
+  location: {
+    href: 'https://www.google.com'
   }
 };
 
 global.DEVELOPMENT = false;
 global.PRODUCTION = false;
 global.TEST = true;
-global.window = {};
+global.window = global.document;
 global.performance = {
   now: () => {}
 }

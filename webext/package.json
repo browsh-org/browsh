@@ -1,7 +1,10 @@
 {
   "scripts": {
+    "get-gobindata": "go get -u gopkg.in/shuLhan/go-bindata.v3/...",
     "build": "./contrib/bundle_webextension.sh",
-    "test": "NODE_PATH=src:test mocha"
+    "unitish": "NODE_PATH=src:test mocha test/unitish",
+    "integration": "NODE_PATH=src:test mocha test/integration",
+    "test": "npm run unitish && npm run integration"
   },
   "babel": {
     "presets": [
@@ -17,7 +20,9 @@
     "copy-webpack-plugin": "^4.3.1",
     "eslint": "^4.15.0",
     "mocha": "^4.1.0",
+    "pty.js": "^0.3.1",
     "sinon": "^4.1.3",
+    "strip-ansi": "^4.0.0",
     "web-ext": "^2.3.1",
     "webpack": "^3.10.0"
   },

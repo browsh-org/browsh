@@ -134,7 +134,7 @@ func webSocketReader(ws *websocket.Conn) {
 		command := parts[0]
 		if command == "/frame" {
 			termbox.SetCursor(0, 0)
-			os.Stdout.Write([]byte(strings.Join(parts[1:], ",")))
+			os.Stdout.Write([]byte(parts[1]))
 			termbox.HideCursor()
 			termbox.Flush()
 		} else {

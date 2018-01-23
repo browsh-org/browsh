@@ -9,12 +9,10 @@ set -e
 
 PROJECT_ROOT=$(git rev-parse --show-toplevel)
 
-webext=$PROJECT_ROOT/node_modules/.bin/web-ext
+NODE_BIN=$PROJECT_ROOT/webext/node_modules/.bin
 
-cd $PROJECT_ROOT/webext
-$PROJECT_ROOT/node_modules/.bin/webpack
-cd $PROJECT_ROOT/webext/dist
-$webext build --overwrite-dest
+cd $PROJECT_ROOT/webext && $NODE_BIN/webpack
+cd $PROJECT_ROOT/webext/dist && $NODE_BIN/web-ext build --overwrite-dest
 
 # Get the current version of Browsh
 version=$(cat $PROJECT_ROOT/webext/manifest.json | python2 -c \

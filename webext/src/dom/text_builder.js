@@ -9,6 +9,7 @@ export default class TextBuillder extends BaseBuilder {
     super();
     this.graphics_builder = frame_builder.graphics_builder;
     this.frame_builder = frame_builder;
+    this._parse_started_elements = [];
   }
 
   getFormattedText() {
