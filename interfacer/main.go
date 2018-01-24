@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
+	"bufio"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -27,7 +27,8 @@ var (
 	webSocketAddresss    = flag.String("port", ":3334", "Web socket service address")
 	firefoxBinary        = flag.String("firefox", "firefox", "Path to Firefox executable")
 	isFFGui              = flag.Bool("with-gui", false, "Don't use headless Firefox")
-	isUseExistingFirefox = flag.Bool("use-existing-ff", false, "Use an existing Firefox process")
+	isUseExistingFirefox = flag.Bool("use-existing-ff", false, "Whether Browsh shouls launch Firefox or not")
+	useFFProfile         = flag.String("ff-profile", "default", "Firefox profile to use")
 	upgrader             = websocket.Upgrader{
 		CheckOrigin:     func(r *http.Request) bool { return true },
 		ReadBufferSize:  1024,
@@ -41,27 +42,27 @@ var (
 func setupLogging() {
 	dir, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		shutdown(err.Error())
 	}
 	logfile = fmt.Sprintf(filepath.Join(dir, "debug.log"))
 	if _, err := os.Stat(logfile); err == nil {
 		os.Truncate(logfile, 0)
 	}
 	if err != nil {
-		panic(err)
+		shutdown(err.Error())
 	}
 }
 
 func log(msg string) {
 	f, oErr := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if oErr != nil {
-		panic(oErr)
+		shutdown(oErr.Error())
 	}
 	defer f.Close()
 
 	msg = msg + "\n"
 	if _, wErr := f.WriteString(msg); wErr != nil {
-		panic(wErr)
+		shutdown(wErr.Error())
 	}
 }
 
@@ -74,9 +75,20 @@ func initialise() {
 func setupTermbox() {
 	err := termbox.Init()
 	if err != nil {
-		panic(err)
+		shutdown(err.Error())
 	}
 	termbox.SetInputMode(termbox.InputAlt | termbox.InputMouse)
+}
+
+func shutdown(message string) {
+	exitCode := 0;
+	if (message != "normal") {
+		exitCode = 1
+	}
+	println(message)
+	log("Shutting down with: " + message)
+	termbox.Close()
+	os.Exit(exitCode)
 }
 
 func sendTtySize() {
@@ -93,8 +105,7 @@ func readStdin() {
 				if (!*isUseExistingFirefox) {
 					sendFirefoxCommand("quitApplication", map[string]interface{}{})
 				}
-				termbox.Close()
-				os.Exit(0)
+				shutdown("normal")
 			}
 			log(fmt.Sprintf("EventKey: k: %d, c: %c, mod: %s", ev.Key, ev.Ch, ev.Mod))
 			eventMap := map[string]interface{}{
@@ -121,7 +132,7 @@ func readStdin() {
 			marshalled, _ := json.Marshal(eventMap)
 			stdinChannel <- "/stdin," + string(marshalled)
 		case termbox.EventError:
-			panic(ev.Err)
+			shutdown(ev.Err.Error())
 		}
 	}
 }
@@ -146,7 +157,7 @@ func webSocketReader(ws *websocket.Conn) {
 				triggerSocketWriterClose()
 				return
 			}
-			panic(err)
+			shutdown(err.Error())
 		}
 	}
 }
@@ -172,7 +183,7 @@ func webSocketWriter(ws *websocket.Conn) {
 				log("Socket writer detected that the browser closed the websocket")
 				return
 			}
-			panic(err)
+			shutdown(err.Error())
 		}
 	}
 }
@@ -181,7 +192,7 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	log("Incoming web request from browser")
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		panic(err)
+		shutdown(err.Error())
 	}
 
 	go webSocketWriter(ws)
@@ -197,29 +208,51 @@ func startHeadlessFirefox() {
 	if !*isFFGui {
 		args = append(args, "--headless")
 	}
+	if (*useFFProfile != "default") {
+		args = append(args, "-P", *useFFProfile)
+	}
 	firefoxProcess := exec.Command(*firefoxBinary, args...)
 	defer firefoxProcess.Process.Kill()
-	_, err := firefoxProcess.Output()
+	stdout, err := firefoxProcess.StdoutPipe()
 	if err != nil {
-		panic(err)
+		shutdown(err.Error())
+	}
+	if err := firefoxProcess.Start(); err != nil {
+		shutdown(err.Error())
+	}
+	in := bufio.NewScanner(stdout)
+	for in.Scan() {
+		log("FF-CONSOLE: " + in.Text()) // write each line to your log, or anything you need
 	}
 }
 
+// Connect to Firefox's Marionette service.
+// RANT: Firefox's remote control tools are so confusing. There seem to be 2
+// services that come with your Firefox binary; Marionette and the Remote
+// Debugger. The latter you would expect to follow the widely supported
+// Chrome standard, but no, it's merely on the roadmap. There is very little
+// documentation on either. I have the impression, but I'm not sure why, that
+// the Remote Debugger is better, seemingly more API methods, and as mentioned
+// is on the roadmap to follow the Chrome standard.
+// I've used Marionette here, simply because it was easier to reverse engineer
+// from the Python Marionette package.
 func firefoxMarionette() {
 	log("Attempting to connect to Firefox Marionette")
 	conn, err := net.Dial("tcp", "127.0.0.1:2828")
+	if err != nil {
+		shutdown(err.Error())
+	}
 	marionette = conn
 	readMarionette()
-	if err != nil {
-		panic(err)
-	}
 	sendFirefoxCommand("newSession", map[string]interface{}{})
 }
 
+// Install the Browsh extension that was bundled with `go-bindata` under
+// `webextension.go`.
 func installWebextension() {
 	data, err := Asset("webext/dist/web-ext-artifacts/browsh.xpi")
 	if err != nil {
-		panic(err)
+		shutdown(err.Error())
 	}
 	file, err := ioutil.TempFile(os.TempDir(), "prefix")
 	defer os.Remove(file.Name())
@@ -228,13 +261,26 @@ func installWebextension() {
 	sendFirefoxCommand("addon:install", args)
 }
 
+// Set a Firefox preference as you would in `about:config`
+// `value` needs to be supplied with quotes if it's to be used as a JS string
+func setFFPreference(key string, value string) {
+	sendFirefoxCommand("setContext", map[string]interface{}{"value": "chrome"})
+	script := fmt.Sprintf(`
+		Components.utils.import("resource://gre/modules/Preferences.jsm");
+		prefs = new Preferences({defaultBranch: false});
+		prefs.set("%s", %s);`, key, value)
+	args := map[string]interface{}{"script": script}
+	sendFirefoxCommand("executeScript", args)
+	sendFirefoxCommand("setContext", map[string]interface{}{"value": "content"})
+}
+
+// Consume output from Marionette, we don't do anything with it. It's just
+// useful to have it in the logs.
 func readMarionette() {
 	buffer := make([]byte, 4096)
 	count, err := marionette.Read(buffer)
 	if err != nil {
-		if err != io.EOF {
-			log(fmt.Sprintf("FF-MRNT: read error: %s", err))
-		}
+		shutdown(err.Error())
 	}
 	log("FF-MRNT: " + string(buffer[:count]))
 }
@@ -263,6 +309,9 @@ func setupFirefox() {
 	// TODO: Do something better than just waiting
 	time.Sleep(3 * time.Second)
 	firefoxMarionette()
+	// Send Browser Console (different from Devtools console) output to
+	// STDOUT.
+	setFFPreference("browser.dom.window.dump.enabled", "true")
 	installWebextension()
 	go loadHomePage()
 }
@@ -278,7 +327,7 @@ func main() {
 	go readStdin()
 	http.HandleFunc("/", webSocketServer)
 	if err := http.ListenAndServe(*webSocketAddresss, nil); err != nil {
-		panic(err)
+		shutdown(err.Error())
 	}
 	log("Exiting at end of main()")
 }
