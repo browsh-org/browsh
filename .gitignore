@@ -4,6 +4,8 @@ build/
 node_modules
 interfacer/target
 interfacer/vendor
+interfacer/interfacer
+interfacer/browsh
 interfacer/webextension.go
 webext/node_modules
 webext/dist

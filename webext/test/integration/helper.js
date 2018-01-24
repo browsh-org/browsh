@@ -152,7 +152,8 @@ class Helper {
     this.firefoxPTY.write(`cd ${dir} \r`);
     let command = `../node_modules/.bin/web-ext run ` +
       `--firefox="${this.project_root}/webext/contrib/firefoxheadless.sh" ` +
-      `--url https://google.com` +
+      `--verbose ` +
+      `--url https://google.com ` +
       `\r`;
     this.firefoxPTY.write(command);
     this.firefoxPTY.on('data', (data) => {
