@@ -1,15 +1,17 @@
 language: node_js
 addons:
-  firefox: "58.0"
+  firefox: '58.0'
 env:
   global:
     - GOLANG_VERSION=1.9
     - GOPATH=$HOME/gopath
     - REPO_ROOT=$GOPATH/src
     - PATH=$PATH:/$HOME/bin:$GOPATH/bin
+    - MDN_USER=user:13243312:78
+    - secure: sKZ1/oBLKNWA0v16d4Yg8V500zIwZwEUpcnW7SMRpeqJMbzlR7GKLpJ/VX6ZAYexokBEEbU+JnI3/aHOmJaO9h2/+b1qwrQqje6totC6/rPhxkdxGxI9jETzPdL0V0XErK4rK2URATEANRnJUFLVuFGaXh6dUZDrbtn8NxDSfZEQGmHlqex5TcqPxmK2v0Lb3l2FcVF2kxGYpKMmjKFQbGBHdjFN5qOrS3jmkHjC6Ie8CaM9ezy55e3sOIrNr/u4kWJAOGE2cT3rjqcmPYaCRRzkiy7q3sYEI6jC9vfOZeyFI6E0e3VPDv+OGq+lnUBbgVjGhiG9LxIJ9Z3JEY9z5OspeczpLiQT2rhstqwDolyhx2liiI9cZe0d+uiLo2YyYKe1RELlClB6cQi9p/J8vJpyVEutIoq8Sdv13vbnJMAmPQi1OD9qtOgBR9cngy5yWIPyizgpcAr6kCYxztwIX4y1wrlHPUdTApDnfJNkNOSBwYBTigmlFZf8BkGXB4JOhcQ8KZM3H2OdOP2rANZIOd1ficgyHgKNt4iomIC/i5d7qnV6OZfzirQgx7yzWqjwoGrPg+OvL9MeY9dMltGsfFL80FLudIzN8sqj3BUYioXWX8GCyVML/XoMPbLpcSLBRMxskUhNSYbaTQ2qML7H5Kv/wce71BXMknzyT0s/mNs=
 
 before_install:
-  - ./interfacer/contrib/setup_go.sh
+  - "./interfacer/contrib/setup_go.sh"
   - cd $REPO_ROOT/webext
 install:
   - npm run get-gobindata
@@ -20,18 +22,19 @@ script:
 after_failure:
   - cat $REPO_ROOT/interfacer/debug.log
   - cat $REPO_ROOT/interfacer/spec.log
+before_deploy:
+  - echo "Do I run depending on the condition in `deploy:` ?"
+  - BROWSH_ENV=RELEASE npm run build
+  - cd $REPO_ROOT/interfacer
+  - go build -o browsh *.go
 deploy:
-  - provider: releases
-    api_key:
-      secure: <your key>
-    file:
-      - linux
-      - linux.sha
-      - os
-      - os.sha
-      - windows
-      - windows.sha
-    skip_cleanup: true
-    on:
-     tags: true
+  provider: releases
+  api_key:
+    secure: anJIaL3KQnKjctldcZGK1m+GJ2uut9ErqsEneb0gWlnwg8EjKRxeKhn4Im1ZfFGgw0G+CIFVH0XD7b5oFQzaNrfU759RuqzpsEibfO/DfTKYJmxExiyR5Xng6WEOa0LHP4DVYEnttjL6aDbcefmVUfCwQ1L+gNx8jPocf+3eorM/GSMXg+wCpaDiVRW5NP63GG+dWwVfNVaDf8XxPcSFc1hVUaLMTOXj7Lxscp6S5703qCetNOPDlUDjfIx6Q/sZ8ce1XxA6iJoJL9BbX0X07cvtyz9ThwBHwjXVtkVdI8jwPkS/f9m1u7bE891wfQuXnPxmsMaF5HeQYTGCgPh22NSTgmIyQLzAFyPIz+8ilkTLsFoK3tglJDkMXTRjDXEH3/M8pvfZCj1wIwOypQMDVMLXf0ZU65+YOaiIRNpl6Qw6uVtUjVVWEf4su1yrv5dnAfIIj5kgjlJuCcUmwAaY+cG4D/qVWZQfekxGlt/u0tvyaPJl6sr3HnRj1beDXl/nHdW+n1UblAzZEveET2XwdITNh0N84fRhUzhkxNO6G8RfktUOzoEWNEG5aewOrQekrSt2CcvCxOSNVZXbR2+bcAAQQNYOtpG5cXFdXacSchi7XSMUzLM6E4+JwLxbLd8Ogm8qXc0NA5r7ssGxTYnkVCw7R39r10/Jw5keZ1ak/d8=
+  file:
+    - interfacer/browsh
+  skip_cleanup: true
+  on:
+    repo: browsh/browsh
+    tags: true
 

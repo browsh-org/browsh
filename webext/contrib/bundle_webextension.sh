@@ -28,7 +28,7 @@ then
   # The signed version. There can only be one canonical XPI for each semantic
   # version.
   source_file=$source_dir/$xpi_file
-  $webext sign --api-key $MDN_USER --api-secret $MDN_KEY
+  $NODE_BIN/web-ext sign --api-key $MDN_USER --api-secret $MDN_KEY
 else
   # In development/testing, we want to be able to bundle the webextension
   # frequently without having to resort to version bumps.

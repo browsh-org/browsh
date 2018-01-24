@@ -193,7 +193,7 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 func startHeadlessFirefox() {
 	println("Starting...")
 	log("Starting Firefox in headless mode")
-	args := []string{"--marionette", "--new-instance", "-P", "browsh2"}
+	args := []string{"--marionette"}
 	if !*isFFGui {
 		args = append(args, "--headless")
 	}
@@ -260,7 +260,8 @@ func loadHomePage() {
 
 func setupFirefox() {
 	go startHeadlessFirefox()
-	time.Sleep(2 * time.Second)
+	// TODO: Do something better than just waiting
+	time.Sleep(3 * time.Second)
 	firefoxMarionette()
 	installWebextension()
 	go loadHomePage()
