@@ -1,17 +1,14 @@
-FROM phusion/baseimage
-
-RUN apt-get update
-RUN apt-get -y install xvfb libgtk-3-0
-
+FROM bitnami/minideb:stretch
+RUN install_packages xvfb libgtk-3-0
 RUN useradd user
 RUN su user
 WORKDIR /home/user
-RUN curl -L -o firefox.tar.bz2 https://ftp.mozilla.org/pub/firefox/releases/58.0b16/linux-x86_64/en-US/firefox-58.0b16.tar.bz2
-RUN apt-get -y install bzip2
-RUN bzip2 -d firefox.tar.bz2
-RUN tar xf firefox.tar
+ADD ./interfacer/contrib/setup_firefox.sh .
+RUN ./setup_firefox.sh
+RUN rm ./setup_firefox.sh
 ENV PATH="/home/user/firefox:${PATH}"
-ADD interfacer/browsh .
+ADD ./interfacer/contrib/setup_browsh.sh .
+RUN ./setup_browsh.sh
 
 CMD ["/home/user/browsh"]
 
