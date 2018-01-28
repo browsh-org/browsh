@@ -12,6 +12,7 @@ export default (MixinBase) => class extends MixinBase {
       case '/frame':
         this._current_frame = JSON.parse(message.slice(7));
         this._applyUI();
+        this.log(this._current_frame.join(''));
         this._sendCurrentFrame();
         break;
       case '/tab_info':

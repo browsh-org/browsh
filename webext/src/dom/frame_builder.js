@@ -20,14 +20,21 @@ export default class FrameBuilder extends BaseBuilder{
   }
 
   sendFrame() {
+    this._log('FRAME_BUILDER: sending frame...')
     this._setupDimensions();
+    this._log('FRAME_BUILDER: dimensions setup...')
     this._compileFrame();
+    this._log('FRAME_BUILDER: frame compiled...')
     this._buildFrame();
+    this._log('FRAME_BUILDER: frame built...')
     this._sendTabInfo();
+    this._log('FRAME_BUILDER: sent tab info...')
     if (!this._is_first_frame_finished) {
       this._sendMessage('/status,parsing_complete');
     }
+    this._log(this.frame)
     this._sendMessage(`/frame,${JSON.stringify(this.frame)}`);
+    this._log('FRAME_BUILDER: frame sent to background...')
     this._is_first_frame_finished = true;
   }
 
@@ -37,6 +44,9 @@ export default class FrameBuilder extends BaseBuilder{
     }, false);
     window.addEventListener("unload", () => {
       this._sendMessage('/status,window_unload')
+    });
+    window.addEventListener('error', (event) => {
+      this._log("TAB JS: " + event)
     });
     // Whilst developing this webextension the auto reload only reloads this code,
     // not the page, so we don't get the `DOMContentLoaded` event to kick everything off.
@@ -94,35 +104,36 @@ export default class FrameBuilder extends BaseBuilder{
   }
 
   _handleBackgroundMessage(message) {
+    this._log('FRAME_BUILDER: received message from BG: ' + message)
     let input, url;
-      const parts = message.split(',');
-      const command = parts[0];
-      switch (command) {
-        case '/request_frame':
-          this.sendFrame();
-          break;
-        case '/tty_size':
-          this.tty_width = parseInt(parts[1]);
-          this.tty_height = parseInt(parts[2]);
-          this._log(`Tab received TTY size: ${this.tty_width}x${this.tty_height}`);
-          break;
-        case '/stdin':
-          input = JSON.parse(utils.rebuildArgsToSingleArg(parts));
-          this._handleUserInput(input);
-          break;
-        case '/url':
-          url = utils.rebuildArgsToSingleArg(parts);
-          document.location.href = url;
-          break;
-        case '/location_back':
-          history.go(-1);
-          break;
-        case '/window_stop':
-          window.stop();
-          break;
-        default:
-          this._log('Unknown command sent to tab', message);
-      }
+    const parts = message.split(',');
+    const command = parts[0];
+    switch (command) {
+      case '/request_frame':
+        this.sendFrame();
+        break;
+      case '/tty_size':
+        this.tty_width = parseInt(parts[1]);
+        this.tty_height = parseInt(parts[2]);
+        this._log(`Tab received TTY size: ${this.tty_width}x${this.tty_height}`);
+        break;
+      case '/stdin':
+        input = JSON.parse(utils.rebuildArgsToSingleArg(parts));
+        this._handleUserInput(input);
+        break;
+      case '/url':
+        url = utils.rebuildArgsToSingleArg(parts);
+        document.location.href = url;
+        break;
+      case '/location_back':
+        history.go(-1);
+        break;
+      case '/window_stop':
+        window.stop();
+        break;
+      default:
+        this._log('Unknown command sent to tab', message);
+    }
   }
 
   _handleUserInput(input) {

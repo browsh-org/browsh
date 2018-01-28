@@ -56,11 +56,11 @@ class Helper {
   broadcastOutput() {
     let buffer = '';
     this.browshPTY.on('data', (data) => {
+      this.log('BROWSH CLI: ' + this.cleanFrame(data));
       if (this.is_last_startup_message_consumed) {
         buffer += data;
         buffer = this.broadcastBrowserOutput(buffer);
       } else {
-        this.log(data);
         this.frame = this.cleanFrame(data);
       }
     });
@@ -73,6 +73,7 @@ class Helper {
     if (buffer.includes(cursor_reset_sig)) {
       buffer = this.cleanFrame(buffer);
       this.frame = this.insertTTYLines(buffer);
+      this.log(this.frame);
       buffer = '';
     }
     return buffer;
@@ -146,18 +147,23 @@ class Helper {
   // then may as well keep consistent.
   startFirefox() {
     const dir = this.project_root + '/webext/dist';
-    this.firefoxPTY = pty.spawn('bash', [], {
+    // Curiously, suing `bash` on Travis causes $PATH to overwritten and this
+    // PTY to not be able to find `node`.
+    this.firefoxPTY = pty.spawn('sh', [], {
       env: process.env
     });
     this.firefoxPTY.write(`cd ${dir} \r`);
     let command = `../node_modules/.bin/web-ext run ` +
       `--firefox="${this.project_root}/webext/contrib/firefoxheadless.sh" ` +
       `--verbose ` +
+      `--no-reload ` +
       `--url https://google.com ` +
       `\r`;
     this.firefoxPTY.write(command);
     this.firefoxPTY.on('data', (data) => {
-      this.log(data);
+      const ignore = /gconf|x11|dbus/i.test(data);
+      if (ignore) return;
+      this.log('WEBEXT RUNNER: ' + data);
     });
   }
 }

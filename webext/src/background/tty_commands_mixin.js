@@ -15,7 +15,6 @@ export default (MixinBase) => class extends MixinBase {
       case '/tty_size':
         this.tty_width = parts[1];
         this.tty_height = parts[2];
-        if(this.active_tab_id) this.sendTTYSizeToBrowser();
         if (this.char_width && this.char_height){
           this.resizeBrowserWindow();
         }

@@ -15,7 +15,7 @@ import (
 	"time"
 
 	// Termbox seems to be one of the best projects in any language for handling terminal input.
-	// It's cross-platform and the maintainer is disciplined about supporting the baseline of escape
+	// It"s cross-platform and the maintainer is disciplined about supporting the baseline of escape
 	// codes that work across the majority of terminals.
 	"github.com/nsf/termbox-go"
 
@@ -27,7 +27,7 @@ var (
 	webSocketAddresss    = flag.String("port", ":3334", "Web socket service address")
 	firefoxBinary        = flag.String("firefox", "firefox", "Path to Firefox executable")
 	isFFGui              = flag.Bool("with-gui", false, "Don't use headless Firefox")
-	isUseExistingFirefox = flag.Bool("use-existing-ff", false, "Whether Browsh shouls launch Firefox or not")
+	isUseExistingFirefox = flag.Bool("use-existing-ff", false, "Whether Browsh should launch Firefox or not")
 	useFFProfile         = flag.String("ff-profile", "default", "Firefox profile to use")
 	upgrader             = websocket.Upgrader{
 		CheckOrigin:     func(r *http.Request) bool { return true },
@@ -37,6 +37,39 @@ var (
 	stdinChannel   = make(chan string)
 	marionette     net.Conn
 	ffCommandCount = 0
+	defaultFFPrefs = map[string]string{
+		"browser.startup.homepage": "'about:blank'",
+		"startup.homepage_welcome_url": "'about:blank'",
+		"startup.homepage_welcome_url.additional": "''",
+		"devtools.errorconsole.enabled": "true",
+		"devtools.chrome.enabled": "true",
+
+		// Send Browser Console (different from Devtools console) output to
+		// STDOUT.
+		"browser.dom.window.dump.enabled": "true",
+
+		// From:
+		// http://hg.mozilla.org/mozilla-central/file/1dd81c324ac7/build/automation.py.in//l388
+		// Make url-classifier updates so rare that they won"t affect tests.
+		"urlclassifier.updateinterval": "172800",
+		// Point the url-classifier to a nonexistent local URL for fast failures.
+		"browser.safebrowsing.provider.0.gethashURL":
+			"'http://localhost/safebrowsing-dummy/gethash'",
+		"browser.safebrowsing.provider.0.keyURL":
+			"'http://localhost/safebrowsing-dummy/newkey'",
+		"browser.safebrowsing.provider.0.updateURL":
+			"'http://localhost/safebrowsing-dummy/update'",
+
+		// Disable self repair/SHIELD
+		"browser.selfsupport.url": "'https://localhost/selfrepair'",
+		// Disable Reader Mode UI tour
+		"browser.reader.detectedFirstArticle": "true",
+
+		// Set the policy firstURL to an empty string to prevent
+		// the privacy info page to be opened on every "web-ext run".
+		// (See #1114 for rationale)
+		"datareporting.policy.firstRunURL": "''",
+	}
 )
 
 func setupLogging() {
@@ -185,6 +218,7 @@ func webSocketWriter(ws *websocket.Conn) {
 			}
 			shutdown(err.Error())
 		}
+		log(fmt.Sprintf("TTY sent: %s", message))
 	}
 }
 
@@ -274,7 +308,7 @@ func setFFPreference(key string, value string) {
 	sendFirefoxCommand("setContext", map[string]interface{}{"value": "content"})
 }
 
-// Consume output from Marionette, we don't do anything with it. It's just
+// Consume output from Marionette, we don't do anything with it. It"s just
 // useful to have it in the logs.
 func readMarionette() {
 	buffer := make([]byte, 4096)
@@ -304,14 +338,18 @@ func loadHomePage() {
 	sendFirefoxCommand("get", args)
 }
 
+func setDefaultPreferences() {
+	for key, value := range defaultFFPrefs {
+		setFFPreference(key, value)
+	}
+}
+
 func setupFirefox() {
 	go startHeadlessFirefox()
 	// TODO: Do something better than just waiting
 	time.Sleep(3 * time.Second)
 	firefoxMarionette()
-	// Send Browser Console (different from Devtools console) output to
-	// STDOUT.
-	setFFPreference("browser.dom.window.dump.enabled", "true")
+	setDefaultPreferences()
 	installWebextension()
 	go loadHomePage()
 }
@@ -319,6 +357,7 @@ func setupFirefox() {
 func main() {
 	initialise()
 	if !*isUseExistingFirefox {
+		println("Starting Browsh...")
 		setupFirefox()
 	} else {
 		println("Waiting for a Firefox instance to connect...")

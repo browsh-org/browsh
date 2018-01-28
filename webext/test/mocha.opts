@@ -1,2 +1,2 @@
 --require babel-register
---timeout 15000
+--timeout 60000
