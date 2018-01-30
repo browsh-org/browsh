@@ -9,6 +9,9 @@ manifest_version=$(echo $line | grep -o '".*"' | cut -d " " -f 2 | sed 's/"//g')
 
 latest_tagged_version=$(git tag --sort=v:refname --list 'v*.*.*' | tail -n1 | sed -e "s/^v//")
 
+echo "manifest.json version: $manifest_version"
+echo "Latest tag: $latest_tagged_version"
+
 if [[ "$manifest_version" == "$latest_tagged_version" ]]; then
   echo "Not running release as there's no new version."
   exit 0
@@ -18,7 +21,7 @@ git reset --hard
 git tag v$manifest_version
 
 cd $PROJECT_ROOT/webext
-#BROWSH_ENV=RELEASE npm run build
+BROWSH_ENV=RELEASE npm run build
 
 cd $PROJECT_ROOT/interfacer
 rvm install 2.5.0

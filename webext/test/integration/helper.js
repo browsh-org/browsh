@@ -157,11 +157,11 @@ class Helper {
       `--firefox="${this.project_root}/webext/contrib/firefoxheadless.sh" ` +
       `--verbose ` +
       `--no-reload ` +
-      `--url https://google.com ` +
+      `--url http://www.something.com/ ` +
       `\r`;
     this.firefoxPTY.write(command);
     this.firefoxPTY.on('data', (data) => {
-      const ignore = /gconf|x11|dbus/i.test(data);
+      const ignore = /gconf|x11|dbus|d-bus|javascript strict warning/i.test(data);
       if (ignore) return;
       this.log('WEBEXT RUNNER: ' + data);
     });

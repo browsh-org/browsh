@@ -12,9 +12,11 @@ export default (Base) => class extends Base {
   }
 
   log(...message) {
-    if (message.length === 1) message = message[0];
-    message = stripAnsi(message);
-    message = message.replace(/\u001b\[/g, 'ESC');
+    if (message.length === 1) {
+      message = message[0];
+      message = stripAnsi(message);
+      message = message.replace(/\u001b\[/g, 'ESC');
+    }
     this.sendToTerminal(message);
   }
 

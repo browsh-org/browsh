@@ -20,21 +20,14 @@ export default class FrameBuilder extends BaseBuilder{
   }
 
   sendFrame() {
-    this._log('FRAME_BUILDER: sending frame...')
     this._setupDimensions();
-    this._log('FRAME_BUILDER: dimensions setup...')
     this._compileFrame();
-    this._log('FRAME_BUILDER: frame compiled...')
     this._buildFrame();
-    this._log('FRAME_BUILDER: frame built...')
     this._sendTabInfo();
-    this._log('FRAME_BUILDER: sent tab info...')
     if (!this._is_first_frame_finished) {
       this._sendMessage('/status,parsing_complete');
     }
-    this._log(this.frame)
     this._sendMessage(`/frame,${JSON.stringify(this.frame)}`);
-    this._log('FRAME_BUILDER: frame sent to background...')
     this._is_first_frame_finished = true;
   }
 
@@ -42,12 +35,6 @@ export default class FrameBuilder extends BaseBuilder{
     document.addEventListener("DOMContentLoaded", () => {
       this._init();
     }, false);
-    window.addEventListener("unload", () => {
-      this._sendMessage('/status,window_unload')
-    });
-    window.addEventListener('error', (event) => {
-      this._log("TAB JS: " + event)
-    });
     // Whilst developing this webextension the auto reload only reloads this code,
     // not the page, so we don't get the `DOMContentLoaded` event to kick everything off.
     if (this._isWindowAlreadyLoaded()) this._init(100);
@@ -89,6 +76,12 @@ export default class FrameBuilder extends BaseBuilder{
     this.text_builder.channel = this.channel;
     this._requestInitialTTYSize();
     this._listenForBackgroundMessages();
+    window.addEventListener("unload", () => {
+      this._sendMessage('/status,window_unload')
+    });
+    window.addEventListener('error', (event) => {
+      this._log("TAB JS: " + event)
+    });
   }
 
   _listenForBackgroundMessages() {

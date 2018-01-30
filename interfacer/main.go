@@ -344,6 +344,9 @@ func setDefaultPreferences() {
 	}
 }
 
+// Note that everything executed in and from this function is not covered by the integration
+// tests, because it uses the officially signed webextension, of which there can be only one.
+// We can't bump the version and create a new signed webextension for every commit.
 func setupFirefox() {
 	go startHeadlessFirefox()
 	// TODO: Do something better than just waiting

@@ -12,7 +12,6 @@ export default (MixinBase) => class extends MixinBase {
       case '/frame':
         this._current_frame = JSON.parse(message.slice(7));
         this._applyUI();
-        this.log(this._current_frame.join(''));
         this._sendCurrentFrame();
         break;
       case '/tab_info':
@@ -27,7 +26,9 @@ export default (MixinBase) => class extends MixinBase {
         this.sendTTYSizeToBrowser();
         break;
       case '/status':
-        this._updateStatus(parts[1]);
+        if (this._current_frame) {
+          this._updateStatus(parts[1]);
+        }
         break;
       case `/log`:
         this.log(parts[1]);
@@ -95,8 +96,13 @@ export default (MixinBase) => class extends MixinBase {
       } else {
         char = " "
       }
+      if (charWidthInTTY(char) > 0) {
+        index += charWidthInTTY(char);
+      } else {
+        index += 1;
+        char = " ";
+      }
       row.push(utils.ttyPixel([255, 255, 255], [0, 0, 0], char));
-      index += charWidthInTTY(char);
     }
     return row;
   }

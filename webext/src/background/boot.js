@@ -46,7 +46,7 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
 
   // Curiously `browser.runtime.onMessage` receives the tab's ID, whereas
   // `browser.runtime.onConnect` doesn't. So we have to have 2 tab listeners:
-  //   1. to get the tab ID so we can talk to it later.
+  //   1. to get the tab ID so we can talk to it later with 2.
   //   2. to maintain a long-lived connection to continuously pass messages
   //      back and forth.
   _listenForNewTab() {
@@ -55,10 +55,11 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
 
   getTabsOnSuccess(windowInfoArray) {
     for (let windowInfo of windowInfoArray) {
-      this.log(`BACKGROUND: Window: ${windowInfo.id}`);
       this.log('BACKGROUND: Current tab count: ' + windowInfo.tabs.length);
       windowInfo.tabs.map((tab) => {
-        this.log(tab.title + ' - ' + tab.url)
+        this.log(
+          `ID:${tab.id}(${tab.active ? '!' : 'x'}) ${tab.title} - ${tab.url}`
+        )
       });
     }
   }
@@ -67,7 +68,7 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
     this.log(`Error: ${error}`);
   }
 
-  countTabs() {
+  logTabs() {
     var getting = browser.windows.getAll({
       populate: true,
       windowTypes: ["normal"]
@@ -75,13 +76,27 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
     getting.then(this.getTabsOnSuccess.bind(this), this.getTabsOnError.bind(this));
   }
 
+  // On the very first startup of Firefox on a new profile it loads a tab disclaiming
+  // its data collection to a third-party. Sometimes this tab loads first, sometimes
+  // it loads second. Especially for testing we always need to load the tab we requested
+  // first. So let's just close that tab.
+  // TODO: Only do this for a testing ENV?
+  checkForMozillaCliqzTab(tab) {
+    if (tab.title.includes('Firefox by default shares data to:')) {
+      this.log("Removing the Mozilla Cliqz disclaimer startup tab")
+      const removing = browser.tabs.remove(tab.id);
+      removing.then(() => {}, (error) => this.log(error));
+      return true;
+    }
+    return false;
+  }
+
   _newTabHandler(_request, sender, sendResponse) {
-    //this.countTabs()
-    this.log(`Tab ${sender.tab.id} registered with background process`);
+    this.logTabs()
+    this.log(`Tab ${sender.tab.id} (${sender.tab.title}) registered with background process`);
+    if (this.checkForMozillaCliqzTab(sender.tab)) return;
     // Send the tab back to itself, such that it can be enlightened unto its own nature
-    this.log('BACKGROUND: bouncing tab info back to tab: ' + sender.tab)
     sendResponse(sender.tab);
-    this.log('BACKGROUND: is tab active? ' + sender.tab.active)
     //if (sender.tab.active) this.active_tab_id = sender.tab.id;
     this.active_tab_id = sender.tab.id;
   }
@@ -92,7 +107,7 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
   }
 
   _tabChannelOpenHandler(channel) {
-    // TODO: Can we not assume that channel.name is the same as this.active_tab_id?
+    // TODO: Can we not just assume that channel.name is the same as this.active_tab_id?
     this.log(`Tab ${channel.name} connected for communication with background process`);
     this.tabs[channel.name] = {
       channel: channel
@@ -120,25 +135,22 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
     }
   }
 
-  // Instead of having each tab manage its own frame rate, just keep a single, centralised
+  // Instead of having each tab manage its own frame rate, just keep this single, centralised
   // heartbeat in the background process that switches automatically to the current active
   // tab.
   _startFrameRequestLoop() {
-    let frame_count = 0;
-    this.log('BACKGROUND: frame loop starting')
+    this.log('BACKGROUND: Frame loop starting')
     setInterval(() => {
-      frame_count += 1;
-      if (frame_count < 10) this.log('BACKGROUND: frame loop called')
       if (!this.tty_width || !this.tty_height) {
         this.log("Not sending frame to TTY without TTY size")
         return;
       }
-      if (frame_count < 10) this.log('BACKGROUND: considering widnow resize')
       if (this._is_intial_window_pending) this._initialWindowResize();
-      if (!this.tabs.hasOwnProperty(this.active_tab_id)) return;
-      if (frame_count < 10) this.log('BACKGROUND: there is an active tab, requesting frame')
+      if (!this.tabs.hasOwnProperty(this.active_tab_id)) {
+        this.log("No active tab, so not requesting a frame");
+        return;
+      }
       this.sendToCurrentTab('/request_frame');
-      if (frame_count < 10) this.log('BACKGROUND: frame requested')
     }, 1000);
   }
 }

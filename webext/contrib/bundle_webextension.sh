@@ -28,14 +28,20 @@ then
   # The signed version. There can only be one canonical XPI for each semantic
   # version.
   source_file=$source_dir/$xpi_file
+  bundle_file=$source_dir/browsh.xpi
   $NODE_BIN/web-ext sign --api-key $MDN_USER --api-secret $MDN_KEY
 else
+  # TODO: This doesn't currently work with the Marionettte `tempAddon`
+  # installation method. Just use `web-ext run` and Browsh's `use-existing-ff`
+  # flag - which is better anyway as it auto-reloads the extension when files
+  # change. NB: If you fix this, don't forget to change the filename loaded
+  # by `Asset()` in `main.go`.
   # In development/testing, we want to be able to bundle the webextension
   # frequently without having to resort to version bumps.
   source_file=$source_dir/$zip_file
+  bundle_file=$source_dir/browsh.zip
 fi
 
-bundle_file=$source_dir/browsh.xpi
 destination=$PROJECT_ROOT/interfacer/webextension.go
 
 cp -f $source_file $bundle_file

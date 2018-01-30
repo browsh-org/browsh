@@ -4,9 +4,9 @@ import {expect} from 'chai';
 describe('Basic', function () {
   this.retries(3);
   it('basic', (done) => {
-    helper.getPage('https://www.google.com', (page) => {
-      expect(page.title).to.eq('Google');
-      expect(page.url).to.eq('https://www.google.com/');
+    helper.getPage('http://www.something.com/', (page) => {
+      expect(page.title).to.eq('Something.');
+      expect(page.url).to.eq('http://www.something.com/');
       done();
     });
   });

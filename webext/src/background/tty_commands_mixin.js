@@ -135,7 +135,7 @@ export default (MixinBase) => class extends MixinBase {
         focused: false
       }
     );
-    updating(
+    updating.then(
       (info) => {
         this.log(tag, info);
       },
