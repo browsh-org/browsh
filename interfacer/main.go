@@ -1,10 +1,11 @@
 package main
 
 import (
+	"bufio"
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"bufio"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -38,11 +39,11 @@ var (
 	marionette     net.Conn
 	ffCommandCount = 0
 	defaultFFPrefs = map[string]string{
-		"browser.startup.homepage": "'about:blank'",
-		"startup.homepage_welcome_url": "'about:blank'",
+		"browser.startup.homepage":                "'about:blank'",
+		"startup.homepage_welcome_url":            "'about:blank'",
 		"startup.homepage_welcome_url.additional": "''",
-		"devtools.errorconsole.enabled": "true",
-		"devtools.chrome.enabled": "true",
+		"devtools.errorconsole.enabled":           "true",
+		"devtools.chrome.enabled":                 "true",
 
 		// Send Browser Console (different from Devtools console) output to
 		// STDOUT.
@@ -53,12 +54,9 @@ var (
 		// Make url-classifier updates so rare that they won"t affect tests.
 		"urlclassifier.updateinterval": "172800",
 		// Point the url-classifier to a nonexistent local URL for fast failures.
-		"browser.safebrowsing.provider.0.gethashURL":
-			"'http://localhost/safebrowsing-dummy/gethash'",
-		"browser.safebrowsing.provider.0.keyURL":
-			"'http://localhost/safebrowsing-dummy/newkey'",
-		"browser.safebrowsing.provider.0.updateURL":
-			"'http://localhost/safebrowsing-dummy/update'",
+		"browser.safebrowsing.provider.0.gethashURL": "'http://localhost/safebrowsing-dummy/gethash'",
+		"browser.safebrowsing.provider.0.keyURL":     "'http://localhost/safebrowsing-dummy/newkey'",
+		"browser.safebrowsing.provider.0.updateURL":  "'http://localhost/safebrowsing-dummy/update'",
 
 		// Disable self repair/SHIELD
 		"browser.selfsupport.url": "'https://localhost/selfrepair'",
@@ -114,8 +112,8 @@ func setupTermbox() {
 }
 
 func shutdown(message string) {
-	exitCode := 0;
-	if (message != "normal") {
+	exitCode := 0
+	if message != "normal" {
 		exitCode = 1
 	}
 	println(message)
@@ -126,7 +124,7 @@ func shutdown(message string) {
 
 func sendTtySize() {
 	x, y := termbox.Size()
-	stdinChannel <- fmt.Sprintf("/tty_size,%d,%d", x, y)
+	sendMessageToWebExtension(fmt.Sprintf("/tty_size,%d,%d", x, y))
 }
 
 func readStdin() {
@@ -135,7 +133,7 @@ func readStdin() {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyCtrlQ {
-				if (!*isUseExistingFirefox) {
+				if !*isUseExistingFirefox {
 					sendFirefoxCommand("quitApplication", map[string]interface{}{})
 				}
 				shutdown("normal")
@@ -147,7 +145,7 @@ func readStdin() {
 				"mod":  int(ev.Mod),
 			}
 			marshalled, _ := json.Marshal(eventMap)
-			stdinChannel <- "/stdin," + string(marshalled)
+			sendMessageToWebExtension("/stdin," + string(marshalled))
 		case termbox.EventResize:
 			// Need to flush STDOUT before getting the new TTY size because there
 			// can be a discrepancy between the "internal buffer" size and the
@@ -163,27 +161,22 @@ func readStdin() {
 				"mod":     int(ev.Mod),
 			}
 			marshalled, _ := json.Marshal(eventMap)
-			stdinChannel <- "/stdin," + string(marshalled)
+			sendMessageToWebExtension("/stdin," + string(marshalled))
 		case termbox.EventError:
 			shutdown(ev.Err.Error())
 		}
 	}
 }
 
+func sendMessageToWebExtension(message string) {
+	stdinChannel <- message
+}
+
 func webSocketReader(ws *websocket.Conn) {
 	defer ws.Close()
 	for {
 		_, message, err := ws.ReadMessage()
-		parts := strings.Split(string(message), ",")
-		command := parts[0]
-		if command == "/frame" {
-			termbox.SetCursor(0, 0)
-			os.Stdout.Write([]byte(parts[1]))
-			termbox.HideCursor()
-			termbox.Flush()
-		} else {
-			log("WEBEXT: " + string(message))
-		}
+		handleWebextensionCommand(message)
 		if err != nil {
 			if websocket.IsCloseError(err, websocket.CloseGoingAway) {
 				log("Socket reader detected that the browser closed the websocket")
@@ -193,6 +186,50 @@ func webSocketReader(ws *websocket.Conn) {
 			shutdown(err.Error())
 		}
 	}
+}
+
+func handleWebextensionCommand(message []byte) {
+	parts := strings.Split(string(message), ",")
+	command := parts[0]
+	switch command {
+	case "/frame":
+		renderFrame(strings.Join(parts[1:], ","))
+	case "/screenshot":
+		saveScreenshot(parts[1])
+	default:
+		log("WEBEXT: " + string(message))
+	}
+}
+
+func renderFrame(frame string) {
+	termbox.SetCursor(0, 0)
+	os.Stdout.Write([]byte(frame))
+	termbox.HideCursor()
+	termbox.Flush()
+}
+
+func saveScreenshot(base64String string) {
+	dec, err := base64.StdEncoding.DecodeString(base64String)
+	if err != nil {
+		shutdown(err.Error())
+	}
+	file, err := ioutil.TempFile(os.TempDir(), "browsh-screenshot")
+	if err != nil {
+		shutdown(err.Error())
+	}
+	if _, err := file.Write(dec); err != nil {
+		shutdown(err.Error())
+	}
+	if err := file.Sync(); err != nil {
+		shutdown(err.Error())
+	}
+	fullPath := file.Name() + ".jpg"
+	if err := os.Rename(file.Name(), fullPath); err != nil {
+		shutdown(err.Error())
+	}
+	message := "Screenshot saved to " + fullPath
+	sendMessageToWebExtension("/status," + message)
+	file.Close()
 }
 
 // When the socket reader attempts to read from a closed websocket it quickly and
@@ -242,7 +279,7 @@ func startHeadlessFirefox() {
 	if !*isFFGui {
 		args = append(args, "--headless")
 	}
-	if (*useFFProfile != "default") {
+	if *useFFProfile != "default" {
 		args = append(args, "-P", *useFFProfile)
 	}
 	firefoxProcess := exec.Command(*firefoxBinary, args...)
@@ -291,7 +328,7 @@ func installWebextension() {
 	file, err := ioutil.TempFile(os.TempDir(), "prefix")
 	defer os.Remove(file.Name())
 	ioutil.WriteFile(file.Name(), []byte(data), 0644)
-	args := map[string]interface{}{ "path": file.Name() }
+	args := map[string]interface{}{"path": file.Name()}
 	sendFirefoxCommand("addon:install", args)
 }
 

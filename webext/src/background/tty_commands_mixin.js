@@ -11,7 +11,7 @@ export default (MixinBase) => class extends MixinBase {
   handleTerminalMessage(message) {
     const parts = message.split(',');
     const command = parts[0];
-    switch (command) {
+    switch(command) {
       case '/tty_size':
         this.tty_width = parts[1];
         this.tty_height = parts[2];
@@ -27,6 +27,9 @@ export default (MixinBase) => class extends MixinBase {
         // TODO: cancel the current FPS iteration when using this
         this.sendToCurrentTab('/request_frame');
         break;
+      case '/status':
+        this.updateStatus('', parts.slice(1).join(','));
+        break;
     }
   }
 
@@ -36,15 +39,22 @@ export default (MixinBase) => class extends MixinBase {
       this._handleURLBarInput(input);
       return true;
     }
-    switch (input.key) {
+    switch(input.key) {
       case 12: // CTRL+L
         this.isURLBarFocused = true;
         this.urlBarUserContent = "";
         return true;
     }
+    if (input.mod === 1) {
+      switch(input.char) {
+        case 'P':
+          this.screenshotActiveTab();
+          break;
+      }
+    }
     if (input.key === 65512 && input.mouse_y === 1) {
       const x = input.mouse_x;
-      switch (true) {
+      switch(true) {
         case x > 0 && x < 3:
           this.sendToCurrentTab('/location_back');
           break;
@@ -143,6 +153,18 @@ export default (MixinBase) => class extends MixinBase {
         this.log(tag, error);
       }
     );
+  }
+
+  // We use the `browser` object here rather than going into the actual content script
+  // because the content script may have crashed even never loaded.
+  screenshotActiveTab() {
+    const capturing = browser.tabs.captureVisibleTab({ format: 'jpeg' });
+    capturing.then(this.saveScreenshot.bind(this), error => this.log(error));
+  }
+
+  saveScreenshot(imageUri) {
+    const data = imageUri.replace(/^data:image\/\w+;base64,/, "");
+    this.sendToTerminal('/screenshot,' + data);
   }
 }
 

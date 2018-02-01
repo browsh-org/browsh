@@ -1,4 +1,5 @@
 import fs from 'fs';
+import request from 'request';
 import pty from 'pty.js';
 import child from 'child_process';
 import stripAnsi from 'strip-ansi';
@@ -11,14 +12,27 @@ after(() => {
   helper.shutdown();
 });
 
+afterEach(function(done) {
+  if (this.currentTest.state === 'failed') {
+    helper.takeScreenshot();
+    setTimeout(() => helper.uploadScreenshot(done), 1000);
+  } else {
+    done();
+  }
+});
+
 class Helper {
-  constructor () {
+  constructor() {
     this.frame = '';
     this.tty_width = 70;
     this.tty_height = 30;
     this.is_last_startup_message_consumed = false;
     this.browserFingerprint = ' ← | x | ';
-    this.project_root = child.execSync('git rev-parse --show-toplevel').toString().trim();
+    this.project_root = this.shell('git rev-parse --show-toplevel');
+  }
+
+  shell(command) {
+    return child.execSync(command).toString().trim();
   }
 
   log(message) {
@@ -123,7 +137,7 @@ class Helper {
 
   buildPageObject(frame) {
     let frame_lines = [];
-    for(let line of frame.split(/\r?\n/)) {
+    for (let line of frame.split(/\r?\n/)) {
       line = line.replace(/\s+$/, ''); // Right trim
       frame_lines.push(line);
     }
@@ -165,6 +179,44 @@ class Helper {
       if (ignore) return;
       this.log('WEBEXT RUNNER: ' + data);
     });
+  }
+
+  takeScreenshot() {
+    // ALT+SHIFT+P
+    this.browshPTY.write('\x1bP');
+  }
+
+  uploadScreenshot(done) {
+    const file = this.findLatestScreenshot();
+    const options = {
+      url: 'https://api.imgur.com/3/image',
+      method: 'POST',
+      formData: {
+        'image': fs.createReadStream(file)
+      },
+      headers: {
+        'Authorization': 'Client-ID f0b449ea6dd8717'
+      }
+    }
+    request.post(options, (err, httpResponse, body) => {
+      if (err) {
+        // eslint-disable-next-line no-console
+        console.error("Error uploading screenshot: " + err);
+      } else if (httpResponse < 200 || httpResponse > 299) {
+        const message = JSON.parse(body).data.error;
+        // eslint-disable-next-line no-console
+        console.error("Error uploading screenshot: " + message);
+      } else {
+        const link = JSON.parse(body).data.link;
+        // eslint-disable-next-line no-console
+        console.log("Screenshot of errored tab state uploaded to: " + link);
+      }
+      done();
+    });
+  }
+
+  findLatestScreenshot() {
+    return this.shell('ls -t /tmp/*.jpg | head -1');
   }
 }
 

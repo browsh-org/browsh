@@ -60,6 +60,7 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
         this.log(
           `ID:${tab.id}(${tab.active ? '!' : 'x'}) ${tab.title} - ${tab.url}`
         )
+        this.log(JSON.stringify(tab));
       });
     }
   }

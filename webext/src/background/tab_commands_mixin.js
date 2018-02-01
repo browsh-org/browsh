@@ -27,7 +27,7 @@ export default (MixinBase) => class extends MixinBase {
         break;
       case '/status':
         if (this._current_frame) {
-          this._updateStatus(parts[1]);
+          this.updateStatus(parts[1]);
         }
         break;
       case `/log`:
@@ -47,7 +47,8 @@ export default (MixinBase) => class extends MixinBase {
     this.sendToTerminal(`/frame,${raw_frame}`);
   }
 
-  _updateStatus(status) {
+  updateStatus(status, message = '') {
+    if (typeof this._current_frame === 'undefined') return;
     switch (status) {
       case 'page_init':
         this._page_status = `Loading ${this.currentTab().info.url}`;
@@ -59,6 +60,7 @@ export default (MixinBase) => class extends MixinBase {
         this._page_status = 'Loading...';
         break;
       default:
+        if (message != '') status = message;
         this._page_status = status;
     }
     this._applyStatus();
@@ -69,9 +71,11 @@ export default (MixinBase) => class extends MixinBase {
     const tabs = this._buildTTYRow(this._buildTabs());
     const urlBar = this._buildURLBar();
     this._current_frame = tabs.concat(urlBar).concat(this._current_frame);
+    this._applyStatus();
   }
 
   _applyStatus() {
+    if (typeof this._page_status === 'undefined') return;
     let cell;
     const start = (this.tty_height - 1) * this.tty_width;
     for (let i = 0; i < this.tty_width; i++) {

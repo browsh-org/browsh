@@ -3,6 +3,7 @@ const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
+  target: 'node',
   entry: {
     content: './content.js',
     background: './background.js'
