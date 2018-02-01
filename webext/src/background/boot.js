@@ -13,7 +13,18 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
     this.tabs = {};
     // The ID of the tab currently opened in the browser
     this.active_tab_id = null;
+    // Keep track of automatic reloads to problematic tabs
+    this._tab_reloads = [];
     this._connectToTerminal();
+  }
+
+  getTab(tab_id) {
+    return this.tabs[tab_id.toString()];
+  }
+
+  reloadTab(id) {
+    const reloading = browser.tabs.reload(id);
+    reloading.then(() => {}, (error) => this.log(error));
   }
 
   _connectToTerminal() {
@@ -39,11 +50,14 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
 
   _connectToBrowser() {
     this._listenForNewTab();
+    this._listenForTabUpdates();
     this._listenForTabChannelOpen();
     this._listenForFocussedTab();
     this._startFrameRequestLoop();
   }
 
+  // For when a tab's content script, triggered by `onDOMContentLoaded`,
+  // phone's home.
   // Curiously `browser.runtime.onMessage` receives the tab's ID, whereas
   // `browser.runtime.onConnect` doesn't. So we have to have 2 tab listeners:
   //   1. to get the tab ID so we can talk to it later with 2.
@@ -53,53 +67,28 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
     browser.runtime.onMessage.addListener(this._newTabHandler.bind(this));
   }
 
-  getTabsOnSuccess(windowInfoArray) {
-    for (let windowInfo of windowInfoArray) {
-      this.log('BACKGROUND: Current tab count: ' + windowInfo.tabs.length);
-      windowInfo.tabs.map((tab) => {
-        this.log(
-          `ID:${tab.id}(${tab.active ? '!' : 'x'}) ${tab.title} - ${tab.url}`
-        )
-        this.log(JSON.stringify(tab));
+  // There's what seems to be a bug: tabs can exist and be processed without
+  // triggering any `browser.tabs.onUpdated` events. Therefore we need to
+  // manually poll :/
+  _listenForTabUpdates() {
+    setInterval(() => {
+      this._pollAllTabs((tab) => {
+        this._ensureTabConnects(tab);
       });
-    }
+    }, 100);
   }
 
-  getTabsOnError(error) {
-    this.log(`Error: ${error}`);
-  }
-
-  logTabs() {
-    var getting = browser.windows.getAll({
-      populate: true,
-      windowTypes: ["normal"]
-    });
-    getting.then(this.getTabsOnSuccess.bind(this), this.getTabsOnError.bind(this));
-  }
-
-  // On the very first startup of Firefox on a new profile it loads a tab disclaiming
-  // its data collection to a third-party. Sometimes this tab loads first, sometimes
-  // it loads second. Especially for testing we always need to load the tab we requested
-  // first. So let's just close that tab.
-  // TODO: Only do this for a testing ENV?
-  checkForMozillaCliqzTab(tab) {
-    if (tab.title.includes('Firefox by default shares data to:')) {
-      this.log("Removing the Mozilla Cliqz disclaimer startup tab")
-      const removing = browser.tabs.remove(tab.id);
-      removing.then(() => {}, (error) => this.log(error));
-      return true;
-    }
-    return false;
+  _handleTabUpdate(_tab_id, changes, tab) {
+    this.log(`Tab ${tab.id} detected chages: ${JSON.stringify(changes)}`);
+    this._ensureTabConnects(changes.status, tab)
   }
 
   _newTabHandler(_request, sender, sendResponse) {
-    this.logTabs()
     this.log(`Tab ${sender.tab.id} (${sender.tab.title}) registered with background process`);
-    if (this.checkForMozillaCliqzTab(sender.tab)) return;
+    if (this._checkForMozillaCliqzTab(sender.tab)) return;
     // Send the tab back to itself, such that it can be enlightened unto its own nature
     sendResponse(sender.tab);
-    //if (sender.tab.active) this.active_tab_id = sender.tab.id;
-    this.active_tab_id = sender.tab.id;
+    if (sender.tab.active) this.active_tab_id = sender.tab.id;
   }
 
   // This is the main communication channel for all back and forth messages to tabs
@@ -122,6 +111,82 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
 
   _focussedTabHandler(tab) {
     this.active_tab_id = tab.id
+  }
+
+  _isTabConnected(tab_id) {
+    return typeof this.tabs[tab_id.toString()] !== 'undefined';
+  }
+
+  // For various reasons a tab's content script doesn't always load. Currently
+  // the known reasons are;
+  //   1. Pages without content, such as direct links to images.
+  //   2. Native pages such as `about:config`.
+  //   3. Unknown buggy behaviour such as on Travis :/
+  // So here we attempt some workarounds.
+  _ensureTabConnects(tab) {
+    if (!this._isTabReloadOkay(tab.id)) {
+      return;
+    }
+    if (tab.status === 'complete' && !this._isTabConnected(tab.id)) {
+      this.log(
+        `Automatically reloading tab ${tab.id} that has loaded but not connected ` +
+        'to the webextension'
+      );
+      this.reloadTab(tab.id);
+      this._trackTabReloads(tab.id);
+    }
+  }
+
+  _isTabReloadOkay(tab_id) {
+    const count = this._tab_reloads[tab_id.toString()];
+    if(typeof count === 'undefined') return true;
+    return count <= 3;
+  }
+
+  _trackTabReloads(tab_id) {
+    if(typeof this._tab_reloads[tab_id.toString()] === 'undefined') {
+      this._tab_reloads[tab_id.toString()] = 1;
+    } else {
+      this._tab_reloads[tab_id.toString()] += 1;
+    }
+  }
+
+  _getTabsOnSuccess(windowInfoArray, callback) {
+    for (let windowInfo of windowInfoArray) {
+      windowInfo.tabs.map((tab) => {
+        callback(tab);
+      });
+    }
+  }
+
+  _getTabsOnError(error) {
+    this.log(`Error: ${error}`);
+  }
+
+  _pollAllTabs(callback) {
+    var getting = browser.windows.getAll({
+      populate: true,
+      windowTypes: ["normal"]
+    });
+    getting.then(
+      (windowInfoArray) => this._getTabsOnSuccess(windowInfoArray, callback),
+      () => this._getTabsOnError(callback)
+    );
+  }
+
+  // On the very first startup of Firefox on a new profile it loads a tab disclaiming
+  // its data collection to a third-party. Sometimes this tab loads first, sometimes
+  // it loads second. Especially for testing we always need to load the tab we requested
+  // first. So let's just close that tab.
+  // TODO: Only do this for a testing ENV?
+  _checkForMozillaCliqzTab(tab) {
+    if (tab.title.includes('Firefox by default shares data to:')) {
+      this.log("Removing the Mozilla Cliqz disclaimer startup tab")
+      const removing = browser.tabs.remove(tab.id);
+      removing.then(() => {}, (error) => this.log(error));
+      return true;
+    }
+    return false;
   }
 
   // The browser window can only be resized once we have both the character dimensions from

@@ -97,7 +97,6 @@ export default class FrameBuilder extends BaseBuilder{
   }
 
   _handleBackgroundMessage(message) {
-    this._log('FRAME_BUILDER: received message from BG: ' + message)
     let input, url;
     const parts = message.split(',');
     const command = parts[0];
