@@ -32,6 +32,7 @@ export default class FrameBuilder extends BaseBuilder{
   }
 
   _setupInit() {
+    // TODO: Can we not just boot up as soon as we detect the background script?
     document.addEventListener("DOMContentLoaded", () => {
       this._init();
     }, false);

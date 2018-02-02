@@ -2,7 +2,12 @@
 
 set -ex
 
-PROJECT_ROOT=$(git rev-parse --show-toplevel)
+if [ ! -f .travis.yml ]; then
+  PROJECT_ROOT=$(git rev-parse --show-toplevel)
+else
+  PROJECT_ROOT=.
+fi
+
 line=$(cat $PROJECT_ROOT/.travis.yml | grep 'firefox: "')
 version=$(echo $line | grep -o '".*"' | cut -d " " -f 1 | sed 's/"//g')
 

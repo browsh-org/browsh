@@ -75,7 +75,7 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
       this._pollAllTabs((tab) => {
         this._ensureTabConnects(tab);
       });
-    }, 100);
+    }, 1000);
   }
 
   _handleTabUpdate(_tab_id, changes, tab) {

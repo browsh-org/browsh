@@ -5,15 +5,15 @@
 # Browsh in the Dockerfile because that would require signing the webextension
 # again, which can't be done as only one canonical release of a webextension is
 # allowed by MDN per semantic version. It's actually quite good to not have to
-# repeat the build process (after having done so in Travis after successfully
-# passing tests). So we simply just download the already built binary :)
+# repeat the build process (having done so in Travis after successfully
+# passing tests). So we simply just download the already built binary.
 
-PROJECT_ROOT=$(git rev-parse --show-toplevel)
-if [ $? -eq 0 ]; then
-  manifest=$PROJECT_ROOT/webext/manifest.json
+if [ ! -f manifest.json ]; then
+  PROJECT_ROOT=$(git rev-parse --show-toplevel)/webext
 else
-  manifest=./manifest.json
+  PROJECT_ROOT=.
 fi
+manifest=$PROJECT_ROOT/manifest.json
 
 line=$(cat $manifest | grep '"version"')
 version=$(echo $line | grep -o '".*"' | cut -d " " -f 2 | sed 's/"//g')
