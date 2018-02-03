@@ -9,3 +9,7 @@
 [[constraint]]
   name = "github.com/shuLhan/go-bindata"
   version = "3.2.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/shibukawa/configdir"

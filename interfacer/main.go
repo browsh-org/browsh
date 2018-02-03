@@ -21,6 +21,8 @@ import (
 	"github.com/nsf/termbox-go"
 
 	"github.com/gorilla/websocket"
+	"github.com/shibukawa/configdir"
+
 )
 
 var (
@@ -30,6 +32,7 @@ var (
 	isFFGui              = flag.Bool("with-gui", false, "Don't use headless Firefox")
 	isUseExistingFirefox = flag.Bool("use-existing-ff", false, "Whether Browsh should launch Firefox or not")
 	useFFProfile         = flag.String("ff-profile", "default", "Firefox profile to use")
+	isDebug              = flag.Bool("debug", false, "Log to ./debug.log")
 	upgrader             = websocket.Upgrader{
 		CheckOrigin:     func(r *http.Request) bool { return true },
 		ReadBufferSize:  1024,
@@ -85,6 +88,9 @@ func setupLogging() {
 }
 
 func log(msg string) {
+	if !*isDebug {
+		return
+	}
 	f, oErr := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if oErr != nil {
 		shutdown(oErr.Error())
@@ -272,6 +278,14 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	sendTtySize()
 }
 
+// Gets a cross-platform path to store Browsh config
+func getConfigFolder() string {
+	configDirs := configdir.New("browsh", "firefox_profile")
+	folders := configDirs.QueryFolders(configdir.Global)
+	folders[0].MkdirAll()
+	return folders[0].Path
+}
+
 func startHeadlessFirefox() {
 	println("Starting...")
 	log("Starting Firefox in headless mode")
@@ -280,7 +294,12 @@ func startHeadlessFirefox() {
 		args = append(args, "--headless")
 	}
 	if *useFFProfile != "default" {
+		log("Using profile: " + *useFFProfile)
 		args = append(args, "-P", *useFFProfile)
+	} else {
+		profilePath := getConfigFolder()
+		log("Using default profile at: " + profilePath)
+		args = append(args, "--profile", profilePath)
 	}
 	firefoxProcess := exec.Command(*firefoxBinary, args...)
 	defer firefoxProcess.Process.Kill()

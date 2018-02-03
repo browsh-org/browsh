@@ -63,7 +63,7 @@ class Helper {
       env: process.env
     });
     this.browshPTY.write(`cd ${dir} \r`);
-    this.browshPTY.write(`go run *.go -use-existing-ff \r`);
+    this.browshPTY.write(`go run *.go -use-existing-ff -debug \r`);
     this.broadcastOutput();
   }
 

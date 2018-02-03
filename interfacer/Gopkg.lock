@@ -20,14 +20,14 @@
   revision = "aa4a75b1c20a2b03751b1a9f7e41d58bd6f71c43"
 
 [[projects]]
-  name = "github.com/shuLhan/go-bindata"
+  branch = "master"
+  name = "github.com/shibukawa/configdir"
   packages = ["."]
-  revision = "13e7f547b03edacc82d8b69dcf1f404b7f1d97f7"
-  version = "v3.2.0"
+  revision = "e180dbdc8da04c4fa04272e875ce64949f38bd3e"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2c892d289743dedad27a5cab0c6716e1949efe9aa7cee7b683ce50ad5c15e5d6"
+  inputs-digest = "e1642a608af3337f43720099e44ef494d6d73b19c3c61f5422be19c8465df364"
   solver-name = "gps-cdcl"
   solver-version = 1
