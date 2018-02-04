@@ -32,6 +32,8 @@ var (
 	isUseExistingFirefox = flag.Bool("use-existing-ff", false, "Whether Browsh should launch Firefox or not")
 	useFFProfile         = flag.String("ff-profile", "default", "Firefox profile to use")
 	isDebug              = flag.Bool("debug", false, "Log to ./debug.log")
+	startupURL           = flag.String("startup-url", "https://google.com", "URL to launch at startup")
+	timeLimit            = flag.Int("time-limit", 0, "Kill Browsh after the specified number of seconds")
 	upgrader             = websocket.Upgrader{
 		CheckOrigin:     func(r *http.Request) bool { return true },
 		ReadBufferSize:  1024,
@@ -139,7 +141,7 @@ func readStdin() {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyCtrlQ {
 				if !*isUseExistingFirefox {
-					sendFirefoxCommand("quitApplication", map[string]interface{}{})
+					quitFirefox()
 				}
 				shutdown("normal")
 			}
@@ -387,7 +389,7 @@ func loadHomePage() {
 	// Wait for the CLI websocket server to start listening
 	time.Sleep(200 * time.Millisecond)
 	args := map[string]interface{}{
-		"url": "https://google.com",
+		"url": *startupURL,
 	}
 	sendFirefoxCommand("get", args)
 }
@@ -398,11 +400,25 @@ func setDefaultPreferences() {
 	}
 }
 
+func beginTimeLimit() {
+	warningLength := 10
+	warningLimit := time.Duration(*timeLimit - warningLength);
+	time.Sleep(warningLimit * time.Second)
+	message := fmt.Sprintf("Browsh will close in %d seconds...", warningLength)
+	sendMessageToWebExtension("/status," + message)
+	time.Sleep(time.Duration(warningLength) * time.Second)
+	quitFirefox()
+	shutdown("normal")
+}
+
 // Note that everything executed in and from this function is not covered by the integration
 // tests, because it uses the officially signed webextension, of which there can be only one.
 // We can't bump the version and create a new signed webextension for every commit.
 func setupFirefox() {
 	go startHeadlessFirefox()
+	if (*timeLimit > 0) {
+		go beginTimeLimit()
+	}
 	// TODO: Do something better than just waiting
 	time.Sleep(3 * time.Second)
 	firefoxMarionette()
@@ -411,10 +427,14 @@ func setupFirefox() {
 	go loadHomePage()
 }
 
+func quitFirefox() {
+	sendFirefoxCommand("quitApplication", map[string]interface{}{})
+}
+
 func main() {
 	initialise()
 	if !*isUseExistingFirefox {
-		println("Starting Browsh...")
+		println("Starting Browsh, the modern terminal web browser...")
 		setupFirefox()
 	} else {
 		println("Waiting for a Firefox instance to connect...")
