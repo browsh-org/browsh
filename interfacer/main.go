@@ -22,7 +22,6 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/shibukawa/configdir"
-
 )
 
 var (
@@ -42,8 +41,8 @@ var (
 	marionette     net.Conn
 	ffCommandCount = 0
 	defaultFFPrefs = map[string]string{
-		"browser.startup.homepage":                "'about:blank'",
-		"startup.homepage_welcome_url":            "'about:blank'",
+		"browser.startup.homepage":                "'https://www.google.com'",
+		"startup.homepage_welcome_url":            "'https://www.google.com'",
 		"startup.homepage_welcome_url.additional": "''",
 		"devtools.errorconsole.enabled":           "true",
 		"devtools.chrome.enabled":                 "true",
@@ -287,7 +286,6 @@ func getConfigFolder() string {
 }
 
 func startHeadlessFirefox() {
-	println("Starting...")
 	log("Starting Firefox in headless mode")
 	args := []string{"--marionette"}
 	if !*isFFGui {
