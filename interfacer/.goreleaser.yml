@@ -6,6 +6,7 @@ builds:
       - windows
       - darwin
       - linux
+      - freebsd
     goarch:
       - amd64
     ldflags: -s -w
