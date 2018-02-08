@@ -1,6 +1,13 @@
 FROM bitnami/minideb:stretch
 
 RUN install_packages xvfb libgtk-3-0 curl ca-certificates bzip2 libdbus-glib-1-2
+
+# Logging client for Google's Stackdriver logging service.
+# NB Not used by default. Only used by the Browsh as a Service platform on the
+#    anonymous accounts.
+RUN curl -L -o /usr/local/bin/gcloud_logger https://github.com/tombh/gcloud_pipe_logger/releases/download/v0.0.5/gcloud_pipe_logger_0.0.5_linux_amd64
+RUN chmod a+x /usr/local/bin/gcloud_logger
+
 RUN useradd -m user
 RUN su user
 ENV HOME=/home/user
