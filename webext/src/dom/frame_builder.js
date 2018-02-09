@@ -137,6 +137,12 @@ export default class FrameBuilder extends BaseBuilder{
       case 65516: // down arrow
         window.scrollBy(0, 20);
         break;
+      case 65508: // scroll up
+        window.scrollBy(0, -20);
+        break;
+      case 65507: // scroll down
+        window.scrollBy(0, 20);
+        break;
       case 65512: // mousedown
         this._mouseAction('click', input.mouse_x, input.mouse_y);
         this._mouseAction('mousedown', input.mouse_x, input.mouse_y);

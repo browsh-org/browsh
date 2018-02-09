@@ -145,7 +145,6 @@ func readStdin() {
 				}
 				shutdown("normal")
 			}
-			log(fmt.Sprintf("EventKey: k: %d, c: %c, mod: %s", ev.Key, ev.Ch, ev.Mod))
 			eventMap := map[string]interface{}{
 				"key":  int(ev.Key),
 				"char": string(ev.Ch),
@@ -160,7 +159,6 @@ func readStdin() {
 			termbox.Flush()
 			sendTtySize()
 		case termbox.EventMouse:
-			log(fmt.Sprintf("Mouse: k: %d, x: %d, y: %d, mod: %s", ev.Key, ev.MouseX, ev.MouseY, ev.Mod))
 			eventMap := map[string]interface{}{
 				"key":     int(ev.Key),
 				"mouse_x": int(ev.MouseX),
@@ -262,7 +260,6 @@ func webSocketWriter(ws *websocket.Conn) {
 			}
 			shutdown(err.Error())
 		}
-		log(fmt.Sprintf("TTY sent: %s", message))
 	}
 }
 

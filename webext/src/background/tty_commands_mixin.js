@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import utils from 'utils';
 
 // Handle commands coming in from the terminal, like; STDIN keystrokes, TTY resize, etc
@@ -25,7 +26,9 @@ export default (MixinBase) => class extends MixinBase {
         }
         // Trigger a faster feedback response
         // TODO: cancel the current FPS iteration when using this
-        this.sendToCurrentTab('/request_frame');
+        _.throttle(() => {
+          this.sendToCurrentTab('/request_frame')
+        }, 50);
         break;
       case '/status':
         this.updateStatus('', parts.slice(1).join(','));
