@@ -16,6 +16,7 @@ export default class FrameBuilder extends BaseBuilder{
     // ID for element we place in the DOM to measure the size of a single monospace
     // character.
     this._measuring_box_id = 'browsh_em_measuring_box';
+    this._is_graphics_mode = true;
     this._setupInit();
   }
 
@@ -130,6 +131,11 @@ export default class FrameBuilder extends BaseBuilder{
   }
 
   _handleUserInput(input) {
+    this._handleSpecialKeys(input);
+    this._handleCharBasedKeys(input);
+  }
+
+  _handleSpecialKeys(input) {
     switch (input.key) {
       case 65517: // up arow
         window.scrollBy(0, -20);
@@ -152,6 +158,16 @@ export default class FrameBuilder extends BaseBuilder{
         break;
       case 18: // CTRL+R
         window.location.reload();
+        break;
+    }
+  }
+
+  _handleCharBasedKeys(input) {
+    switch (input.char) {
+      case 'M':
+        if (input.mod === 1) {
+          this._is_graphics_mode = !this._is_graphics_mode;
+        }
         break;
     }
   }
@@ -316,29 +332,48 @@ export default class FrameBuilder extends BaseBuilder{
   // However we can't just write random pixels to a TTY screen, we must collate 2 rows
   // of native pixels for every row of the terminal.
   _buildTtyRow(bg_row, fg_row, y) {
-    let tty_index, char, x_shoved;
+    let tty_index;
     let row = [];
-    let char_width_debt = 0;
+    this._char_width_debt = 0;
     const tty_row = parseInt(y / 2);
     for (let x = 0; x < this.frame_width; x++) {
-      if (x + char_width_debt >= this.frame_width) {
+      if (x + this._char_width_debt >= this.frame_width) {
         // Ideally this shouldn't happen because the CSS 'should' deal with wide
         // characters.
         break;
       }
       tty_index = (tty_row * this.frame_width) + x;
       if (this._doesCellHaveACharacter(tty_index)) {
-        char = this.formatted_text[tty_index];
-        char_width_debt = this._calculateCharWidthDebt(char_width_debt, char[0]);
-        // Don't display a wide character in the final column
-        if (x + char_width_debt >= this.frame_width) char[0] = ' ';
-        row.push(utils.ttyPixel(char[1], char[2], char[0]));
+        row = this._addCharacter(row, x, tty_index);
       } else {
-        // Wide characters take up more than one cell, so we might not always be
-        // iterating by 1.
-        x_shoved = x + char_width_debt;
-        row.push(utils.ttyPixel(fg_row[x_shoved], bg_row[x_shoved], '▄'));
+        row = this._addGraphicsBlock(row, x, fg_row, bg_row);
       }
+    }
+    return row;
+  }
+
+  _addCharacter(row, x, tty_index) {
+    const char = this.formatted_text[tty_index];
+    this._calculateCharWidthDebt(char[0]);
+    // Don't display a wide character in the final column
+    if (x + this._char_width_debt >= this.frame_width) char[0] = ' ';
+    if (this._is_graphics_mode) {
+      row.push(utils.ttyPixel(char[1], char[2], char[0]));
+    } else {
+      // TODO: Somehow communicate clickable text
+      row.push(char[0]);
+    }
+    return row;
+  }
+
+  _addGraphicsBlock(row, x, fg_row, bg_row) {
+    // Wide characters take up more than one cell, so we might not always be
+    // iterating by 1.
+    const x_shoved = x + this._char_width_debt;
+    if (this._is_graphics_mode) {
+      row.push(utils.ttyPixel(fg_row[x_shoved], bg_row[x_shoved], '▄'));
+    } else {
+      row.push(' ');
     }
     return row;
   }
@@ -349,12 +384,11 @@ export default class FrameBuilder extends BaseBuilder{
   //   2. Use CSS or JS so that wide characters actually flow in the DOM as 2
   //      monospaced characters. This will allow pages of nothing but wide
   //      characters to properly display.
-  _calculateCharWidthDebt(current_debt, char) {
+  _calculateCharWidthDebt(char) {
     const char_width_in_tty = charWidthInTTY(char);
     if (char_width_in_tty > 1) {
-      current_debt += char_width_in_tty - 1;
+      this._char_width_debt += char_width_in_tty - 1;
     }
-    return current_debt;
   }
 
   // We need to know this because we want all empty cells to be 'transparent'
