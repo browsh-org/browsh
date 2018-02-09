@@ -65,6 +65,7 @@ export default (MixinBase) => class extends MixinBase {
           this.sendToCurrentTab('/window_stop');
           break;
         default:
+          this.urlBarUserContent = "";
           this.isURLBarFocused = true;
       }
       return true;
@@ -89,6 +90,7 @@ export default (MixinBase) => class extends MixinBase {
         this.urlBarUserContent = this.urlBarUserContent.slice(0, -1);
         return;
     }
+    if (typeof char === 'undefined') return;
     this.urlBarUserContent += char;
   }
 
