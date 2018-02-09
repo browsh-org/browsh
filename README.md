@@ -8,11 +8,12 @@ or Firefox in your terminal 😲
 
 ## Why?
 
-I'm travelling around the world and sometimes I don't have very good
-Internet. If all I have is a 3kbps connection tethered from my phone
-then it's good to SSH into my server and browse the web through
-[elinks](https://github.com/tombh/texttop/issues/17). That way my
-_server_ downloads the web pages and uses the limited bandwidth of my
+Not all the world has good Internet.
+
+If all you have is a 3kbps connection tethered from a phone
+then it's good to SSH into a server and browse the web through
+[elinks](https://github.com/tombh/texttop/issues/17). That way the
+_server_ downloads the web pages and uses the limited bandwidth of an
 SSH connection to display the result. But it lacks JS support and all
 that other modern HTML5 goodness. So Browsh is simply a way to have
 the power of a remote server running a modern browser, but interfaced
@@ -47,8 +48,7 @@ Or download and run the Docker image (~800MB) with:
 Most keys and mouse gestures should work as you'd expect on a desktop
 browser.
 
-`CTRL+l` Focus URL bar
-`ALT+P` Take screenshot
+For full documentation see [the documentation](https://www.brow.sh/docs/introduction/)
 
 ## Contributing
 To setup a dev env you will need NodeJS and Golang installed. If you get stuck
