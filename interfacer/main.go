@@ -13,12 +13,13 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"strconv"
 	"time"
+	"math/rand"
 
-	// Termbox seems to be one of the best projects in any language for handling terminal input.
-	// It"s cross-platform and the maintainer is disciplined about supporting the baseline of escape
-	// codes that work across the majority of terminals.
-	"github.com/nsf/termbox-go"
+	// TCell seems to be one of the best projects in any language for handling terminal
+	// standards across the major OSs.
+	"github.com/gdamore/tcell"
 
 	"github.com/gorilla/websocket"
 	"github.com/shibukawa/configdir"
@@ -42,6 +43,8 @@ var (
 	stdinChannel   = make(chan string)
 	marionette     net.Conn
 	ffCommandCount = 0
+	isConnectedToWebExtension = false
+	screen tcell.Screen
 	defaultFFPrefs = map[string]string{
 		"browser.startup.homepage":                "'https://www.google.com'",
 		"startup.homepage_welcome_url":            "'https://www.google.com'",
@@ -104,18 +107,39 @@ func log(msg string) {
 	}
 }
 
+// Write a simple text string to the screen. Not for use in the browser frames
+// themselves. If you want anything to appear in the browser then must be done
+// through the webextension.
+func writeString(x, y int, str string) {
+	var defaultColours = tcell.StyleDefault
+	rgb := tcell.NewHexColor(int32(rand.Int() & 0xffffff))
+	defaultColours.Foreground(rgb)
+	defaultColours.Background(tcell.ColorRed)
+	for _, c := range str {
+		screen.SetContent(x, y, c, nil, defaultColours)
+		x++
+	}
+}
+
 func initialise() {
 	flag.Parse()
-	setupTermbox()
+	setupTcell()
 	setupLogging()
 }
 
-func setupTermbox() {
-	err := termbox.Init()
+func setupTcell() {
+	var err error
+	screen, err = tcell.NewScreen()
 	if err != nil {
-		shutdown(err.Error())
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
 	}
-	termbox.SetInputMode(termbox.InputAlt | termbox.InputMouse)
+	if err = screen.Init(); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+	screen.EnableMouse()
+	screen.Clear()
 }
 
 func shutdown(message string) {
@@ -125,55 +149,56 @@ func shutdown(message string) {
 	}
 	println(message)
 	log("Shutting down with: " + message)
-	termbox.Close()
+	screen.Fini()
 	os.Exit(exitCode)
 }
 
 func sendTtySize() {
-	x, y := termbox.Size()
+	x, y := screen.Size()
 	sendMessageToWebExtension(fmt.Sprintf("/tty_size,%d,%d", x, y))
 }
 
 func readStdin() {
-	defer termbox.Close()
 	for {
-		switch ev := termbox.PollEvent(); ev.Type {
-		case termbox.EventKey:
-			if ev.Key == termbox.KeyCtrlQ {
+		ev := screen.PollEvent()
+		switch ev := ev.(type) {
+		case *tcell.EventKey:
+			if ev.Key() == tcell.KeyCtrlQ {
 				if !*isUseExistingFirefox {
 					quitFirefox()
 				}
 				shutdown("normal")
 			}
 			eventMap := map[string]interface{}{
-				"key":  int(ev.Key),
-				"char": string(ev.Ch),
-				"mod":  int(ev.Mod),
+				"key":  int(ev.Key()),
+				"char": string(ev.Rune()),
+				"mod":  int(ev.Modifiers()),
 			}
 			marshalled, _ := json.Marshal(eventMap)
 			sendMessageToWebExtension("/stdin," + string(marshalled))
-		case termbox.EventResize:
-			// Need to flush STDOUT before getting the new TTY size because there
-			// can be a discrepancy between the "internal buffer" size and the
-			// actual size.
-			termbox.Flush()
+		case *tcell.EventResize:
+			screen.Sync()
 			sendTtySize()
-		case termbox.EventMouse:
+		case *tcell.EventMouse:
+			x, y := ev.Position()
+			button := ev.Buttons()
 			eventMap := map[string]interface{}{
-				"key":     int(ev.Key),
-				"mouse_x": int(ev.MouseX),
-				"mouse_y": int(ev.MouseY),
-				"mod":     int(ev.Mod),
+				"button":    int(button),
+				"mouse_x":   int(x),
+				"mouse_y":   int(y),
+				"modifiers": int(ev.Modifiers()),
 			}
 			marshalled, _ := json.Marshal(eventMap)
 			sendMessageToWebExtension("/stdin," + string(marshalled))
-		case termbox.EventError:
-			shutdown(ev.Err.Error())
 		}
 	}
 }
 
 func sendMessageToWebExtension(message string) {
+	if (!isConnectedToWebExtension) {
+		log("Webextension not connected. Message not sent: " + message)
+		return
+	}
 	stdinChannel <- message
 }
 
@@ -198,7 +223,8 @@ func handleWebextensionCommand(message []byte) {
 	command := parts[0]
 	switch command {
 	case "/frame":
-		renderFrame(strings.Join(parts[1:], ","))
+		frame := parseJSONframe(strings.Join(parts[1:], ","))
+		renderFrame(frame)
 	case "/screenshot":
 		saveScreenshot(parts[1])
 	default:
@@ -206,11 +232,65 @@ func handleWebextensionCommand(message []byte) {
 	}
 }
 
-func renderFrame(frame string) {
-	termbox.SetCursor(0, 0)
-	os.Stdout.Write([]byte(frame))
-	termbox.HideCursor()
-	termbox.Flush()
+// Frames received from the webextension are 1 dimensional arrays of strings.
+// They are made up of a repeating pattern of 7 items:
+// ["FG RED", "FG GREEN", "FG BLUE", "BG RED", "BG GREEN", "BG BLUE", "CHARACTER" ...]
+func parseJSONframe(jsonString string) []string {
+	var frame []string
+	jsonBytes := []byte(jsonString)
+	if err := json.Unmarshal(jsonBytes, &frame); err != nil {
+		shutdown(err.Error())
+	}
+	return frame
+}
+
+// Tcell uses a buffer to collect screen updates on, it only actually sends
+// ANSI rendering commands to the terminal when we tell it to. And even then it
+// will try to minimise rendering commands by only rendering parts of the terminal
+// that have changed.
+func renderFrame(frame []string) {
+	var styling = tcell.StyleDefault
+	var character string
+	var runeChars []rune
+	width, height := screen.Size()
+	if (width * height * 7 != len(frame)) {
+		log("Not rendering frame: current frame is not the same size as the screen")
+		log(fmt.Sprintf("screen: %d, frame: %d", width * height * 7, len(frame)))
+		return
+	}
+	index := 0
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			styling = styling.Foreground(getRGBColor(frame, index))
+			index += 3
+			styling = styling.Background(getRGBColor(frame, index))
+			index += 3
+			character = frame[index]
+			runeChars = []rune(character)
+			index++
+			if (character == "WIDE") {
+				continue
+			}
+			screen.SetCell(x, y, styling, runeChars[0])
+		}
+	}
+	screen.Show()
+}
+
+func getRGBColor(frame []string, index int) tcell.Color {
+	rgb := frame[index:index + 3]
+	return tcell.NewRGBColor(
+			toInt32(rgb[0]),
+			toInt32(rgb[1]),
+			toInt32(rgb[2]))
+}
+
+func toInt32(char string) int32 {
+	i, err := strconv.ParseInt(char, 10, 32)
+	if err != nil {
+		shutdown(err.Error())
+	}
+	return int32(i)
 }
 
 func saveScreenshot(base64String string) {
@@ -269,6 +349,8 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		shutdown(err.Error())
 	}
+
+	isConnectedToWebExtension = true
 
 	go webSocketWriter(ws)
 	go webSocketReader(ws)
@@ -431,10 +513,10 @@ func quitFirefox() {
 func main() {
 	initialise()
 	if !*isUseExistingFirefox {
-		println("Starting Browsh, the modern terminal web browser...")
+		writeString(0, 0, "Starting Browsh, the modern terminal web browser...")
 		setupFirefox()
 	} else {
-		println("Waiting for a Firefox instance to connect...")
+		writeString(0, 0, "Waiting for a Firefox instance to connect...")
 	}
 	log("Starting Browsh CLI client")
 	go readStdin()

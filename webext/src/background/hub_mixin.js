@@ -11,13 +11,13 @@ export default (Base) => class extends Base {
     this.terminal.send(message);
   }
 
-  log(...message) {
-    if (message.length === 1) {
-      message = message[0];
-      message = stripAnsi(message);
-      message = message.replace(/\u001b\[/g, 'ESC');
+  log(...messages) {
+    if (messages.length === 1) {
+      messages = messages[0];
+      messages = stripAnsi(messages);
+      messages = messages.replace(/\u001b\[/g, 'ESC');
     }
-    this.sendToTerminal(message);
+    this.sendToTerminal(messages);
   }
 
   currentTab() {

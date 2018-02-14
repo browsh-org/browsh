@@ -16,18 +16,22 @@ export default class GraphicsBuilder extends BaseBuilder {
     const pixel_data_start = parseInt(
       (y * (this.viewport.width * 4)) + (x * 4)
     );
-    let fg_colour = this.pixels_with_text.slice(
+    let fg_rgb = this.pixels_with_text.slice(
       pixel_data_start, pixel_data_start + 3
     );
-    let bg_colour = this.pixels_without_text.slice(
+    let bg_rgb = this.pixels_without_text.slice(
       pixel_data_start, pixel_data_start + 3
     );
-    return [fg_colour, bg_colour];
+    return [
+      [fg_rgb[0], fg_rgb[1], fg_rgb[2]],
+      [bg_rgb[0], bg_rgb[1], bg_rgb[2]]
+    ]
   }
 
   getScaledPixelAt(x, y) {
     const pixel_data_start = (y * this.frame_width * 4) + (x * 4);
-    return this.scaled_pixels.slice(pixel_data_start, pixel_data_start + 3);
+    const rgb = this.scaled_pixels.slice(pixel_data_start, pixel_data_start + 3);
+    return [rgb[0], rgb[1], rgb[2]];
   }
 
   getSnapshotWithText() {

@@ -48,14 +48,14 @@ export default (MixinBase) => class extends MixinBase {
         this.urlBarUserContent = "";
         return true;
     }
-    if (input.mod === 1) {
+    if (input.mod === 4) {
       switch(input.char) {
         case 'P':
           this.screenshotActiveTab();
           break;
       }
     }
-    if (input.key === 65512 && input.mouse_y === 1) {
+    if (input.button === 0 && input.mouse_y === 1) {
       const x = input.mouse_x;
       switch(true) {
         case x > 0 && x < 3:

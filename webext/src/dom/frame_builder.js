@@ -92,7 +92,8 @@ export default class FrameBuilder extends BaseBuilder{
         this._handleBackgroundMessage(message);
       }
       catch(error) {
-        this._log(error);
+        this._log(`'${error.name}' ${error.message}`);
+        this._log(`@${error.fileName}:${error.lineNumber}`);
         this._log(error.stack);
       }
     });
@@ -133,30 +134,18 @@ export default class FrameBuilder extends BaseBuilder{
   _handleUserInput(input) {
     this._handleSpecialKeys(input);
     this._handleCharBasedKeys(input);
+    this._handleMouse(input);
   }
 
   _handleSpecialKeys(input) {
     switch (input.key) {
-      case 65517: // up arow
+      case 257: // up arow
         window.scrollBy(0, -20);
         break;
-      case 65516: // down arrow
+      case 258: // down arrow
         window.scrollBy(0, 20);
         break;
-      case 65508: // scroll up
-        window.scrollBy(0, -20);
-        break;
-      case 65507: // scroll down
-        window.scrollBy(0, 20);
-        break;
-      case 65512: // mousedown
-        this._mouseAction('click', input.mouse_x, input.mouse_y);
-        this._mouseAction('mousedown', input.mouse_x, input.mouse_y);
-        break;
-      case 65509: //mouseup
-        this._mouseAction('mouseup', input.mouse_x, input.mouse_y);
-        break;
-      case 18: // CTRL+R
+      case 18: // CTRL+r
         window.location.reload();
         break;
     }
@@ -165,9 +154,27 @@ export default class FrameBuilder extends BaseBuilder{
   _handleCharBasedKeys(input) {
     switch (input.char) {
       case 'M':
-        if (input.mod === 1) {
+        if (input.mod === 4) {
           this._is_graphics_mode = !this._is_graphics_mode;
         }
+        break;
+    }
+  }
+
+  _handleMouse(input) {
+    switch (input.button) {
+      case 256: // scroll up
+        window.scrollBy(0, -20);
+        break;
+      case 512: // scroll down
+        window.scrollBy(0, 20);
+        break;
+      case 1: // mousedown
+        this._mouseAction('click', input.mouse_x, input.mouse_y);
+        this._mouseAction('mousedown', input.mouse_x, input.mouse_y);
+        break;
+      case 0: //mouseup
+        this._mouseAction('mouseup', input.mouse_x, input.mouse_y);
         break;
     }
   }
@@ -309,7 +316,6 @@ export default class FrameBuilder extends BaseBuilder{
   // Note how we have to keep track of 2 rows of pixels in order to create 1 row of
   // the terminal.
   _buildPixel(x, y) {
-    let row;
     const colour = this.graphics_builder.getScaledPixelAt(x, y);
     if (this._bg_row.length < this.frame_width) {
       this._bg_row.push(colour);
@@ -317,8 +323,8 @@ export default class FrameBuilder extends BaseBuilder{
       this._fg_row.push(colour);
     }
     if (this._fg_row.length === this.frame_width) {
-      row = this._buildTtyRow(this._bg_row, this._fg_row, y);
-      this.frame = this.frame.concat(row);
+      this._buildTtyRow(this._bg_row, this._fg_row, y);
+      this.frame = this.frame.concat(this._row);
       this._bg_row = [];
       this._fg_row = [];
     }
@@ -332,50 +338,44 @@ export default class FrameBuilder extends BaseBuilder{
   // However we can't just write random pixels to a TTY screen, we must collate 2 rows
   // of native pixels for every row of the terminal.
   _buildTtyRow(bg_row, fg_row, y) {
-    let tty_index;
-    let row = [];
-    this._char_width_debt = 0;
+    let tty_index, padding, char;
+    this._row = [];
     const tty_row = parseInt(y / 2);
     for (let x = 0; x < this.frame_width; x++) {
-      if (x + this._char_width_debt >= this.frame_width) {
-        // Ideally this shouldn't happen because the CSS 'should' deal with wide
-        // characters.
-        break;
-      }
       tty_index = (tty_row * this.frame_width) + x;
       if (this._doesCellHaveACharacter(tty_index)) {
-        row = this._addCharacter(row, x, tty_index);
+        this._addCharacter(tty_index);
+        char = this.formatted_text[tty_index][0]
+        padding = this._calculateCharWidthPadding(char);
+        for (let p = 0; p < padding; p++) {
+          x++;
+          this._addCharacter(tty_index, ' ');
+        }
       } else {
-        row = this._addGraphicsBlock(row, x, fg_row, bg_row);
+        this._addGraphicsBlock(x, fg_row, bg_row);
       }
     }
-    return row;
   }
 
-  _addCharacter(row, x, tty_index) {
-    const char = this.formatted_text[tty_index];
-    this._calculateCharWidthDebt(char[0]);
-    // Don't display a wide character in the final column
-    if (x + this._char_width_debt >= this.frame_width) char[0] = ' ';
+  _addCharacter(tty_index, padding = false) {
+    const cell = this.formatted_text[tty_index];
+    let char = padding ? padding : cell[0];
+    const fg = cell[1];
+    const bg = cell[2];
     if (this._is_graphics_mode) {
-      row.push(utils.ttyPixel(char[1], char[2], char[0]));
+      this._row = this._row.concat(utils.ttyCell(fg, bg, char));
     } else {
       // TODO: Somehow communicate clickable text
-      row.push(char[0]);
+      this._row = this._row.concat(utils.ttyPlainCell(char));
     }
-    return row;
   }
 
-  _addGraphicsBlock(row, x, fg_row, bg_row) {
-    // Wide characters take up more than one cell, so we might not always be
-    // iterating by 1.
-    const x_shoved = x + this._char_width_debt;
+  _addGraphicsBlock(x, fg_row, bg_row) {
     if (this._is_graphics_mode) {
-      row.push(utils.ttyPixel(fg_row[x_shoved], bg_row[x_shoved], '▄'));
+      this._row = this._row.concat(utils.ttyCell(fg_row[x], bg_row[x], '▄'));
     } else {
-      row.push(' ');
+      this._row = this._row.concat(utils.ttyPlainCell(' '));
     }
-    return row;
   }
 
   // Deal with UTF8 characters that take up more than a single cell in the TTY.
@@ -384,11 +384,8 @@ export default class FrameBuilder extends BaseBuilder{
   //   2. Use CSS or JS so that wide characters actually flow in the DOM as 2
   //      monospaced characters. This will allow pages of nothing but wide
   //      characters to properly display.
-  _calculateCharWidthDebt(char) {
-    const char_width_in_tty = charWidthInTTY(char);
-    if (char_width_in_tty > 1) {
-      this._char_width_debt += char_width_in_tty - 1;
-    }
+  _calculateCharWidthPadding(char) {
+    return charWidthInTTY(char) - 1;
   }
 
   // We need to know this because we want all empty cells to be 'transparent'

@@ -174,7 +174,6 @@ export default class TextBuillder extends BaseBuilder {
   // real browser.
   _formatTextForTTYGrid(text, dom_rects, parent_element) {
     let col, tty_box, step, character, previous_box, origin;
-    this.char_width_debt = 0
     let character_index = 0;
     for (const box of dom_rects) {
       if (this._isBoxOutsideViewport(box)) return;
@@ -225,7 +224,8 @@ export default class TextBuillder extends BaseBuilder {
     if (this._isCharObscured(colours)) return;
     this.tty_grid[index] = [
       character,
-      ...colours,
+      colours[0],
+      colours[1],
       parent_element,
       _.clone(original_position)
     ];

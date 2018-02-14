@@ -28,10 +28,11 @@ export default (MixinBase) => class extends MixinBase {
       case '/status':
         if (this._current_frame) {
           this.updateStatus(parts[1]);
+          this._sendCurrentFrame();
         }
         break;
       case `/log`:
-        this.log(parts[1]);
+        this.log(message.slice(5));
         break;
       default:
         this.log('Unknown command from tab to background', message);
@@ -43,8 +44,10 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   _sendCurrentFrame() {
-    const raw_frame = this._current_frame.join('');
-    this.sendToTerminal(`/frame,${raw_frame}`);
+    // TODO: I struggled with unmarshalling a mixed array in Golang so I'm crudely
+    // just casting evertything to a string for now.
+    this._current_frame = this._current_frame.map((i) => i.toString());
+    this.sendToTerminal(`/frame,${JSON.stringify(this._current_frame)}`);
   }
 
   updateStatus(status, message = '') {
@@ -64,7 +67,6 @@ export default (MixinBase) => class extends MixinBase {
         this._page_status = status;
     }
     this._applyStatus();
-    this._sendCurrentFrame();
   }
 
   _applyUI() {
@@ -77,11 +79,13 @@ export default (MixinBase) => class extends MixinBase {
   _applyStatus() {
     if (typeof this._page_status === 'undefined') return;
     let cell;
-    const start = (this.tty_height - 1) * this.tty_width;
+    const cell_item_count = 7
+    const bottom_line = this.tty_height - 1;
+    const start = bottom_line * this.tty_width * cell_item_count;
     for (let i = 0; i < this.tty_width; i++) {
       if (this._page_status[i] !== undefined) {
-        cell = utils.ttyPixel([255, 255, 255], [0, 0, 0], this._page_status[i]);
-        this._current_frame[start + i] = cell;
+        cell = utils.ttyPlainCell(this._page_status[i]);
+        this._current_frame.splice(start + (i * 7), 7, ...cell)
       }
     }
   }
@@ -91,22 +95,25 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   _buildTTYRow(text) {
-    let char;
+    let char, char_width;
     let row = [];
-    let index = 0;
-    while (index < this.tty_width) {
+    for (let index = 0; index < this.tty_width; index++) {
       if (index < text.length) {
         char = text[index];
       } else {
         char = " "
       }
-      if (charWidthInTTY(char) > 0) {
-        index += charWidthInTTY(char);
-      } else {
-        index += 1;
+      char_width = charWidthInTTY(char);
+      if (char_width === 0) {
         char = " ";
       }
-      row.push(utils.ttyPixel([255, 255, 255], [0, 0, 0], char));
+      if (char_width > 1) {
+        index += char_width - 1;
+      }
+      row = row.concat(utils.ttyPlainCell(char));
+      for (var padding = 0; padding < char_width - 1; padding++) {
+        row = row.concat(utils.ttyPlainCell(" "));
+      }
     }
     return row;
   }

@@ -16,18 +16,18 @@ describe('Frame Builder', ()=> {
     frame_builder = new FrameBuilder();
   });
 
-  it('should merge pixels and text into ANSI true colour syntax', ()=> {
+  it('should merge pixels and text into a 1D array', ()=> {
     frame_builder.tty_width = 3;
     frame_builder.tty_height = 2 + 2;
     frame_builder.sendFrame();
-    const frame = frame_builder.frame.join('').replace(/\u001b\[/g, 'ESC');
+    const frame = frame_builder.frame.join(',');
     expect(frame).to.eq(
-      'ESC38;2;0;0;0mESC48;2;111;111;111m▄' +
-      'ESC38;2;111;111;111mESC48;2;222;222;222m😐' +
-      'ESC38;2;0;0;0mESC48;2;111;111;111m▄' +
-      'ESC38;2;111;111;111mESC48;2;222;222;222m😄' +
-      'ESC38;2;111;111;111mESC48;2;0;0;0m▄' +
-      'ESC38;2;111;111;111mESC48;2;222;222;222m😂'
+      '0,0,0,111,111,111,▄,' +
+      '111,111,111,222,222,222,😐,' +
+      '0,0,0,111,111,111,▄,' +
+      '111,111,111,222,222,222,😄,' +
+      '111,111,111,0,0,0,▄,' +
+      '111,111,111,222,222,222,😂'
     );
   });
 });
