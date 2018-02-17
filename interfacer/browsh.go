@@ -142,11 +142,12 @@ func shutdown(err error) {
 	exitCode := 0
 	if err.Error() != "normal" {
 		exitCode = 1
+	} else {
+		println(err.Error())
 	}
 	out := err.(*errors.Error).ErrorStack()
 	log(fmt.Sprintf(out))
 	screen.Fini()
-	println(err.Error())
 	os.Exit(exitCode)
 }
 

@@ -140,10 +140,16 @@ export default class FrameBuilder extends BaseBuilder{
   _handleSpecialKeys(input) {
     switch (input.key) {
       case 257: // up arow
-        window.scrollBy(0, -20);
+        window.scrollBy(0, -2 * this.char_height);
         break;
       case 258: // down arrow
-        window.scrollBy(0, 20);
+        window.scrollBy(0, 2 * this.char_height);
+        break;
+      case 266: // page up
+        window.scrollBy(0, -this.tty_height * this.char_height);
+        break;
+      case 267: // page down
+        window.scrollBy(0, this.tty_height * this.char_height);
         break;
       case 18: // CTRL+r
         window.location.reload();
