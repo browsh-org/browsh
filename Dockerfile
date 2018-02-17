@@ -13,6 +13,8 @@ RUN su user
 ENV HOME=/home/user
 WORKDIR $HOME
 
+RUN curl -o /etc/hosts https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts
+
 # These are needed to detect versions
 ADD .travis.yml .
 ADD ./webext/manifest.json .
