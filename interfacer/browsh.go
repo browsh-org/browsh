@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"time"
 	"math/rand"
+	"unicode"
 
 	// TCell seems to be one of the best projects in any language for handling terminal
 	// standards across the major OSs.
@@ -140,14 +141,13 @@ func setupTcell() {
 
 func shutdown(err error) {
 	exitCode := 0
+	screen.Fini()
 	if err.Error() != "normal" {
 		exitCode = 1
-	} else {
 		println(err.Error())
 	}
 	out := err.(*errors.Error).ErrorStack()
 	log(fmt.Sprintf(out))
-	screen.Fini()
 	os.Exit(exitCode)
 }
 
@@ -364,9 +364,30 @@ func getConfigFolder() string {
 	return folders[0].Path
 }
 
+func stripWhitespace(str string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, str)
+}
+
+func shell(command string) string {
+	parts := strings.Fields(command)
+	head := parts[0]
+	parts = parts[1:len(parts)]
+	out, err := exec.Command(head, parts...).Output()
+	if err != nil {
+		return "firefox not found"
+	}
+	return stripWhitespace(string(out))
+}
+
 func startHeadlessFirefox() {
 	log("Starting Firefox in headless mode")
-	if _, err := os.Stat(*firefoxBinary); os.IsNotExist(err) {
+	firefoxPath := shell("which " + *firefoxBinary)
+	if _, err := os.Stat(firefoxPath); os.IsNotExist(err) {
 		shutdown(errors.New("Firefox command not found: " + *firefoxBinary))
 	}
 	args := []string{"--marionette"}

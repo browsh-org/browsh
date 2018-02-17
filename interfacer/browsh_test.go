@@ -2,13 +2,10 @@ package main
 
 import (
 	"bufio"
-	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 	"testing"
 	"time"
-	"unicode"
 
 	"github.com/gdamore/tcell"
 	. "github.com/onsi/ginkgo"
@@ -22,27 +19,6 @@ var browserFingerprint = " ← | x | "
 func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Integration tests")
-}
-
-func StripWhitespace(str string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) {
-			return -1
-		}
-		return r
-	}, str)
-}
-
-func shell(command string) string {
-	parts := strings.Fields(command)
-	head := parts[0]
-	parts = parts[1:len(parts)]
-	out, err := exec.Command(head, parts...).Output()
-	if err != nil {
-		fmt.Printf("%s", err)
-		os.Exit(1)
-	}
-	return StripWhitespace(string(out))
 }
 
 func startWERFirefox() {
