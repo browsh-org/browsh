@@ -2,7 +2,7 @@ import sinon from 'sinon';
 
 import GraphicsBuilder from 'dom/graphics_builder';
 import FrameBuilder from 'dom/frame_builder';
-import MockRange from 'unitish/mocks/range'
+import MockRange from 'mocks/range'
 
 var sandbox = sinon.sandbox.create();
 

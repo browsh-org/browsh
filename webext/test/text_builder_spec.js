@@ -1,17 +1,15 @@
-import sandbox from 'unitish/helper';
-import {
-  expect
-} from 'chai';
+import sandbox from 'helper';
+import { expect } from 'chai';
 
 import FrameBuilder from 'dom/frame_builder';
 import TextBuilder from 'dom/text_builder';
 import GraphicsBuilder from 'dom/graphics_builder';
-import text_nodes from 'unitish/fixtures/text_nodes';
+import text_nodes from 'fixtures/text_nodes';
 import {
   with_text,
   without_text,
   scaled
-} from 'unitish/fixtures/canvas_pixels';
+} from 'fixtures/canvas_pixels';
 
 let text_builder;
 

@@ -1,11 +1,11 @@
-import sandbox from 'unitish/helper';
+import sandbox from 'helper';
 import {expect} from 'chai';
 
 import FrameBuilder from 'dom/frame_builder';
 import GraphicsBuilder from 'dom/graphics_builder';
 import TextBuilder from 'dom/text_builder';
-import canvas_pixels from 'unitish/fixtures/canvas_pixels';
-import text_grid from 'unitish/fixtures/text_grid';
+import canvas_pixels from 'fixtures/canvas_pixels';
+import text_grid from 'fixtures/text_grid';
 
 describe('Frame Builder', ()=> {
   let frame_builder;

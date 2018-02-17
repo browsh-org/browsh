@@ -2,9 +2,7 @@
   "scripts": {
     "get-gobindata": "go get -u gopkg.in/shuLhan/go-bindata.v3/...",
     "build": "./contrib/bundle_webextension.sh",
-    "unitish": "NODE_PATH=src:test mocha test/unitish",
-    "integration": "NODE_PATH=src:test mocha test/integration",
-    "test": "npm run unitish && npm run integration"
+    "test": "NODE_PATH=src:test mocha"
   },
   "babel": {
     "presets": [

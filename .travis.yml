@@ -4,8 +4,7 @@ go:
   - 1.9.x
 
 addons:
-  # Use the full version number with ".0" if needed. This value is scraped
-  # by setup scripts.
+  # Use the full version number with ".0" if needed. This value is scraped by setup scripts.
   firefox: "58.0"
   apt:
     packages:
@@ -27,17 +26,17 @@ before_install:
   - ./webext/contrib/setup_node.sh
   - mkdir -p $REPO_ROOT && cp -rfp $TRAVIS_BUILD_DIR -T $REPO_ROOT
 install:
-  - cd $REPO_ROOT/interfacer
-  - dep ensure
+  - cd $REPO_ROOT/interfacer && dep ensure
   - cd $REPO_ROOT/webext
   - source ~/.nvm/nvm.sh
   - npm run get-gobindata
   - npm install
   - npm run build
 script:
-  - npm test
+  - cd $REPO_ROOT/webext && npm test
+  - cd $REPO_ROOT/interfacer && ./contrib/run_tests.sh
+after_failure:
   - cat $REPO_ROOT/interfacer/debug.log
-  - cat $REPO_ROOT/interfacer/spec.log
 after_success:
   - $REPO_ROOT/contrib/release_if_new_version.sh
 

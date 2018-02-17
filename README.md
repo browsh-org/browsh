@@ -44,6 +44,11 @@ You will need to have Firefox >=57 aleady installed.
 Or download and run the Docker image (~800MB) with:
     `docker run -it tombh/browsh`
 
+There's currently a known bug when running Browsh against a fresh install of Firefox.
+If Browsh happens to be the first to ever open Firefox on your machine then it will
+get stuck because Firefox behaves differently on its first ever launch. The simple
+fix is to either just to run Browsh again, or launch Firefox manually yourself (you don't even need to keep it open).
+
 ## Usage
 Most keys and mouse gestures should work as you'd expect on a desktop
 browser.
@@ -76,6 +81,11 @@ Then the ideal setup for development is:
   * have Mozilla's handy `web-ext` tool run Firefox and reinstall the
     webextension everytime webpack rebuilds it: (in `webext/dist`)
     `web-ext run --verbose --url https://google.com`
+
+## Tests
+
+For the webextension: in the `webext/` folder, `npm test`
+For the CLI client: in the `interfacer/` folder `./contrib/run_tests.sh`
 
 ## License
 GNU General Public License v3.0
