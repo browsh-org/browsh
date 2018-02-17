@@ -530,6 +530,10 @@ func start(injectedScreen tcell.Screen) {
 }
 
 func ttyStart() {
+	// Hack to force true colours
+	// Follow: https://github.com/gdamore/tcell/pull/183
+	os.Setenv("TERM", "xterm-truecolor")
+
 	realScreen, err := tcell.NewScreen()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
