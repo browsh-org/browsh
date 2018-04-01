@@ -36,7 +36,7 @@ script:
   - cd $REPO_ROOT/webext && npm test
   - cd $REPO_ROOT/interfacer && ./contrib/run_tests.sh
 after_failure:
-  - cat $REPO_ROOT/interfacer/debug.log
+  - cat $REPO_ROOT/interfacer/test/debug.log
 after_success:
   - $REPO_ROOT/contrib/release_if_new_version.sh
 

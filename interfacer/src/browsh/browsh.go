@@ -1,4 +1,4 @@
-package main
+package browsh
 
 import (
 	"bufio"
@@ -15,7 +15,6 @@ import (
 	"strings"
 	"strconv"
 	"time"
-	"math/rand"
 	"unicode"
 
 	// TCell seems to be one of the best projects in any language for handling terminal
@@ -82,49 +81,53 @@ var (
 func setupLogging() {
 	dir, err := os.Getwd()
 	if err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 	logfile = fmt.Sprintf(filepath.Join(dir, "debug.log"))
 	if _, err := os.Stat(logfile); err == nil {
 		os.Truncate(logfile, 0)
 	}
 	if err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 }
 
-func log(msg string) {
+// Log ... general purpose logger
+func Log(msg string) {
 	if !*isDebug {
 		return
 	}
 	f, oErr := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if oErr != nil {
-		shutdown(oErr)
+		Shutdown(oErr)
 	}
 	defer f.Close()
 
 	msg = msg + "\n"
 	if _, wErr := f.WriteString(msg); wErr != nil {
-		shutdown(wErr)
+		Shutdown(wErr)
 	}
 }
 
 // Write a simple text string to the screen. Not for use in the browser frames
-// themselves. If you want anything to appear in the browser then must be done
+// themselves. If you want anything to appear in the browser that must be done
 // through the webextension.
 func writeString(x, y int, str string) {
 	var defaultColours = tcell.StyleDefault
-	rgb := tcell.NewHexColor(int32(rand.Int() & 0xffffff))
+	rgb := tcell.NewHexColor(int32(0xffffff))
 	defaultColours.Foreground(rgb)
-	defaultColours.Background(tcell.ColorRed)
 	for _, c := range str {
 		screen.SetContent(x, y, c, nil, defaultColours)
 		x++
 	}
+	screen.Sync()
 }
 
-func initialise() {
+func initialise(isTesting bool) {
 	flag.Parse()
+	if isTesting {
+		*isDebug = true
+	}
 	setupTcell()
 	setupLogging()
 }
@@ -139,7 +142,8 @@ func setupTcell() {
 	screen.Clear()
 }
 
-func shutdown(err error) {
+// Shutdown ... Cleanly Shutdown browsh
+func Shutdown(err error) {
 	exitCode := 0
 	screen.Fini()
 	if err.Error() != "normal" {
@@ -147,7 +151,7 @@ func shutdown(err error) {
 		println(err.Error())
 	}
 	out := err.(*errors.Error).ErrorStack()
-	log(fmt.Sprintf(out))
+	Log(fmt.Sprintf(out))
 	os.Exit(exitCode)
 }
 
@@ -165,7 +169,7 @@ func readStdin() {
 				if !*isUseExistingFirefox {
 					quitFirefox()
 				}
-				shutdown(errors.New("normal"))
+				Shutdown(errors.New("normal"))
 			}
 			eventMap := map[string]interface{}{
 				"key":  int(ev.Key()),
@@ -194,7 +198,7 @@ func readStdin() {
 
 func sendMessageToWebExtension(message string) {
 	if (!isConnectedToWebExtension) {
-		log("Webextension not connected. Message not sent: " + message)
+		Log("Webextension not connected. Message not sent: " + message)
 		return
 	}
 	stdinChannel <- message
@@ -207,11 +211,11 @@ func webSocketReader(ws *websocket.Conn) {
 		handleWebextensionCommand(message)
 		if err != nil {
 			if websocket.IsCloseError(err, websocket.CloseGoingAway) {
-				log("Socket reader detected that the browser closed the websocket")
+				Log("Socket reader detected that the browser closed the websocket")
 				triggerSocketWriterClose()
 				return
 			}
-			shutdown(err)
+			Shutdown(err)
 		}
 	}
 }
@@ -226,7 +230,7 @@ func handleWebextensionCommand(message []byte) {
 	case "/screenshot":
 		saveScreenshot(parts[1])
 	default:
-		log("WEBEXT: " + string(message))
+		Log("WEBEXT: " + string(message))
 	}
 }
 
@@ -237,7 +241,7 @@ func parseJSONframe(jsonString string) []string {
 	var frame []string
 	jsonBytes := []byte(jsonString)
 	if err := json.Unmarshal(jsonBytes, &frame); err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 	return frame
 }
@@ -252,8 +256,8 @@ func renderFrame(frame []string) {
 	var runeChars []rune
 	width, height := screen.Size()
 	if (width * height * 7 != len(frame)) {
-		log("Not rendering frame: current frame is not the same size as the screen")
-		log(fmt.Sprintf("screen: %d, frame: %d", width * height * 7, len(frame)))
+		Log("Not rendering frame: current frame is not the same size as the screen")
+		Log(fmt.Sprintf("screen: %d, frame: %d", width * height * 7, len(frame)))
 		return
 	}
 	index := 0
@@ -286,7 +290,7 @@ func getRGBColor(frame []string, index int) tcell.Color {
 func toInt32(char string) int32 {
 	i, err := strconv.ParseInt(char, 10, 32)
 	if err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 	return int32(i)
 }
@@ -294,21 +298,21 @@ func toInt32(char string) int32 {
 func saveScreenshot(base64String string) {
 	dec, err := base64.StdEncoding.DecodeString(base64String)
 	if err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 	file, err := ioutil.TempFile(os.TempDir(), "browsh-screenshot")
 	if err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 	if _, err := file.Write(dec); err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 	if err := file.Sync(); err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 	fullPath := file.Name() + ".jpg"
 	if err := os.Rename(file.Name(), fullPath); err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 	message := "Screenshot saved to " + fullPath
 	sendMessageToWebExtension("/status," + message)
@@ -330,22 +334,22 @@ func webSocketWriter(ws *websocket.Conn) {
 	defer ws.Close()
 	for {
 		message = <-stdinChannel
-		log(fmt.Sprintf("TTY sending: %s", message))
+		Log(fmt.Sprintf("TTY sending: %s", message))
 		if err := ws.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 			if err == websocket.ErrCloseSent {
-				log("Socket writer detected that the browser closed the websocket")
+				Log("Socket writer detected that the browser closed the websocket")
 				return
 			}
-			shutdown(err)
+			Shutdown(err)
 		}
 	}
 }
 
 func webSocketServer(w http.ResponseWriter, r *http.Request) {
-	log("Incoming web request from browser")
+	Log("Incoming web request from browser")
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 
 	isConnectedToWebExtension = true
@@ -373,7 +377,8 @@ func stripWhitespace(str string) string {
 	}, str)
 }
 
-func shell(command string) string {
+// Shell ... Nice and easy shell commands
+func Shell(command string) string {
 	parts := strings.Fields(command)
 	head := parts[0]
 	parts = parts[1:len(parts)]
@@ -385,35 +390,69 @@ func shell(command string) string {
 }
 
 func startHeadlessFirefox() {
-	log("Starting Firefox in headless mode")
-	firefoxPath := shell("which " + *firefoxBinary)
+	Log("Starting Firefox in headless mode")
+	firefoxPath := Shell("which " + *firefoxBinary)
 	if _, err := os.Stat(firefoxPath); os.IsNotExist(err) {
-		shutdown(errors.New("Firefox command not found: " + *firefoxBinary))
+		Shutdown(errors.New("Firefox command not found: " + *firefoxBinary))
 	}
 	args := []string{"--marionette"}
 	if !*isFFGui {
 		args = append(args, "--headless")
 	}
 	if *useFFProfile != "default" {
-		log("Using profile: " + *useFFProfile)
+		Log("Using profile: " + *useFFProfile)
 		args = append(args, "-P", *useFFProfile)
 	} else {
 		profilePath := getConfigFolder()
-		log("Using default profile at: " + profilePath)
+		Log("Using default profile at: " + profilePath)
 		args = append(args, "--profile", profilePath)
 	}
 	firefoxProcess := exec.Command(*firefoxBinary, args...)
 	defer firefoxProcess.Process.Kill()
 	stdout, err := firefoxProcess.StdoutPipe()
 	if err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 	if err := firefoxProcess.Start(); err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 	in := bufio.NewScanner(stdout)
 	for in.Scan() {
-		log("FF-CONSOLE: " + in.Text())
+		Log("FF-CONSOLE: " + in.Text())
+	}
+}
+
+// Start Firefox via the `web-ext` CLI tool. This is for development and testing,
+// because I haven't been able to recreate the way `web-ext` injects an unsigned
+// extension.
+func startWERFirefox() {
+	Log("Attempting to start headless Firefox with `web-ext`")
+	var rootDir = Shell("git rev-parse --show-toplevel")
+	args := []string{
+		"run",
+		"--firefox=" + rootDir + "/webext/contrib/firefoxheadless.sh",
+		"--verbose",
+		"--no-reload",
+		"--url=http://www.something.com/",
+	}
+	firefoxProcess := exec.Command(rootDir+"/webext/node_modules/.bin/web-ext", args...)
+	firefoxProcess.Dir = rootDir + "/webext/dist/"
+	defer firefoxProcess.Process.Kill()
+	stdout, err := firefoxProcess.StdoutPipe()
+	if err != nil {
+		Shutdown(err)
+	}
+	if err := firefoxProcess.Start(); err != nil {
+		Shutdown(err)
+	}
+	in := bufio.NewScanner(stdout)
+	for in.Scan() {
+		if strings.Contains(in.Text(), "JavaScript strict") ||
+		   strings.Contains(in.Text(), "D-BUS") ||
+		   strings.Contains(in.Text(), "dbus") {
+			continue
+		}
+		Log("FF-CONSOLE: " + in.Text())
 	}
 }
 
@@ -428,10 +467,10 @@ func startHeadlessFirefox() {
 // I've used Marionette here, simply because it was easier to reverse engineer
 // from the Python Marionette package.
 func firefoxMarionette() {
-	log("Attempting to connect to Firefox Marionette")
+	Log("Attempting to connect to Firefox Marionette")
 	conn, err := net.Dial("tcp", "127.0.0.1:2828")
 	if err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 	marionette = conn
 	readMarionette()
@@ -443,7 +482,7 @@ func firefoxMarionette() {
 func installWebextension() {
 	data, err := Asset("webext/dist/web-ext-artifacts/browsh.xpi")
 	if err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
 	file, err := ioutil.TempFile(os.TempDir(), "prefix")
 	defer os.Remove(file.Name())
@@ -471,13 +510,13 @@ func readMarionette() {
 	buffer := make([]byte, 4096)
 	count, err := marionette.Read(buffer)
 	if err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
-	log("FF-MRNT: " + string(buffer[:count]))
+	Log("FF-MRNT: " + string(buffer[:count]))
 }
 
 func sendFirefoxCommand(command string, args map[string]interface{}) {
-	log("Sending `" + command + "` to Firefox Marionette")
+	Log("Sending `" + command + "` to Firefox Marionette")
 	fullCommand := []interface{}{0, ffCommandCount, command, args}
 	marshalled, _ := json.Marshal(fullCommand)
 	message := fmt.Sprintf("%d:%s", len(marshalled), marshalled)
@@ -509,7 +548,7 @@ func beginTimeLimit() {
 	sendMessageToWebExtension("/status," + message)
 	time.Sleep(time.Duration(warningLength) * time.Second)
 	quitFirefox()
-	shutdown(errors.New("normal"))
+	Shutdown(errors.New("normal"))
 }
 
 // Note that everything executed in and from this function is not covered by the integration
@@ -532,25 +571,33 @@ func quitFirefox() {
 	sendFirefoxCommand("quitApplication", map[string]interface{}{})
 }
 
-func start(injectedScreen tcell.Screen) {
+// Start ... Start Browsh
+func Start(injectedScreen tcell.Screen) {
+	var isTesting = fmt.Sprintf("%T", injectedScreen) == "*tcell.simscreen"
 	screen = injectedScreen
-	initialise()
+	initialise(isTesting)
 	if !*isUseExistingFirefox {
-		writeString(0, 0, "Starting Browsh, the modern terminal web browser...")
-		setupFirefox()
+		if isTesting {
+			writeString(0, 0, "Starting Browsh in test mode...")
+			go startWERFirefox()
+		} else {
+			writeString(0, 0, "Starting Browsh, the modern terminal web browser...")
+			setupFirefox()
+		}
 	} else {
 		writeString(0, 0, "Waiting for a Firefox instance to connect...")
 	}
-	log("Starting Browsh CLI client")
+	Log("Starting Browsh CLI client")
 	go readStdin()
 	http.HandleFunc("/", webSocketServer)
 	if err := http.ListenAndServe(*webSocketAddresss, nil); err != nil {
-		shutdown(err)
+		Shutdown(err)
 	}
-	log("Exiting at end of main()")
+	Log("Exiting at end of main()")
 }
 
-func ttyStart() {
+// TtyStart ... Main entrypoint.
+func TtyStart() {
 	// Hack to force true colours
 	// Follow: https://github.com/gdamore/tcell/pull/183
 	os.Setenv("TERM", "xterm-truecolor")
@@ -560,5 +607,5 @@ func ttyStart() {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
-	start(realScreen)
+	Start(realScreen)
 }
