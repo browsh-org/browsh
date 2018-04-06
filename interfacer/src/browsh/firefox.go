@@ -58,7 +58,7 @@ func startWERFirefox() {
 		"--firefox=" + rootDir + "/webext/contrib/firefoxheadless.sh",
 		"--verbose",
 		"--no-reload",
-		"--url=http://www.something.com/",
+		"--url=http://localhost:" + TestServerPort + "/smorgasbord",
 	}
 	firefoxProcess := exec.Command(rootDir+"/webext/node_modules/.bin/web-ext", args...)
 	firefoxProcess.Dir = rootDir + "/webext/dist/"

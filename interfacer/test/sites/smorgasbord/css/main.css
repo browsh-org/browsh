@@ -1,5 +1,5 @@
 #content {
-  width: 1000px;
+  width: 500px;
   margin: auto;
 }
 
@@ -15,4 +15,8 @@ h1 {
 .right_col {
   width: 45%;
   float: right;
+}
+
+.big_middle {
+  clear: both;
 }

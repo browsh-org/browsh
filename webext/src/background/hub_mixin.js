@@ -1,6 +1,6 @@
 import stripAnsi from 'strip-ansi';
 
-// Here we keep the public funcntions used to mediate communications between
+// Here we keep the public functions used to mediate communications between
 // the background process, tabs and the terminal.
 export default (Base) => class extends Base {
   sendToCurrentTab(message) {

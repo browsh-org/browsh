@@ -72,6 +72,8 @@ var (
 		// (See #1114 for rationale)
 		"datareporting.policy.firstRunURL": "''",
 	}
+	// TestServerPort ... Port for the test server
+	TestServerPort = "4444"
 )
 
 func setupLogging() {

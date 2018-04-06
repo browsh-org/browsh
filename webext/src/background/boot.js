@@ -180,8 +180,11 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
   // first. So let's just close that tab.
   // TODO: Only do this for a testing ENV?
   _checkForMozillaCliqzTab(tab) {
-    if (tab.title.includes('Firefox by default shares data to:')) {
-      this.log("Removing the Mozilla Cliqz disclaimer startup tab")
+    if (
+      tab.title.includes('Firefox by default shares data to:') ||
+      tab.title.includes('Firefox Privacy Notice')
+    ) {
+      this.log("Removing Firefox startup page")
       const removing = browser.tabs.remove(tab.id);
       removing.then(() => {}, (error) => this.log(error));
       return true;
@@ -217,6 +220,6 @@ export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin
         return;
       }
       this.sendToCurrentTab('/request_frame');
-    }, 1000);
+    }, 500);
   }
 }

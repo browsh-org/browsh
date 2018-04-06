@@ -15,8 +15,8 @@
 /* Loader (*/
 #spinner {
   margin: auto;
-  width: 200px;
-  height: 200px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
 
   background-image: linear-gradient(bottom, #FF00FF 50%, #00FFFF 50%);
@@ -25,8 +25,8 @@
   background-image: -webkit-linear-gradient(bottom, #FF00FF 50%, #00FFFF 50%);
   background-image: -ms-linear-gradient(bottom, #FF00FF 50%, #00FFFF 50%);
 
-  -webkit-animation: spinner 30s infinite linear;
-  -moz-animation: spinner 30s infinite linear;
-  -ms-animation: spinner 30s infinite linear;
-  animation: spinner 30s infinite linear;
+  -webkit-animation: spinner 2s infinite linear;
+  -moz-animation: spinner 2s infinite linear;
+  -ms-animation: spinner 2s infinite linear;
+  animation: spinner 2s infinite linear;
 }

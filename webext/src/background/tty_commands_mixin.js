@@ -99,8 +99,10 @@ export default (MixinBase) => class extends MixinBase {
     const search_engine = 'https://www.google.com/search?q=';
     let input = this.urlBarUserContent;
     // Basically just check to see if there is text either side of a dot
-    const is_url = RegExp(/^[^\s]+\.[^\s]+/);
-    if (is_url.test(input)) {
+    const is_straddled_dot = RegExp(/^[^\s]+\.[^\s]+/);
+    // More comprehensive URL pattern
+    const is_url = RegExp(/\/\/\w+(\.\w+)*(:[0-9]+)?\/?(\/[.\w]*)*$/);
+    if (is_straddled_dot.test(input) || is_url.test(input)) {
       url = input;
       if (!url.startsWith('http')) {
         url = 'http://' + url;
@@ -161,7 +163,7 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   // We use the `browser` object here rather than going into the actual content script
-  // because the content script may have crashed even never loaded.
+  // because the content script may have crashed, even never loaded.
   screenshotActiveTab() {
     const capturing = browser.tabs.captureVisibleTab({ format: 'jpeg' });
     capturing.then(this.saveScreenshot.bind(this), error => this.log(error));

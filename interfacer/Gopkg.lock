@@ -11,13 +11,13 @@
   branch = "master"
   name = "github.com/gdamore/tcell"
   packages = [".","terminfo"]
-  revision = "40c3b117ed496996c8482be266e60583ca988b09"
+  revision = "2548ddfbd80a92e96bdde663cdb77b56d65e7dd9"
 
 [[projects]]
   name = "github.com/go-errors/errors"
   packages = ["."]
-  revision = "3afebba5a48dbc89b574d890b6b34d9ee10b4785"
-  version = "v1.0.0"
+  revision = "a6af135bd4e28680facf08a3d206b454abc877a4"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/gorilla/websocket"
@@ -59,29 +59,29 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["html","html/atom","html/charset"]
-  revision = "dc948dff8834a7fe1ca525f8d04e261c2b56e70d"
+  revision = "b3c676e531a6dc479fa1b35ac961c13f5e2b4d2e"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "37707fdb30a5b38865cfb95e5aab41707daec7fd"
+  revision = "1d206c9fa8975fb4cf00df1dc8bf3283dc24ba0e"
 
 [[projects]]
-  branch = "master"
   name = "golang.org/x/text"
   packages = ["encoding","encoding/charmap","encoding/htmlindex","encoding/internal","encoding/internal/identifier","encoding/japanese","encoding/korean","encoding/simplifiedchinese","encoding/traditionalchinese","encoding/unicode","internal/gen","internal/tag","internal/utf8internal","language","runes","transform","unicode/cldr"]
-  revision = "4e4a3210bb54bb31f6ab2cdca2edcc0b50c420c1"
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
 
 [[projects]]
-  branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "d670f9405373e636a5a2765eea47fac0c9bc91a4"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "80faa02d1c28fe5141cd0e049b497a403eb8db3929283119d2ebd39e27c34a93"
+  inputs-digest = "d45276f27c8406a168f3f82f609de071ef087fef39e2135d2e2a87b00f15b0bd"
   solver-name = "gps-cdcl"
   solver-version = 1

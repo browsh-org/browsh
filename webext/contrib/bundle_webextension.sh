@@ -10,6 +10,7 @@ set -e
 PROJECT_ROOT=$(git rev-parse --show-toplevel)
 
 NODE_BIN=$PROJECT_ROOT/webext/node_modules/.bin
+destination=$PROJECT_ROOT/interfacer/src/browsh/webextension.go
 
 cd $PROJECT_ROOT/webext && $NODE_BIN/webpack
 cd $PROJECT_ROOT/webext/dist && $NODE_BIN/web-ext build --overwrite-dest
@@ -42,8 +43,6 @@ else
   bundle_file=$source_dir/browsh.zip
 fi
 
-destination=$PROJECT_ROOT/interfacer/webextension.go
-
 cp -f $source_file $bundle_file
 
 echo "Bundling $source_file to $destination..."
@@ -51,6 +50,6 @@ echo "Bundling $source_file to $destination..."
 go-bindata \
   -nocompress \
   -prefix $PROJECT_ROOT \
-  -pkg main \
+  -pkg browsh \
   -o $destination \
   $bundle_file

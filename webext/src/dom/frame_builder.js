@@ -312,9 +312,10 @@ export default class FrameBuilder extends BaseBuilder{
   }
 
   _sendTabInfo() {
+    const title_object = document.getElementsByTagName("title");
     let info = {
       url: document.location.href,
-      title: document.getElementsByTagName("title")[0].innerHTML
+      title: title_object.length ? title_object[0].innerHTML : ""
     }
     this._sendMessage(`/tab_info,${JSON.stringify(info)}`);
   }
