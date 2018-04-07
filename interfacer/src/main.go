@@ -1,6 +1,6 @@
 package main
 
-import "browsh"
+import "browsh/interfacer/src/browsh"
 
 func main() {
 	browsh.TtyStart()

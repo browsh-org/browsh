@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 
-go test test/*.go
+go test test/*.go -v

@@ -9,7 +9,7 @@ import (
 
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/terminfo"
-	gingko "github.com/onsi/ginkgo"
+	ginkgo "github.com/onsi/ginkgo"
 	gomega "github.com/onsi/gomega"
 
 	"browsh/interfacer/src/browsh"
@@ -48,8 +48,8 @@ func GetFrame() string {
 			line = 0
 		}
 	}
-	log += styleDefault
-	browsh.Log(log)
+	log = "\n" + log + styleDefault
+	ginkgo.GinkgoWriter.Write([]byte(log))
 	return frame
 }
 
@@ -73,15 +73,27 @@ func waitForNextFrame() {
 	time.Sleep(500 * time.Millisecond)
 }
 
+// WaitForText waits for a particular string at particular position in the frame
+func WaitForText(text string, x, y int) {
+	var found string
+	start := time.Now()
+	for time.Since(start) < perTestTimeout {
+		found = GetText(x, y, runeCount(text))
+		if found == text { return }
+		time.Sleep(100 * time.Millisecond)
+	}
+	panic("Waiting for '" + text + "' to appear but it didn't")
+}
+
 // GotoURL sends the browsh browser to the specified URL
 func GotoURL(url string) {
 	SpecialKey(tcell.KeyCtrlL)
 	Keyboard(url)
 	SpecialKey(tcell.KeyEnter)
-	// TODO: Waiting and looking for the URL aren't optimal.
-	// Better to somehow create a unique identifier to poll for. Polling for the URL isn't
-	// good enough because it could be the same URL as the previous test.
-	time.Sleep(250 * time.Millisecond)
+	WaitForText("Loading", 0, 24)
+	WaitForText("▄▄▄▄▄▄▄", 0, 24)
+	// TODO: Looking for the URL isn't optimal because it could be the same URL
+	// as the previous test.
 	gomega.Expect(url).To(BeInFrameAt(9, 1))
 }
 
@@ -165,13 +177,19 @@ func runeCount(text string) int {
 	return utf8.RuneCountInString(text)
 }
 
-var _ = gingko.BeforeSuite(func() {
+var _ =	ginkgo.BeforeEach(func() {
+	browsh.Log("\n---------")
+	browsh.Log(ginkgo.CurrentGinkgoTestDescription().FullTestText)
+	browsh.Log("---------")
+})
+
+var _ = ginkgo.BeforeSuite(func() {
 	initTerm()
 	go startHTTPServer()
 	go startBrowsh()
 	waitForBrowsh()
 })
 
-var _	= gingko.AfterSuite(func() {
+var _	= ginkgo.AfterSuite(func() {
 	browsh.Shell(rootDir + "/webext/contrib/firefoxheadless.sh kill")
 })
