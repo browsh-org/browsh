@@ -1,29 +1,29 @@
-export default class BaseBuilder {
-  _sendMessage(message) {
+export default (MixinBase) => class extends MixinBase {
+  sendMessage(message) {
     this.channel.postMessage(message);
   }
 
-  _snap(number) {
+  snap(number) {
     return parseInt(Math.round(number));
   }
 
-  _log(...messages) {
-    this._sendMessage(`/log,${JSON.stringify(messages)}`);
+  log(...messages) {
+    this.sendMessage(`/log,${JSON.stringify(messages)}`);
   }
 
-  _logPerformance(work, reference) {
+  logPerformance(work, reference) {
     let start = performance.now();
     work();
     let end = performance.now();
-    this._firstFrameLog(`${reference}: ${end - start}ms`);
+    this.firstFrameLog(`${reference}: ${end - start}ms`);
   }
 
   // If you're logging large objects and using a high-ish FPS (<1000ms) then you might
   // crash the browser. So use this function instead.
-  _firstFrameLog(...logs) {
+  firstFrameLog(...logs) {
     if (this._is_first_frame_finished) return;
     if (DEVELOPMENT) {
-      this._log(logs);
+      this.log(logs);
     }
   }
 }

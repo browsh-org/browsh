@@ -1,9 +1,7 @@
 import sandbox from 'helper';
 import { expect } from 'chai';
 
-import FrameBuilder from 'dom/frame_builder';
-import TextBuilder from 'dom/text_builder';
-import GraphicsBuilder from 'dom/graphics_builder';
+import DocumentBuilder from 'dom/document_builder';
 import text_nodes from 'fixtures/text_nodes';
 import {
   with_text,
@@ -11,7 +9,6 @@ import {
   scaled
 } from 'fixtures/canvas_pixels';
 
-let text_builder;
 
 // To save us hand-writing large pixel arrays, let's just have an unrealistically
 // small window, it's not a problem, because we'll never actually have to view real
@@ -19,32 +16,33 @@ let text_builder;
 window.innerWidth = 3;
 window.innerHeight = 4;
 
+let document_builder;
+
 function setup() {
-  let frame_builder = new FrameBuilder();
-  frame_builder.tty_width = 3
-  frame_builder.tty_height = 2 + 2
-  frame_builder.char_width = 1
-  frame_builder.char_height = 2
-  frame_builder.graphics_builder.getSnapshotWithText();
-  frame_builder.graphics_builder.getSnapshotWithoutText();
-  frame_builder.graphics_builder.getScaledSnapshot();
-  text_builder = new TextBuilder(frame_builder);
+  document_builder = new DocumentBuilder();
+  document_builder.tty_width = 3
+  document_builder.tty_height = 2 + 2
+  document_builder.char_width = 1
+  document_builder.char_height = 2
+  document_builder.getScreenshotWithText();
+  document_builder.getScreenshotWithoutText();
+  document_builder.getScaledScreenshot();
 }
 
 describe('Text Builder', () => {
   beforeEach(() => {
-    let getPixelsStub = sandbox.stub(GraphicsBuilder.prototype, '_getPixelData');
+    let getPixelsStub = sandbox.stub(DocumentBuilder.prototype, '_getPixelData');
     getPixelsStub.onCall(0).returns(with_text);
     getPixelsStub.onCall(1).returns(without_text);
     getPixelsStub.onCall(2).returns(scaled);
     setup();
-    text_builder.text_nodes = text_nodes;
+    document_builder._text_nodes = text_nodes;
   });
 
   it('should convert text nodes to a grid', () => {
-    text_builder._updateState();
-    text_builder._positionTextNodes();
-    const grid = text_builder.tty_grid;
+    document_builder._updateState();
+    document_builder._positionTextNodes();
+    const grid = document_builder.tty_grid;
     expect(grid[0]).to.deep.equal([
       't', [255, 255, 255],
       [0, 0, 0],

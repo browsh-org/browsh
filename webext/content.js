@@ -1,4 +1,4 @@
-import FrameBuilder from 'dom/frame_builder';
+import DOMManager from 'dom/manager';
 
-new FrameBuilder();
+new DOMManager();
 

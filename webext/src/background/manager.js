@@ -1,12 +1,12 @@
-import mixins from 'mixin_factory';
-import HubMixin from 'background/hub_mixin';
+import utils from 'utils';
+import CommonMixin from 'background/common_mixin';
 import TTYCommandsMixin from 'background/tty_commands_mixin';
 import TabCommandsMixin from 'background/tab_commands_mixin';
 
 // Boots the background process. Mainly involves connecting to the websocket server
 // launched by the Browsh CLI client and setting up listeners for new tabs that
 // have our webextension content script inside them.
-export default class extends mixins(HubMixin, TTYCommandsMixin, TabCommandsMixin) {
+export default class extends utils.mixins(CommonMixin, TTYCommandsMixin, TabCommandsMixin) {
   constructor() {
     super();
     // Keep track of connections to active tabs

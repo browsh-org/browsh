@@ -1,4 +1,10 @@
 export default {
+  mixins: function (...mixins) {
+    return mixins.reduce((base, mixin) => {
+      return mixin(base);
+    }, class {});
+  },
+
   ttyCell: function (fg_colour, bg_colour, character) {
     fg_colour = fg_colour || [255, 255, 255];
     bg_colour = bg_colour || [0, 0, 0];

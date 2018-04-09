@@ -1,14 +1,12 @@
-import BaseBuilder from 'dom/base_builder';
-
-// Converts an instance of the viewport into a an array of pixel values.
-// Note, that it does this both with and without the text visible in order
+// Converts an instance of the visible DOM into an array of pixel values.
+// Note that it does this both with and without the text visible in order
 // to aid in a clean separation of the graphics and text in the final frame
 // rendered in the terminal.
-export default class GraphicsBuilder extends BaseBuilder {
+export default (MixinBase) => class extends MixinBase {
   constructor() {
     super();
-    this.off_screen_canvas = document.createElement('canvas');
-    this.ctx = this.off_screen_canvas.getContext('2d');
+    this._off_screen_canvas = document.createElement('canvas');
+    this._ctx = this._off_screen_canvas.getContext('2d');
     this._updateCurrentViewportDimensions();
   }
 
@@ -34,54 +32,52 @@ export default class GraphicsBuilder extends BaseBuilder {
     return [rgb[0], rgb[1], rgb[2]];
   }
 
-  getSnapshotWithText() {
-    this._logPerformance(() => {
-      this._getSnapshotWithText();
-    }, 'get snapshot with text');
+  getScreenshotWithText() {
+    this.logPerformance(() => {
+      this._getScreenshotWithText();
+    }, 'get screenshot with text');
   }
 
-  getSnapshotWithoutText() {
-    this._logPerformance(() => {
-      this._getSnapshotWithoutText();
-    }, 'get snapshot without text');
+  getScreenshotWithoutText() {
+    this.logPerformance(() => {
+      this._getScreenshotWithoutText();
+    }, 'get screenshot without text');
   }
 
-  getScaledSnapshot(frame_width, frame_height) {
-    this._logPerformance(() => {
-      this._getScaledSnapshot(frame_width, frame_height);
-    }, 'get scaled snapshot');
+  getScaledScreenshot() {
+    this.logPerformance(() => {
+      this._getScaledScreenshot();
+    }, 'get scaled screenshot');
   }
 
-  _getSnapshotWithoutText() {
+  _getScreenshotWithoutText() {
     this._hideText();
-    this.pixels_without_text = this._getSnapshot();
+    this.pixels_without_text = this._getScreenshot();
     this._showText();
     return this.pixels_without_text;
   }
 
-  _getSnapshotWithText() {
-    this.pixels_with_text = this._getSnapshot();
+  _getScreenshotWithText() {
+    this.pixels_with_text = this._getScreenshot();
     return this.pixels_with_text;
   }
 
-  _getScaledSnapshot(frame_width, frame_height) {
-    this.frame_width = frame_width;
-    this.frame_height = frame_height;
+  _getScaledScreenshot() {
     this._scaleCanvas();
-    this.scaled_pixels = this._getSnapshot();
+    this.scaled_pixels = this._getScreenshot();
     this._unScaleCanvas();
     this._is_first_frame_finished = true;
     return this.scaled_pixels;
   }
 
   _hideText() {
-    this.styles = document.createElement("style");
-    document.head.appendChild(this.styles);
-    this.styles.sheet.insertRule(
+    this._styles = document.createElement("style");
+    document.head.appendChild(this._styles);
+    this._styles.sheet.insertRule(
       'html * {' +
       '  color: transparent !important;' +
       // Note the disabling of transition effects here. Some websites have a fancy fade
-      // animation when changing colours, which we don't have time for in taking a snapshot.
+      // animation when changing colours, which we don't have time for in taking a screenshot.
       // However, a drawback here is that, when we remove this style the transition actually
       // kicks in - not that the terminal sees it because, by the nature of this style change
       // here, we only ever capture the screen when text is invisible. However, I wonder if
@@ -93,13 +89,12 @@ export default class GraphicsBuilder extends BaseBuilder {
   }
 
   _showText() {
-    this.styles.parentNode.removeChild(this.styles);
+    this._styles.parentNode.removeChild(this._styles);
   }
 
-  _getSnapshot() {
+  _getScreenshot() {
     this._updateCurrentViewportDimensions()
-    let pixel_data = this._getPixelData();
-    return pixel_data;
+    return this._getPixelData();
   }
 
   // Deal with page scrolling and other viewport changes.
@@ -112,28 +107,28 @@ export default class GraphicsBuilder extends BaseBuilder {
       width: window.innerWidth,
       height: window.innerHeight
     }
-    if (!this.is_scaled) {
+    if (!this._is_scaled) {
       // Resize our canvas to match the viewport. I guess this makes for efficient
       // use of memory?
-      this.off_screen_canvas.width = this.viewport.width;
-      this.off_screen_canvas.height = this.viewport.height;
+      this._off_screen_canvas.width = this.viewport.width;
+      this._off_screen_canvas.height = this.viewport.height;
     }
   }
 
   // Scale the screenshot so that 1 pixel approximates half a TTY cell.
   _scaleCanvas() {
-    this.is_scaled = true;
+    this._is_scaled = true;
     const scale_x = this.frame_width / this.viewport.width;
     const scale_y = this.frame_height / this.viewport.height;
     this._hideText();
-    this.ctx.save();
-    this.ctx.scale(scale_x, scale_y);
+    this._ctx.save();
+    this._ctx.scale(scale_x, scale_y);
   }
 
   _unScaleCanvas() {
-    this.ctx.restore();
+    this._ctx.restore();
     this._showText();
-    this.is_scaled = false;
+    this._is_scaled = false;
   }
 
   // Get an array of RGB values.
@@ -141,14 +136,14 @@ export default class GraphicsBuilder extends BaseBuilder {
   _getPixelData() {
     let width, height;
     let background_colour = 'rgb(255,255,255)';
-    if (this.is_scaled) {
+    if (this._is_scaled) {
       width = this.frame_width;
       height = this.frame_height;
     } else {
       width = this.viewport.width;
       height = this.viewport.height;
     }
-    this.ctx.drawWindow(
+    this._ctx.drawWindow(
       window,
       this.viewport.x_scroll,
       this.viewport.y_scroll,
@@ -156,6 +151,6 @@ export default class GraphicsBuilder extends BaseBuilder {
       this.viewport.height,
       background_colour
     );
-    return this.ctx.getImageData(0, 0, width, height).data;
+    return this._ctx.getImageData(0, 0, width, height).data;
   }
 }

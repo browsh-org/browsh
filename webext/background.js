@@ -1,4 +1,4 @@
-import Boot from 'background/boot'
+import BackgroundManager from 'background/manager'
 
-new Boot();
+new BackgroundManager();
 

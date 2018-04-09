@@ -1,61 +1,52 @@
 import _ from 'lodash';
 
-import BaseBuilder from 'dom/base_builder';
-
 // Convert the text on the page into a snapped 2-dimensional grid to be displayed directly
 // in the terminal.
-export default class TextBuillder extends BaseBuilder {
-  constructor(frame_builder) {
+export default (MixinBase) => class extends MixinBase {
+  constructor() {
     super();
-    this.graphics_builder = frame_builder.graphics_builder;
-    this.frame_builder = frame_builder;
     this._parse_started_elements = [];
   }
 
-  getFormattedText() {
+  buildFormattedText() {
     this._updateState();
     this._getTextNodes();
     this._positionTextNodes();
     this._is_first_frame_finished = true;
-    return this.tty_grid;
   }
 
   _updateState() {
     this.tty_grid = [];
-    this.tty_dom_width = this.frame_builder.tty_width;
+    this.tty_dom_width = this.tty_width;
     // For Tabs and URL bar.
-    this.tty_dom_height = this.frame_builder.tty_height - 2;
-    this.char_width = this.frame_builder.char_width;
-    this.char_height = this.frame_builder.char_height;
-    this.pixels_with_text = this.graphics_builder.pixels_with_text;
-    this.pixels_without_text = this.graphics_builder.pixels_without_text;
+    this.tty_dom_height = this.tty_height - 2;
     this._parse_started_elements = [];
   }
 
   // This is relatively cheap: around 50ms for a 13,000 word Wikipedia page
   _getTextNodes() {
-    this._logPerformance(() => {
+    this.logPerformance(() => {
       this.__getTextNodes();
     }, 'tree walker');
   }
 
   // This should be around 125ms for a largish Wikipedia page of 13,000 words
   _positionTextNodes() {
-    this._logPerformance(() => {
+    this.logPerformance(() => {
       this.__positionTextNodes();
     }, 'position text nodes');
   }
 
   // Search through every node in the DOM looking for displayable text.
   __getTextNodes() {
-    this.text_nodes = [];
+    this._text_nodes = [];
     const walker = document.createTreeWalker(
       document.body,
       NodeFilter.SHOW_TEXT,
       { acceptNode: this._isRelevantTextNode },
       false
     );
-    while(walker.nextNode()) this.text_nodes.push(walker.currentNode);
+    while(walker.nextNode()) this._text_nodes.push(walker.currentNode);
   }
 
   // Does the node contain text that we want to display?
@@ -77,7 +68,7 @@ export default class TextBuillder extends BaseBuilder {
   __positionTextNodes() {
     let range = document.createRange();
     let bounding_box;
-    for (const node of this.text_nodes) {
+    for (const node of this._text_nodes) {
       range.selectNode(node);
       bounding_box = range.getBoundingClientRect();
       if (this._isBoxOutsideViewport(bounding_box)) continue;
@@ -94,16 +85,16 @@ export default class TextBuillder extends BaseBuilder {
   _isBoxOutsideViewport(bounding_box) {
     const is_top_in =
       bounding_box.top >= 0 &&
-      bounding_box.top < this.graphics_builder.viewport.height;
+      bounding_box.top < this.viewport.height;
     const is_bottom_in =
       bounding_box.bottom >= 0 &&
-      bounding_box.bottom < this.graphics_builder.viewport.height;
+      bounding_box.bottom < this.viewport.height;
     const is_left_in =
       bounding_box.left >= 0 &&
-      bounding_box.left < this.graphics_builder.viewport.width;
+      bounding_box.left < this.viewport.width;
     const is_right_in =
       bounding_box.right >= 0 &&
-      bounding_box.right < this.graphics_builder.viewport.width;
+      bounding_box.right < this.viewport.width;
     return !((is_top_in || is_bottom_in) && (is_left_in || is_right_in));
   }
 
@@ -207,9 +198,9 @@ export default class TextBuillder extends BaseBuilder {
   // Round and snap a DOM rectangle as if it were placed in the terminal
   _convertBoxToTTYUnits(viewport_dom_rect) {
     return {
-      col_start: this._snap(viewport_dom_rect.left / this.char_width),
-      row: this._snap(viewport_dom_rect.top / this.char_height),
-      width: this._snap(viewport_dom_rect.width / this.char_width),
+      col_start: this.snap(viewport_dom_rect.left / this.char_width),
+      row: this.snap(viewport_dom_rect.top / this.char_height),
+      width: this.snap(viewport_dom_rect.width / this.char_width),
     }
   }
 
@@ -270,10 +261,10 @@ export default class TextBuillder extends BaseBuilder {
     // arrays during testing - rounding to the top-left saves having to write and extra
     // column and row.
     const half = 0.449;
-    const offset_x = this._snap(original_position.x + (this.char_width * half));
-    const offset_y = this._snap(original_position.y + (this.char_height * half));
+    const offset_x = this.snap(original_position.x + (this.char_width * half));
+    const offset_y = this.snap(original_position.y + (this.char_height * half));
     if (this._isCharCentreOutsideViewport(offset_x, offset_y)) return false;
-    return this.graphics_builder.getPixelsAt(offset_x, offset_y);
+    return this.getPixelsAt(offset_x, offset_y);
   }
 
   // Check if the char is in the viewport again because of x increments, y potentially
@@ -281,9 +272,9 @@ export default class TextBuillder extends BaseBuilder {
   // unicode block.
   _isCharCentreOutsideViewport(x, y) {
     if (
-      x >= this.graphics_builder.viewport.width ||
+      x >= this.viewport.width ||
       x < 0 ||
-      y >= this.graphics_builder.viewport.height ||
+      y >= this.viewport.height ||
       y < 0
     ) return false;
   }

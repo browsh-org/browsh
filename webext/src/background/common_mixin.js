@@ -2,7 +2,7 @@ import stripAnsi from 'strip-ansi';
 
 // Here we keep the public functions used to mediate communications between
 // the background process, tabs and the terminal.
-export default (Base) => class extends Base {
+export default (MixinBase) => class extends MixinBase {
   sendToCurrentTab(message) {
     this.currentTab().channel.postMessage(message);
   }
