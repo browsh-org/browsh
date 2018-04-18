@@ -1,3 +1,5 @@
+import TTYCell from "dom/tty_cell";
+
 let base = build(
   [
     '',   '😐', '',
@@ -10,9 +12,14 @@ let base = build(
 export default base;
 
 function build(text, fg_colour, bg_colour) {
+  let cell;
   let grid = [];
   for(const character of text) {
-    grid.push([character, fg_colour, bg_colour]);
+    cell = new TTYCell();
+    cell.rune = character;
+    cell.fg_colour = fg_colour;
+    cell.bg_colour = bg_colour;
+    grid.push(cell);
   }
   return grid;
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
+	"strconv"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -42,6 +43,11 @@ var (
 	ffCommandCount = 0
 	isConnectedToWebExtension = false
 	screen tcell.Screen
+	frame []string
+	uiHeight = 2
+	frameWidth int
+	frameHeight int
+	State map[string]string
 	defaultFFPrefs = map[string]string{
 		"browser.startup.homepage":                "'https://www.google.com'",
 		"startup.homepage_welcome_url":            "'https://www.google.com'",
@@ -205,6 +211,22 @@ func Start(injectedScreen tcell.Screen) {
 		Shutdown(err)
 	}
 	Log("Exiting at end of main()")
+}
+
+func toInt(char string) int {
+	i, err := strconv.ParseInt(char, 10, 16)
+	if err != nil {
+		Shutdown(err)
+	}
+	return int(i)
+}
+
+func toInt32(char string) int32 {
+	i, err := strconv.ParseInt(char, 10, 32)
+	if err != nil {
+		Shutdown(err)
+	}
+	return int32(i)
 }
 
 // TtyStart ... Main entrypoint.

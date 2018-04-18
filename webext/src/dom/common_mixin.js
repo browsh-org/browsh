@@ -1,10 +1,12 @@
 export default (MixinBase) => class extends MixinBase {
-  sendMessage(message) {
-    this.channel.postMessage(message);
+  constructor() {
+    super();
+    this._is_first_frame_finished = false;
   }
 
-  snap(number) {
-    return parseInt(Math.round(number));
+  sendMessage(message) {
+    if (this.channel == undefined) { return }
+    this.channel.postMessage(message);
   }
 
   log(...messages) {
@@ -21,7 +23,7 @@ export default (MixinBase) => class extends MixinBase {
   // If you're logging large objects and using a high-ish FPS (<1000ms) then you might
   // crash the browser. So use this function instead.
   firstFrameLog(...logs) {
-    if (this._is_first_frame_finished) return;
+    //if (this._is_first_frame_finished) return;
     if (DEVELOPMENT) {
       this.log(logs);
     }

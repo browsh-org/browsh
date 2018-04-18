@@ -9,12 +9,22 @@ import TabCommandsMixin from 'background/tab_commands_mixin';
 export default class extends utils.mixins(CommonMixin, TTYCommandsMixin, TabCommandsMixin) {
   constructor() {
     super();
+    // All state that needs to be synced with the TTY
+    this.state = {}
+    // Dimensions from the tab
+    this.dimensions = {
+      dom: {},
+      char: {},
+      frame: {}
+    }
     // Keep track of connections to active tabs
     this.tabs = {};
     // The ID of the tab currently opened in the browser
     this.active_tab_id = null;
     // Keep track of automatic reloads to problematic tabs
     this._tab_reloads = [];
+    // When the real GUI browser first launches it's sized to the same size as the desktop
+    this._is_initial_window_pending = true;
     this._connectToTerminal();
   }
 
@@ -197,10 +207,10 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin, TabComm
   // efficient way of triggering this initial window resize, than just waiting for the data
   // on every frame tick.
   _initialWindowResize() {
-    if (!this._is_intial_window_pending) return;
+    if (!this._is_initial_window_pending) return;
     if(this.char_width && this.char_height && this.tty_width && this.tty_height) {
       this.resizeBrowserWindow();
-      this._is_intial_window_pending = false;
+      this._is_initial_window_pending = false;
     }
   }
 
@@ -214,7 +224,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin, TabComm
         this.log("Not sending frame to TTY without TTY size")
         return;
       }
-      if (this._is_intial_window_pending) this._initialWindowResize();
+      if (this._is_initial_window_pending) this._initialWindowResize();
       if (!this.tabs.hasOwnProperty(this.active_tab_id)) {
         this.log("No active tab, so not requesting a frame");
         return;

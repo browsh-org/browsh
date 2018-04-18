@@ -20,8 +20,9 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      // TODO: For production use a different webpack.config.js
       DEVELOPMENT: JSON.stringify(true),
+      TEST: JSON.stringify(false),
+      // TODO: For production use a different webpack.config.js
       PRODUCTION: JSON.stringify(false)
     }),
     new CopyWebpackPlugin([

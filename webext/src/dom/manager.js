@@ -1,24 +1,28 @@
 import utils from 'utils';
+
 import CommonMixin from 'dom/common_mixin';
-import DocumentBuilder from 'dom/document_builder';
+import Dimensions from 'dom/dimensions';
+import FrameBuilder from 'dom/frame_builder';
 
 // Entrypoint for managing a single tab
 export default class extends utils.mixins(CommonMixin) {
   constructor() {
     super();
-    // ID for element we place in the DOM to measure the size of a single monospace
-    // character.
-    this._measuring_box_id = 'browsh_em_measuring_box';
+    this.dimensions = new Dimensions();
     this._setupInit();
   }
 
   sendFrame() {
-    this.document_builder.makeFrame();
+    this.frame_builder.makeFrame();
     this._sendTabInfo();
     if (!this._is_first_frame_finished) {
       this.sendMessage('/status,parsing_complete');
     }
-    this.sendMessage(`/frame,${JSON.stringify(this.document_builder.frame)}`);
+    if (this.frame_builder.frame.length > 0) {
+      this.sendMessage(`/frame,${JSON.stringify(this.frame_builder.frame)}`);
+    } else {
+      this.log("Not sending empty frame");
+    }
     this._is_first_frame_finished = true;
   }
 
@@ -33,7 +37,7 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   _isWindowAlreadyLoaded() {
-    return !!this._findMeasuringBox();
+    return !!this.dimensions.findMeasuringBox();
   }
 
   _init(delay = 0) {
@@ -65,12 +69,15 @@ export default class extends utils.mixins(CommonMixin) {
 
   _postCommsInit() {
     this.log('Webextension postCommsInit()');
-    this.document_builder = new DocumentBuilder(this.channel)
+    this.dimensions.channel = this.channel;
+    this.frame_builder = new FrameBuilder(this.channel, this.dimensions);
     this._sendTabInfo();
     this.sendMessage('/status,page_init');
-    this._calculateMonospaceDimensions();
-    this._requestInitialTTYSize();
     this._listenForBackgroundMessages();
+    this._startWindowEventListeners()
+  }
+
+  _startWindowEventListeners() {
     window.addEventListener("unload", () => {
       this.sendMessage('/status,window_unload')
     });
@@ -100,13 +107,8 @@ export default class extends utils.mixins(CommonMixin) {
       case '/request_frame':
         this.sendFrame();
         break;
-      case '/tty_size':
-        this.document_builder.tty_width = parseInt(parts[1]);
-        this.document_builder.tty_height = parseInt(parts[2]);
-        this.log(
-          `Tab received TTY size: ` +
-          `${this.document_builder.tty_width}x${this.document_builder.tty_height}`
-        );
+      case '/rebuild_text':
+        this._buildText();
         break;
       case '/stdin':
         input = JSON.parse(utils.rebuildArgsToSingleArg(parts));
@@ -136,16 +138,16 @@ export default class extends utils.mixins(CommonMixin) {
   _handleSpecialKeys(input) {
     switch (input.key) {
       case 257: // up arow
-        window.scrollBy(0, -2 * this.document_builder.char_height);
+        window.scrollBy(0, -2 * this.dimensions.char.height);
         break;
       case 258: // down arrow
-        window.scrollBy(0, 2 * this.document_builder.char_height);
+        window.scrollBy(0, 2 * this.dimensions.char.height);
         break;
       case 266: // page up
-        window.scrollBy(0, -this.document_builder.tty_height * this.document_builder.char_height);
+        window.scrollBy(0, -window.innerHeight);
         break;
       case 267: // page down
-        window.scrollBy(0, this.document_builder.tty_height * this.document_builder.char_height);
+        window.scrollBy(0, window.innerHeight);
         break;
       case 18: // CTRL+r
         window.location.reload();
@@ -157,7 +159,8 @@ export default class extends utils.mixins(CommonMixin) {
     switch (input.char) {
       case 'M':
         if (input.mod === 4) {
-          this.document_builder.is_graphics_mode = !this.document_builder.is_graphics_mode;
+          this.frame_builder.is_graphics_mode = !this.frame_builder.is_graphics_mode;
+          this.frame_builder.buildText();
         }
         break;
     }
@@ -166,10 +169,10 @@ export default class extends utils.mixins(CommonMixin) {
   _handleMouse(input) {
     switch (input.button) {
       case 256: // scroll up
-        window.scrollBy(0, -20);
+        window.scrollBy(0, -2);
         break;
       case 512: // scroll down
-        window.scrollBy(0, 20);
+        window.scrollBy(0, 2);
         break;
       case 1: // mousedown
         this._mouseAction('click', input.mouse_x, input.mouse_y);
@@ -182,98 +185,18 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   _mouseAction(type, x, y) {
-    const [dom_x, dom_y] = this._getDOMCoordsFromMouseCoords(x, y);
-    const element = document.elementFromPoint(dom_x, dom_y);
+    const [dom_x, dom_y] = this.frame_builder.getDOMCoordsFromMouseCoords(x, y);
+    const element = document.elementFromPoint(
+      dom_x - window.scrollX,
+      dom_y - window.scrollY
+    );
     const event = new MouseEvent(type, {
       bubbles: true,
       cancelable: true,
-      clientX: dom_x,
-      clientY: dom_y
+      pageX: dom_x,
+      pageY: dom_y
     });
     element.dispatchEvent(event);
-  }
-
-  // The user clicks on a TTY grid which has a significantly lower resolution than the
-  // actual browser window. So we scale the coordinates up as if the user clicked on the
-  // the central "pixel" of a TTY cell.
-  _getDOMCoordsFromMouseCoords(x, y) {
-    let dom_x, dom_y, char, original_position;
-    y = y - 2; // Because of the UI header bar
-    const index = (y * this.tty_width) + x;
-    if (this.document_builder.tty_grid[index] !== undefined) {
-      char = this.document_builder.tty_grid[index][0];
-    } else {
-      char = false;
-    }
-    if (!char || char === '▄') {
-      dom_x = (x * this.document_builder.char_width);
-      dom_y = (y * this.document_builder.char_height);
-    } else {
-      // Recall that text can be shifted from its original position in the browser in order
-      // to snap it consistently to the TTY grid.
-      original_position = this.document_builder.tty_grid[index][4];
-      dom_x = original_position.x;
-      dom_y = original_position.y;
-    }
-    return [
-      dom_x + (this.document_builder.char_width / 2),
-      dom_y + (this.document_builder.char_height / 2)
-    ];
-  }
-
-  // The background process can't send the TTY size as soon as it gets it because maybe
-  // the a tab doesn't exist yet. So we request it ourselves - because we'd have to be
-  // ready in order to request.
-  _requestInitialTTYSize() {
-    this.sendMessage('/request_tty_size');
-  }
-
-  // This is critical in order for the terminal to match the browser as closely as possible.
-  // Ideally we want the browser's window size to be exactly multiples of the terminal's
-  // dimensions. So if the terminal is 80x40 and the font-size is 12px (12x6 pixels), then
-  // the window should be 480x480. Also knowing the precise font-size helps the text builder
-  // map un-snapped text to the best grid cells - grid cells that represent the terminal's
-  // character positions.
-  // The reason that we can't just do some basic maths on the CSS `font-size` value we enforce
-  // is that there are various factors that can skew the actual font dimensions on the page.
-  // For instance, you can't guarantee that a browser is using exactly the same version of
-  // a named monospace font. Also different browser families and even different versions of
-  // the same browser may have subtle differences in how they render text. Furthermore we can
-  // actually get floating point accuracy if we use `Element.getBoundingClientRect()` which
-  // further helps as calculations are compounded during our rendering processes.
-  _calculateMonospaceDimensions() {
-    const element = this._getOrCreateMeasuringBox();
-    const dom_rect = element.getBoundingClientRect();
-    this.document_builder.char_width = dom_rect.width;
-    this.document_builder.char_height = dom_rect.height + 2; // TODO: WTF is this magic number?
-    this.sendMessage(
-      `/char_size,` +
-      `${this.document_builder.char_width},` +
-      `${this.document_builder.char_height}`
-    );
-    this.log(
-      `Tab char dimensions: ` +
-      `${this.document_builder.char_width}x${this.document_builder.char_height}`
-    );
-  }
-
-  // Back when printing was done by physical stamps, it was convention to measure the
-  // font-size using the letter 'M', thus where we get the unit 'em' from. Not that it
-  // should make any difference to us, but it's nice to keep a tradition.
-  _getOrCreateMeasuringBox() {
-    let measuring_box = this._findMeasuringBox();
-    if (measuring_box) return measuring_box;
-    measuring_box = document.createElement('span');
-    measuring_box.id = this._measuring_box_id;
-    measuring_box.style.visibility = 'hidden';
-    var M = document.createTextNode('M');
-    measuring_box.appendChild(M);
-    document.body.appendChild(measuring_box);
-    return measuring_box;
-  }
-
-  _findMeasuringBox() {
-    return document.getElementById(this._measuring_box_id);
   }
 
   _sendTabInfo() {

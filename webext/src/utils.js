@@ -17,6 +17,10 @@ export default {
     return this.ttyCell(null, null, character);
   },
 
+  snap: function (number) {
+    return parseInt(Math.round(number));
+  },
+
   rebuildArgsToSingleArg: function (args) {
     return args.slice(1).join(',');
   }

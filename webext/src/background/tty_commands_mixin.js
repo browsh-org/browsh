@@ -16,9 +16,7 @@ export default (MixinBase) => class extends MixinBase {
       case '/tty_size':
         this.tty_width = parts[1];
         this.tty_height = parts[2];
-        if (this.char_width && this.char_height){
-          this.resizeBrowserWindow();
-        }
+        this.resizeBrowserWindow();
         break;
       case '/stdin':
         if (!this._handleUICommand(parts)) {
@@ -115,20 +113,20 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   resizeBrowserWindow() {
-    if (!this.tty_width || !this.char_width || !this.tty_height || !this.char_height) {
+    if (!this.tty_width || !this.dimensions.char.width || !this.tty_height || !this.dimensions.char.height) {
       this.log(
         'Not resizing browser window without all of the TTY and character dimensions'
       );
       return;
     }
     // Does this include scrollbars???
-    const window_width = parseInt(Math.round(this.tty_width * this.char_width));
-    // Leave room for tabs and URL bar. TODO: globally refactor TTY DOM height
+    const window_width = parseInt(Math.round(this.tty_width * this.dimensions.char.width));
+    // Leave room for tabs and URL bar
     const tty_dom_height = this.tty_height - 2;
     // I don't know why we have to add 4 more lines to the window height?? But without
     // it text doesn't fill the bottom of the TTY.
     const window_height = parseInt(Math.round(
-      (tty_dom_height + 4) * this.char_height
+      (tty_dom_height + 4) * this.dimensions.char.height
     ));
     const current_window = browser.windows.getCurrent();
     current_window.then(

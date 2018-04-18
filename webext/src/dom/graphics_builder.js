@@ -1,33 +1,45 @@
+import utils from 'utils';
+
+import CommonMixin from 'dom/common_mixin';
+
 // Converts an instance of the visible DOM into an array of pixel values.
 // Note that it does this both with and without the text visible in order
 // to aid in a clean separation of the graphics and text in the final frame
 // rendered in the terminal.
-export default (MixinBase) => class extends MixinBase {
-  constructor() {
+export default class extends utils.mixins(CommonMixin) {
+  constructor(channel, dimensions) {
     super();
+    this.channel = channel;
+    this.dimensions = dimensions;
     this._off_screen_canvas = document.createElement('canvas');
     this._ctx = this._off_screen_canvas.getContext('2d');
-    this._updateCurrentViewportDimensions();
   }
 
-  getPixelsAt(x, y) {
+  // With full-block single-glyph font on
+  getUnscaledFGPixelAt(x, y) {
     const pixel_data_start = parseInt(
-      (y * (this.viewport.width * 4)) + (x * 4)
+      (y * this.dimensions.dom.width * 4) + (x * 4)
     );
     let fg_rgb = this.pixels_with_text.slice(
       pixel_data_start, pixel_data_start + 3
     );
+    return [fg_rgb[0], fg_rgb[1], fg_rgb[2]];
+  }
+
+  // Without any text showing at all
+  getUnscaledBGPixelAt(x, y) {
+    const pixel_data_start = parseInt(
+      (y * this.dimensions.dom.width * 4) + (x * 4)
+    );
     let bg_rgb = this.pixels_without_text.slice(
       pixel_data_start, pixel_data_start + 3
     );
-    return [
-      [fg_rgb[0], fg_rgb[1], fg_rgb[2]],
-      [bg_rgb[0], bg_rgb[1], bg_rgb[2]]
-    ]
+    return [bg_rgb[0], bg_rgb[1], bg_rgb[2]];
   }
 
+  // Scaled to so the size where each pixel is the same size as a TTY cell
   getScaledPixelAt(x, y) {
-    const pixel_data_start = (y * this.frame_width * 4) + (x * 4);
+    const pixel_data_start = (y * this.dimensions.frame.width * 4) + (x * 4);
     const rgb = this.scaled_pixels.slice(pixel_data_start, pixel_data_start + 3);
     return [rgb[0], rgb[1], rgb[2]];
   }
@@ -66,7 +78,6 @@ export default (MixinBase) => class extends MixinBase {
     this._scaleCanvas();
     this.scaled_pixels = this._getScreenshot();
     this._unScaleCanvas();
-    this._is_first_frame_finished = true;
     return this.scaled_pixels;
   }
 
@@ -93,36 +104,16 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   _getScreenshot() {
-    this._updateCurrentViewportDimensions()
+    this.dimensions.update()
     return this._getPixelData();
-  }
-
-  // Deal with page scrolling and other viewport changes.
-  // Perhaps the window has been resized to better accommodate text-sizing, or to try
-  // to trigger some mobile responsive CSS.
-  _updateCurrentViewportDimensions() {
-    this.viewport = {
-      x_scroll: window.scrollX,
-      y_scroll: window.scrollY,
-      width: window.innerWidth,
-      height: window.innerHeight
-    }
-    if (!this._is_scaled) {
-      // Resize our canvas to match the viewport. I guess this makes for efficient
-      // use of memory?
-      this._off_screen_canvas.width = this.viewport.width;
-      this._off_screen_canvas.height = this.viewport.height;
-    }
   }
 
   // Scale the screenshot so that 1 pixel approximates half a TTY cell.
   _scaleCanvas() {
     this._is_scaled = true;
-    const scale_x = this.frame_width / this.viewport.width;
-    const scale_y = this.frame_height / this.viewport.height;
     this._hideText();
     this._ctx.save();
-    this._ctx.scale(scale_x, scale_y);
+    this._ctx.scale(this.dimensions.scale_factor.width, this.dimensions.scale_factor.height);
   }
 
   _unScaleCanvas() {
@@ -131,24 +122,29 @@ export default (MixinBase) => class extends MixinBase {
     this._is_scaled = false;
   }
 
+  _updateCanvasSize() {
+    if (this._is_scaled) return;
+    this._off_screen_canvas.width = this.dimensions.dom.width;
+    this._off_screen_canvas.height = this.dimensions.dom.height;
+  }
+
   // Get an array of RGB values.
   // This is Firefox-only. Chrome has a nicer MediaStream for this.
   _getPixelData() {
     let width, height;
     let background_colour = 'rgb(255,255,255)';
     if (this._is_scaled) {
-      width = this.frame_width;
-      height = this.frame_height;
+      width = this.dimensions.frame.width;
+      height = this.dimensions.frame.height;
     } else {
-      width = this.viewport.width;
-      height = this.viewport.height;
+      width = this.dimensions.dom.width;
+      height = this.dimensions.dom.height;
     }
+    this._updateCanvasSize();
     this._ctx.drawWindow(
-      window,
-      this.viewport.x_scroll,
-      this.viewport.y_scroll,
-      this.viewport.width,
-      this.viewport.height,
+      window, 0, 0,
+      this.dimensions.dom.width,
+      this.dimensions.dom.height,
       background_colour
     );
     return this._ctx.getImageData(0, 0, width, height).data;

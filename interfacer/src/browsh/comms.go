@@ -39,8 +39,16 @@ func handleWebextensionCommand(message []byte) {
 	command := parts[0]
 	switch command {
 	case "/frame":
-		frame := parseJSONframe(strings.Join(parts[1:], ","))
-		renderFrame(frame)
+		frame = parseJSONFrame(strings.Join(parts[1:], ","))
+		renderUI()
+		renderFrame()
+	case "/state":
+		oldState := map[string]string{}
+		for k,v := range State{
+      oldState[k] = v
+    }
+		parseJSONState(strings.Join(parts[1:], ","))
+		handleStateChange(oldState)
 	case "/screenshot":
 		saveScreenshot(parts[1])
 	default:
@@ -51,13 +59,33 @@ func handleWebextensionCommand(message []byte) {
 // Frames received from the webextension are 1 dimensional arrays of strings.
 // They are made up of a repeating pattern of 7 items:
 // ["FG RED", "FG GREEN", "FG BLUE", "BG RED", "BG GREEN", "BG BLUE", "CHARACTER" ...]
-func parseJSONframe(jsonString string) []string {
+func parseJSONFrame(jsonString string) []string {
 	var frame []string
 	jsonBytes := []byte(jsonString)
 	if err := json.Unmarshal(jsonBytes, &frame); err != nil {
 		Shutdown(err)
 	}
 	return frame
+}
+
+func parseJSONState(jsonString string) {
+	jsonBytes := []byte(jsonString)
+	if err := json.Unmarshal(jsonBytes, &State); err != nil {
+		Shutdown(err)
+	}
+}
+
+func handleStateChange(oldState map[string]string) {
+	if (State["page_state"] != oldState["page_state"]) {
+		Log("State change: page_state=" + State["page_state"])
+		if (State["page_state"] == "page_init") {
+			yScroll = 0
+		}
+	}
+	if (State["frame_width"] != "" && State["frame_height"] != "") {
+		frameWidth = toInt(State["frame_width"])
+		frameHeight = toInt(State["frame_height"])
+	}
 }
 
 // When the socket reader attempts to read from a closed websocket it quickly and

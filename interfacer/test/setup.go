@@ -85,13 +85,25 @@ func WaitForText(text string, x, y int) {
 	panic("Waiting for '" + text + "' to appear but it didn't")
 }
 
+// WaitForPageLoad waits for the page to load
+func WaitForPageLoad() {
+	start := time.Now()
+	for time.Since(start) < perTestTimeout {
+		if browsh.State["page_state"] == "parsing_complete" {
+			time.Sleep(100 * time.Millisecond)
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	panic("Page didn't load within timeout")
+}
+
 // GotoURL sends the browsh browser to the specified URL
 func GotoURL(url string) {
 	SpecialKey(tcell.KeyCtrlL)
 	Keyboard(url)
 	SpecialKey(tcell.KeyEnter)
-	WaitForText("Loading", 0, 24)
-	WaitForText("▄▄▄▄▄▄▄", 0, 24)
+	WaitForPageLoad()
 	// TODO: Looking for the URL isn't optimal because it could be the same URL
 	// as the previous test.
 	gomega.Expect(url).To(BeInFrameAt(9, 1))

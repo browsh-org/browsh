@@ -36,23 +36,31 @@ var _ = Describe("Showing a basic webpage", func() {
 			})
 
 			It("should navigate to a new page by clicking a link", func() {
-				simScreen.InjectMouse(12, 21, tcell.Button1, tcell.ModNone)
+				Expect("Another▄page").To(BeInFrameAt(12, 19))
+				simScreen.InjectMouse(12, 19, tcell.Button1, tcell.ModNone)
 				Expect("Another").To(BeInFrameAt(0, 0))
 			})
 
 			It("should scroll the page by one line", func() {
 				SpecialKey(tcell.KeyDown)
-				Expect("meal,▄originating▄in▄").To(BeInFrameAt(12, 12))
+				Expect("meal,▄originating▄in▄").To(BeInFrameAt(12, 11))
 			})
 
 			It("should scroll the page by one page", func() {
 				SpecialKey(tcell.KeyPgDn)
-				Expect("continuing▄with▄a▄variety▄of▄fish").To(BeInFrameAt(12, 10))
+				Expect("continuing▄with▄a▄variety▄of▄fish").To(BeInFrameAt(12, 12))
 			})
 		})
 	})
 
 	Describe("Rendering", func() {
+		It("should reset page scroll to zero on page load", func() {
+			SpecialKey(tcell.KeyPgDn)
+			Expect("continuing▄with▄a▄variety▄of▄fish").To(BeInFrameAt(12, 12))
+			GotoURL(testSiteURL + "/smorgasbord/another.html")
+			Expect("Another▄webpage").To(BeInFrameAt(1, 3))
+		})
+
 		It("should render dynamic content", func() {
 			Expect([3]int32{0, 255, 255}).To(Equal(GetFgColour(39, 3)))
 			waitForNextFrame()
@@ -68,8 +76,8 @@ var _ = Describe("Showing a basic webpage", func() {
 
 		Describe("Text positioning", func() {
 			It("should position the left/right-aligned coloumns", func() {
-				Expect("Smörgåsbord▄(Swedish:").To(BeInFrameAt(12, 11))
-				Expect("The▄Swedish▄word").To(BeInFrameAt(42, 11))
+				Expect("Smörgåsbord▄(Swedish:").To(BeInFrameAt(12, 10))
+				Expect("The▄Swedish▄word").To(BeInFrameAt(42, 10))
 			})
 		})
 	})

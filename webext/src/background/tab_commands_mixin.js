@@ -6,6 +6,7 @@ import utils from 'utils';
 // the current character dimensions .
 export default (MixinBase) => class extends MixinBase {
   handleTabMessage(message) {
+    let incoming;
     const parts = message.split(',');
     const command = parts[0];
     switch (command) {
@@ -17,13 +18,11 @@ export default (MixinBase) => class extends MixinBase {
       case '/tab_info':
         this.currentTab().info = JSON.parse(utils.rebuildArgsToSingleArg(parts));
         break;
-      case '/char_size':
-        this.char_width = parts[1];
-        this.char_height = parts[2]
-        if(this.tty_width && this.tty_height) this.resizeBrowserWindow();
-        break;
-      case '/request_tty_size':
-        this.sendTTYSizeToBrowser();
+      case '/dimensions':
+        incoming = JSON.parse(message.slice(12));
+        this._mightResizeWindow(incoming);
+        this.dimensions = incoming;
+        this._sendFrameSize();
         break;
       case '/status':
         if (this._current_frame) {
@@ -39,55 +38,53 @@ export default (MixinBase) => class extends MixinBase {
     }
   }
 
-  sendTTYSizeToBrowser() {
-    this.sendToCurrentTab(`/tty_size,${this.tty_width},${this.tty_height}`);
+  _mightResizeWindow(incoming) {
+    if (this.dimensions.char.width != incoming.char.width ||
+        this.dimensions.char.height != incoming.char.height) {
+      this.dimensions = incoming;
+      this.resizeBrowserWindow();
+    }
+  }
+
+  _sendFrameSize() {
+    this.state['frame_width'] = this.dimensions.frame.width;
+    this.state['frame_height'] = this.dimensions.frame.height;
+    this.sendState();
   }
 
   _sendCurrentFrame() {
+    this.sendState();
     // TODO: I struggled with unmarshalling a mixed array in Golang so I'm crudely
-    // just casting evertything to a string for now.
+    // just casting everything to a string for now.
     this._current_frame = this._current_frame.map((i) => i.toString());
     this.sendToTerminal(`/frame,${JSON.stringify(this._current_frame)}`);
   }
 
   updateStatus(status, message = '') {
     if (typeof this._current_frame === 'undefined') return;
+    let status_message;
     switch (status) {
       case 'page_init':
-        this._page_status = `Loading ${this.currentTab().info.url}`;
+        status_message = `Loading ${this.currentTab().info.url}`;
         break;
       case 'parsing_complete':
-        this._page_status = '';
+        status_message = '';
         break;
       case 'window_unload':
-        this._page_status = 'Loading...';
+        status_message = 'Loading...';
         break;
       default:
-        if (message != '') status = message;
-        this._page_status = status;
+        if (message != '') status_message = message;
     }
-    this._applyStatus();
+    this.state['page_state'] = status;
+    this.state['page_status_message'] = status_message;
+    this.sendState();
   }
 
   _applyUI() {
     const tabs = this._buildTTYRow(this._buildTabs());
     const urlBar = this._buildURLBar();
     this._current_frame = tabs.concat(urlBar).concat(this._current_frame);
-    this._applyStatus();
-  }
-
-  _applyStatus() {
-    if (typeof this._page_status === 'undefined') return;
-    let cell;
-    const cell_item_count = 7
-    const bottom_line = this.tty_height - 1;
-    const start = bottom_line * this.tty_width * cell_item_count;
-    for (let i = 0; i < this.tty_width; i++) {
-      if (this._page_status[i] !== undefined) {
-        cell = utils.ttyPlainCell(this._page_status[i]);
-        this._current_frame.splice(start + (i * 7), 7, ...cell)
-      }
-    }
   }
 
   _buildTabs() {
