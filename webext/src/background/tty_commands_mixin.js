@@ -26,7 +26,7 @@ export default (MixinBase) => class extends MixinBase {
         // TODO: cancel the current FPS iteration when using this
         _.throttle(() => {
           this.sendToCurrentTab('/request_frame')
-        }, 50);
+        }, 250);
         break;
       case '/status':
         this.updateStatus('', parts.slice(1).join(','));

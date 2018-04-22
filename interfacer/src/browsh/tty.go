@@ -95,7 +95,7 @@ func handleScrolling(ev *tcell.EventKey) {
 }
 
 func limitScroll(height int) {
-	maxYScroll := (frameHeight / 2) - height
+	maxYScroll := (frame.height / 2) - height
 	if (yScroll > maxYScroll) { yScroll = maxYScroll }
 	if (yScroll < 0) { yScroll = 0 }
 }
@@ -122,23 +122,17 @@ func renderAll() {
 // Render the tabs and URL bar
 // TODO: Temporary function, UI rendering should all be moved into this CLI app
 func renderUI() {
+	return
 	var styling = tcell.StyleDefault
-	var character string
 	var runeChars []rune
 	width, _ := screen.Size()
 	index := 0
 	for y := 0; y < uiHeight ; y++ {
 		for x := 0; x < width; x++ {
-			styling = styling.Foreground(getRGBColor(index))
-			index += 3
-			styling = styling.Background(getRGBColor(index))
-			index += 3
-			character = frame[index]
-			runeChars = []rune(character)
+			styling = styling.Foreground(frame.cells[index].fgColour)
+			styling = styling.Background(frame.cells[index].bgColour)
+			runeChars = frame.cells[index].character
 			index++
-			if (character == "WIDE") {
-				continue
-			}
 			screen.SetCell(x, y, styling, runeChars[0])
 		}
 	}
@@ -150,35 +144,23 @@ func renderUI() {
 // will try to minimise rendering commands by only rendering parts of the terminal
 // that have changed.
 func renderFrame() {
+	if (len(frame.pixels) == 0 || len(frame.text) == 0) { return }
 	var styling = tcell.StyleDefault
-	var character string
 	var runeChars []rune
 	width, height := screen.Size()
-	uiSize :=  uiHeight * width * 7
-	if (len(frame) == uiSize) {
-		Log("Not rendering zero-size frame data")
-		return
-	}
-	if (frameWidth == 0 || frameHeight == 0) {
+	if (frame.width == 0 || frame.height == 0) {
 		Log("Not rendering frame with a zero dimension")
 		return
 	}
 	index := 0
 	for y := 0; y < height - uiHeight; y++ {
 		for x := 0; x < width; x++ {
-			index = ((y + yScroll) * frameWidth * 7) + ((x + xScroll) * 7)
-			index += uiSize
+			index = ((y + yScroll) * frame.width) + ((x + xScroll))
 			if (!checkCell(index, x + xScroll, y + yScroll)) { return }
-			styling = styling.Foreground(getRGBColor(index))
-			index += 3
-			styling = styling.Background(getRGBColor(index))
-			index += 3
-			character = frame[index]
-			runeChars = []rune(character)
-			index++
-			if (character == "WIDE") {
-				continue
-			}
+			styling = styling.Foreground(frame.cells[index].fgColour)
+			styling = styling.Background(frame.cells[index].bgColour)
+			runeChars = frame.cells[index].character
+			if (len(runeChars) == 0) { continue } // TODO: shouldn't need this
 			screen.SetCell(x, y + uiHeight, styling, runeChars[0])
 		}
 	}
@@ -201,23 +183,12 @@ func overlayPageStatusMessage(height int) {
 }
 
 func checkCell(index, x, y int) bool {
-	for i := 0; i < 7; i++ {
-		if (index + i >= len(frame) || frame[index + i] == "") {
-			message := fmt.Sprintf("Blank frame data (size: %d) at %dx%d, index:%d/%d", len(frame), x, y, index, i)
-			Log(message)
-			Log(fmt.Sprintf("%d", yScroll))
-			return false;
-		}
+	if (index >= len(frame.cells)) {
+		message := fmt.Sprintf(
+			"Blank frame data (size: %d) at %dx%d, index: %d",
+			len(frame.cells), x, y, index)
+		Log(message)
+		return false;
 	}
 	return true;
-}
-
-// Given a raw frame from the webextension, find the RGB colour at a given
-// 1 dimensional index.
-func getRGBColor(index int) tcell.Color {
-	rgb := frame[index:index + 3]
-	return tcell.NewRGBColor(
-			toInt32(rgb[0]),
-			toInt32(rgb[1]),
-			toInt32(rgb[2]))
 }

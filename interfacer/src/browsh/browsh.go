@@ -43,10 +43,8 @@ var (
 	ffCommandCount = 0
 	isConnectedToWebExtension = false
 	screen tcell.Screen
-	frame []string
 	uiHeight = 2
-	frameWidth int
-	frameHeight int
+	frame = Frame{}
 	State map[string]string
 	defaultFFPrefs = map[string]string{
 		"browser.startup.homepage":                "'https://www.google.com'",

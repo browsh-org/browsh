@@ -38,8 +38,12 @@ func handleWebextensionCommand(message []byte) {
 	parts := strings.Split(string(message), ",")
 	command := parts[0]
 	switch command {
-	case "/frame":
-		frame = parseJSONFrame(strings.Join(parts[1:], ","))
+	case "/frame_text":
+		frame.parseJSONFrameText(strings.Join(parts[1:], ","))
+		renderUI()
+		renderFrame()
+	case "/frame_pixels":
+		frame.parseJSONFramePixels(strings.Join(parts[1:], ","))
 		renderUI()
 		renderFrame()
 	case "/state":
@@ -54,18 +58,6 @@ func handleWebextensionCommand(message []byte) {
 	default:
 		Log("WEBEXT: " + string(message))
 	}
-}
-
-// Frames received from the webextension are 1 dimensional arrays of strings.
-// They are made up of a repeating pattern of 7 items:
-// ["FG RED", "FG GREEN", "FG BLUE", "BG RED", "BG GREEN", "BG BLUE", "CHARACTER" ...]
-func parseJSONFrame(jsonString string) []string {
-	var frame []string
-	jsonBytes := []byte(jsonString)
-	if err := json.Unmarshal(jsonBytes, &frame); err != nil {
-		Shutdown(err)
-	}
-	return frame
 }
 
 func parseJSONState(jsonString string) {
@@ -83,8 +75,8 @@ func handleStateChange(oldState map[string]string) {
 		}
 	}
 	if (State["frame_width"] != "" && State["frame_height"] != "") {
-		frameWidth = toInt(State["frame_width"])
-		frameHeight = toInt(State["frame_height"])
+		frame.width = toInt(State["frame_width"])
+		frame.height = toInt(State["frame_height"])
 	}
 }
 

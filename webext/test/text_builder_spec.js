@@ -2,8 +2,8 @@ import sandbox from 'helper';
 import { expect } from 'chai';
 
 import Dimensions from 'dom/dimensions';
-import FrameBuilder from 'dom/frame_builder';
 import GraphicsBuilder from 'dom/graphics_builder';
+import TextBuilder from 'dom/text_builder';
 import TTYCell from 'dom/tty_cell';
 import text_nodes from 'fixtures/text_nodes';
 import {
@@ -12,20 +12,15 @@ import {
   scaled
 } from 'fixtures/canvas_pixels';
 
-
-// To save us hand-writing large pixel arrays, let's just have an unrealistically
-// small window, it's not a problem, because we'll never actually have to view real
-// webpages on it.
-window.innerWidth = 3;
-window.innerHeight = 4;
-
-let frame_builder;
+let graphics_builder, text_builder;
 
 function setup() {
-  frame_builder = new FrameBuilder(undefined, new Dimensions());
-  frame_builder.graphics_builder.getScreenshotWithText();
-  frame_builder.graphics_builder.getScreenshotWithoutText();
-  frame_builder.graphics_builder.getScaledScreenshot();
+  let dimensions = new Dimensions();
+  graphics_builder = new GraphicsBuilder(undefined, dimensions);
+  text_builder = new TextBuilder(undefined, dimensions, graphics_builder);
+  graphics_builder.getScreenshotWithText();
+  graphics_builder.getScreenshotWithoutText();
+  graphics_builder.getScaledScreenshot();
   sandbox.stub(TTYCell.prototype, 'isHighestLayer').returns(true);
 }
 
@@ -36,20 +31,22 @@ describe('Text Builder', () => {
     getPixelsStub.onCall(1).returns(without_text);
     getPixelsStub.onCall(2).returns(scaled);
     setup();
-    frame_builder.text_builder._text_nodes = text_nodes;
+    text_builder._text_nodes = text_nodes;
+    text_builder._updateState();
+    text_builder._positionTextNodes();
   });
 
-  it('should convert text nodes to a grid', () => {
-    frame_builder.text_builder._updateState();
-    frame_builder.text_builder._positionTextNodes();
-    const grid = frame_builder.text_builder.tty_grid.cells;
+  it('should convert text nodes to a grid of cell objects', () => {
+    const grid = text_builder.tty_grid.cells;
     expect(grid[0]).to.deep.equal({
       index: 0,
       rune: 't',
       fg_colour: [255, 255, 255],
       bg_colour: [0, 0, 0],
       parent_element: {
-        style: {}
+        style: {
+          textAlign: "left"
+        }
       },
       tty_coords: {
         x: 0,
@@ -60,39 +57,23 @@ describe('Text Builder', () => {
         y: 0
       }
     });
-    expect(grid[1]).to.deep.equal({
-      index: 1,
-      rune: 'e',
-      fg_colour: [255, 255, 255],
-      bg_colour: [111, 111, 111],
-      parent_element: {
-        style: {}
-      },
-      tty_coords: {
-        x: 1,
-        y: 0
-      },
-      dom_coords: {
-        x: 1,
-        y: 0
-      }
-    });
-    expect(grid[2]).to.deep.equal({
-      index: 2,
-      rune: 's',
-      fg_colour: [255, 255, 255],
-      bg_colour: [0, 0, 0],
-      parent_element: {
-        style: {}
-      },
-      tty_coords: {
-        x: 2,
-        y: 0
-      },
-      dom_coords: {
-        x: 2,
-        y: 0
-      }
-    });
+    expect(grid[5]).to.equal(undefined);
+  });
+
+  it('should ignore spaces on new lines', () => {
+    const grid = text_builder.tty_grid.cells;
+    expect(grid[3].rune).to.equal('n');
+    expect(grid[3].tty_coords.y).to.equal(1);
+  });
+
+  it('should serialise a frame', () => {
+    text_builder._serialiseFrame();
+    expect(text_builder.frame).to.deep.equal([
+      '255', '255', '255', 't',
+      '255', '255', '255', 'e',
+      '255', '255', '255', 's',
+      '255', '255', '255', 'n',
+      '0', '0', '0', '', '0', '0', '0', ''
+    ]);
   });
 });

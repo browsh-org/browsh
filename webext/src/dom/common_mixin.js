@@ -23,7 +23,7 @@ export default (MixinBase) => class extends MixinBase {
   // If you're logging large objects and using a high-ish FPS (<1000ms) then you might
   // crash the browser. So use this function instead.
   firstFrameLog(...logs) {
-    //if (this._is_first_frame_finished) return;
+    if (this._is_first_frame_finished) return;
     if (DEVELOPMENT) {
       this.log(logs);
     }

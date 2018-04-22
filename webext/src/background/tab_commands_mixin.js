@@ -10,10 +10,11 @@ export default (MixinBase) => class extends MixinBase {
     const parts = message.split(',');
     const command = parts[0];
     switch (command) {
-      case '/frame':
-        this._current_frame = JSON.parse(message.slice(7));
-        this._applyUI();
-        this._sendCurrentFrame();
+      case '/frame_text':
+        this.sendToTerminal(`/frame_text,${message.slice(12)}`);
+        break;
+      case '/frame_pixels':
+        this.sendToTerminal(`/frame_pixels,${message.slice(14)}`);
         break;
       case '/tab_info':
         this.currentTab().info = JSON.parse(utils.rebuildArgsToSingleArg(parts));
@@ -27,7 +28,7 @@ export default (MixinBase) => class extends MixinBase {
       case '/status':
         if (this._current_frame) {
           this.updateStatus(parts[1]);
-          this._sendCurrentFrame();
+          this.sendState();
         }
         break;
       case `/log`:
@@ -50,14 +51,6 @@ export default (MixinBase) => class extends MixinBase {
     this.state['frame_width'] = this.dimensions.frame.width;
     this.state['frame_height'] = this.dimensions.frame.height;
     this.sendState();
-  }
-
-  _sendCurrentFrame() {
-    this.sendState();
-    // TODO: I struggled with unmarshalling a mixed array in Golang so I'm crudely
-    // just casting everything to a string for now.
-    this._current_frame = this._current_frame.map((i) => i.toString());
-    this.sendToTerminal(`/frame,${JSON.stringify(this._current_frame)}`);
   }
 
   updateStatus(status, message = '') {

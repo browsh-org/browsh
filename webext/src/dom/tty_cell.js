@@ -1,5 +1,3 @@
-import charWidthInTTY from 'string-width';
-
 // A single cell on the TTY grid
 export default class {
   // When a character clobbers another character in the grid, we can't use our
@@ -27,26 +25,6 @@ export default class {
       element.browsh_calculated_styles = styles;
     }
     return element.browsh_calculated_styles;
-  }
-
-  isTransparent() {
-    const is_undefined = this.rune === undefined;
-    const is_empty = this.rune === '';
-    const is_space = /^\s+$/.test(this.rune);
-    const is_not_worth_printing = is_empty || is_space || is_undefined;
-    return is_not_worth_printing;
-  }
-
-  // Deal with UTF8 characters that take up more than a single cell in the TTY.
-  // Eg; 比如说
-  // TODO:
-  //   1. Do all terminals deal with wide characters the same?
-  //   2. Use CSS or JS so that wide characters actually flow in the DOM as 2
-  //      monospaced characters. This will allow pages of nothing but wide
-  //      characters to render/flow as closely as possible ot how they will appear
-  //      in the TTY.
-  calculateCharWidthPadding() {
-    return charWidthInTTY(this.rune) - 1;
   }
 }
 

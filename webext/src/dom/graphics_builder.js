@@ -15,6 +15,16 @@ export default class extends utils.mixins(CommonMixin) {
     this._ctx = this._off_screen_canvas.getContext('2d');
   }
 
+  sendFrame() {
+    this.getScaledScreenshot();
+    this._serialiseFrame();
+    if (this.frame.length > 0) {
+      this.sendMessage(`/frame_pixels,${JSON.stringify(this.frame)}`);
+    } else {
+      this.log("Not sending empty pixels frame");
+    }
+  }
+
   // With full-block single-glyph font on
   getUnscaledFGPixelAt(x, y) {
     const pixel_data_start = parseInt(
@@ -113,7 +123,10 @@ export default class extends utils.mixins(CommonMixin) {
     this._is_scaled = true;
     this._hideText();
     this._ctx.save();
-    this._ctx.scale(this.dimensions.scale_factor.width, this.dimensions.scale_factor.height);
+    this._ctx.scale(
+      this.dimensions.scale_factor.width,
+      this.dimensions.scale_factor.height
+    );
   }
 
   _unScaleCanvas() {
@@ -148,5 +161,16 @@ export default class extends utils.mixins(CommonMixin) {
       background_colour
     );
     return this._ctx.getImageData(0, 0, width, height).data;
+  }
+
+  _serialiseFrame() {
+    this.frame = [];
+    const height = this.dimensions.frame.height;
+    const width = this.dimensions.frame.width;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        this.getScaledPixelAt(x, y).map((c) => this.frame.push(c.toString()));
+      }
+    }
   }
 }

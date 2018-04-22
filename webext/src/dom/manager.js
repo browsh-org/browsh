@@ -2,7 +2,8 @@ import utils from 'utils';
 
 import CommonMixin from 'dom/common_mixin';
 import Dimensions from 'dom/dimensions';
-import FrameBuilder from 'dom/frame_builder';
+import GraphicsBuilder from 'dom/graphics_builder';
+import TextBuilder from 'dom/text_builder';
 
 // Entrypoint for managing a single tab
 export default class extends utils.mixins(CommonMixin) {
@@ -12,18 +13,34 @@ export default class extends utils.mixins(CommonMixin) {
     this._setupInit();
   }
 
+  _postCommsConstructor() {
+    this.dimensions.channel = this.channel;
+    this.dimensions.update();
+    this.graphics_builder = new GraphicsBuilder(this.channel, this.dimensions);
+    this.text_builder = new TextBuilder(this.channel, this.dimensions, this.graphics_builder);
+    this.text_builder.sendFrame();
+  }
+
   sendFrame() {
-    this.frame_builder.makeFrame();
+    this.dimensions.update()
+    if (this.dimensions.dom.is_new) {
+      this.text_builder.sendFrame();
+    }
+    this.graphics_builder.sendFrame();
     this._sendTabInfo();
     if (!this._is_first_frame_finished) {
       this.sendMessage('/status,parsing_complete');
     }
-    if (this.frame_builder.frame.length > 0) {
-      this.sendMessage(`/frame,${JSON.stringify(this.frame_builder.frame)}`);
-    } else {
-      this.log("Not sending empty frame");
-    }
     this._is_first_frame_finished = true;
+  }
+
+  _postCommsInit() {
+    this.log('Webextension postCommsInit()');
+    this._postCommsConstructor();
+    this._sendTabInfo();
+    this.sendMessage('/status,page_init');
+    this._listenForBackgroundMessages();
+    this._startWindowEventListeners()
   }
 
   _setupInit() {
@@ -65,16 +82,6 @@ export default class extends utils.mixins(CommonMixin) {
 
   _registrationError(error) {
     this.log(error);
-  }
-
-  _postCommsInit() {
-    this.log('Webextension postCommsInit()');
-    this.dimensions.channel = this.channel;
-    this.frame_builder = new FrameBuilder(this.channel, this.dimensions);
-    this._sendTabInfo();
-    this.sendMessage('/status,page_init');
-    this._listenForBackgroundMessages();
-    this._startWindowEventListeners()
   }
 
   _startWindowEventListeners() {
@@ -185,7 +192,7 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   _mouseAction(type, x, y) {
-    const [dom_x, dom_y] = this.frame_builder.getDOMCoordsFromMouseCoords(x, y);
+    const [dom_x, dom_y] = this._getDOMCoordsFromMouseCoords(x, y);
     const element = document.elementFromPoint(
       dom_x - window.scrollX,
       dom_y - window.scrollY
@@ -197,6 +204,37 @@ export default class extends utils.mixins(CommonMixin) {
       pageY: dom_y
     });
     element.dispatchEvent(event);
+  }
+
+  // The user clicks on a TTY grid which has a significantly lower resolution than the
+  // actual browser window. So we scale the coordinates up as if the user clicked on the
+  // the central "pixel" of a TTY cell.
+  //
+  // Furthermore if the TTY click is on a readable character then the click is proxied
+  // to the original position of the character before TextBuilder snapped the character into
+  // position.
+  _getDOMCoordsFromMouseCoords(x, y) {
+    let dom_x, dom_y, char, original_position;
+    const index = (y * this.dimensions.frame.width) + x;
+    if (this.text_builder.tty_grid.cells[index] !== undefined) {
+      char = this.text_builder.tty_grid.cells[index].rune;
+    } else {
+      char = false;
+    }
+    if (!char || char === '▄') {
+      dom_x = (x * this.dimensions.char.width);
+      dom_y = (y * this.dimensions.char.height);
+    } else {
+      // Recall that text can be shifted from its original position in the browser in order
+      // to snap it consistently to the TTY grid.
+      original_position = this.text_builder.tty_grid.cells[index].dom_coords;
+      dom_x = original_position.x;
+      dom_y = original_position.y;
+    }
+    return [
+      dom_x + (this.dimensions.char.width / 2),
+      dom_y + (this.dimensions.char.height / 2)
+    ];
   }
 
   _sendTabInfo() {

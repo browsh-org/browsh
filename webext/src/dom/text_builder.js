@@ -12,7 +12,9 @@ export default class extends utils.mixins(CommonMixin) {
     super();
     this.channel = channel;
     this.dimensions = dimensions;
+    this.graphics_builder = graphics_builder;
     this.tty_grid = new TTYGrid(dimensions, graphics_builder);
+    this.frame = [];
     this._parse_started_elements = [];
     // A `range` is the DOM's representation of elements and nodes as they are rendered in
     // the DOM. Think of the 'range' that is created when you select/highlight text for
@@ -20,8 +22,20 @@ export default class extends utils.mixins(CommonMixin) {
     this._range = document.createRange();
   }
 
+  sendFrame() {
+    this.buildFormattedText();
+    this._serialiseFrame();
+    if (this.frame.length > 0) {
+      this.sendMessage(`/frame_text,${JSON.stringify(this.frame)}`);
+    } else {
+      this.log("Not sending empty text frame");
+    }
+  }
+
   buildFormattedText() {
     this._updateState();
+    this.graphics_builder.getScreenshotWithText();
+    this.graphics_builder.getScreenshotWithoutText();
     this._getTextNodes();
     this._positionTextNodes();
   }
@@ -43,6 +57,12 @@ export default class extends utils.mixins(CommonMixin) {
     this.logPerformance(() => {
       this.__positionTextNodes();
     }, 'position text nodes');
+  }
+
+  _serialiseFrame() {
+    this.logPerformance(() => {
+      this.__serialiseFrame();
+    }, 'serialise text frame');
   }
 
   // Search through every node in the DOM looking for displayable text.
@@ -77,7 +97,8 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   _formatText() {
-    this._normaliseWhitespace()
+    this._normaliseWhitespace();
+    this._fixJustifiedText();
   }
 
   // Justified text uses the space between words to stretch a line to perfectly fit from
@@ -93,11 +114,8 @@ export default class extends utils.mixins(CommonMixin) {
   //     even by a find-replace on all occurrences of 'justify'?
   //   * Yet another thing, the style change doesn't actually get picked up until the
   //     next frame. Thus why the loop is independent of the `positionTextNodes()` loop.
-  fixJustifiedText() {
-    this._getTextNodes();
-    for (const node of this._text_nodes) {
-      node.parentElement.style.textAlign = 'left';
-    }
+  _fixJustifiedText() {
+    this._node.parentElement.style.textAlign = 'left';
   }
 
   // The need for this wasn't immediately obvious to me. The fact is that the DOM stores
@@ -274,6 +292,28 @@ export default class extends utils.mixins(CommonMixin) {
       col_start: utils.snap(this._dom_box.left / this.dimensions.char.width),
       row: utils.snap(this._dom_box.top / this.dimensions.char.height),
       width: utils.snap(this._dom_box.width / this.dimensions.char.width),
+    }
+  }
+
+  __serialiseFrame() {
+    let cell, index;
+    this.frame = [];
+    const height = this.dimensions.frame.height / 2;
+    const width = this.dimensions.frame.width;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        index = (y * width) + x;
+        cell = this.tty_grid.cells[index];
+        if (cell === undefined) {
+          this.frame.push("0")
+          this.frame.push("0")
+          this.frame.push("0")
+          this.frame.push("")
+        } else {
+          cell.fg_colour.map((c) => this.frame.push(c.toString()));
+          this.frame.push(cell.rune);
+        }
+      }
     }
   }
 

@@ -1,4 +1,4 @@
-// It'd be nice to somehow automate the creation of the coordinates here
+// TODO: It'd be nice to somehow automate the creation of the coordinates here
 
 let base = {
   textContent: "\n testing nodes",
@@ -7,7 +7,7 @@ let base = {
   },
   bounding_box: {
     top: 0.1,
-    bottom: 4.1,
+    bottom: 2.1,
     left: 0.1,
     right: 7.1,
     width: 7.1
@@ -20,7 +20,7 @@ let base = {
   },
   {
     // 'nodes'
-    top: 4.1,
+    top: 2.1,
     left: 0.1,
     width: 5.1
   }]

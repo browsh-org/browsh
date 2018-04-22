@@ -21,6 +21,11 @@ export default {
     return parseInt(Math.round(number));
   },
 
+  ensureEven: function (number) {
+    if (number % 2) { number++ }
+    return number;
+  },
+
   rebuildArgsToSingleArg: function (args) {
     return args.slice(1).join(',');
   }

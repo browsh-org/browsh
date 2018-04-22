@@ -101,9 +101,18 @@ export default class extends utils.mixins(CommonMixin) {
   // Note that it treats the height of a single TTY cell as containing 2 pixels. Therefore
   // a TTY of 4x4 will have frame dimensions of 4x8.
   _updateFrameDimensions() {
+    let width = this.dom.width * this.scale_factor.width;
+    let height = this.dom.height * this.scale_factor.height;
+    width = utils.snap(width);
+    height = utils.snap(height);
+
+    // Only the height needs to be even because of the UTF8 half-block trick. A single
+    // TTY cell always contains exactly 2 pseudo pixels.
+    height = utils.ensureEven(height);
+
     this.frame = {
-      width: utils.snap(this.dom.width * this.scale_factor.width),
-      height: utils.snap(this.dom.height * this.scale_factor.height)
+      width: width,
+      height: height
     }
   }
 
