@@ -163,14 +163,7 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   _handleCharBasedKeys(input) {
-    switch (input.char) {
-      case 'M':
-        if (input.mod === 4) {
-          this.frame_builder.is_graphics_mode = !this.frame_builder.is_graphics_mode;
-          this.frame_builder.buildText();
-        }
-        break;
-    }
+    switch (input.char) { default: }
   }
 
   _handleMouse(input) {

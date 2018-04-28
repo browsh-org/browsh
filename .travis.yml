@@ -34,7 +34,8 @@ install:
   - npm run build
 script:
   - cd $REPO_ROOT/webext && npm test
-  - cd $REPO_ROOT/interfacer && ./contrib/run_tests.sh
+  - cd $REPO_ROOT/interfacer && go test src/browsh/*.go -v
+  - cd $REPO_ROOT/interfacer && go test test/*.go -v
 after_failure:
   - cat $REPO_ROOT/interfacer/test/debug.log
 after_success:

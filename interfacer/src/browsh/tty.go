@@ -14,6 +14,8 @@ var (
 	yScroll = 0
 	screen tcell.Screen
 	uiHeight = 2
+	// IsMonochromeMode decides whether to render the TTY in full colour or monochrome
+	IsMonochromeMode = false
 )
 
 func setupTcell() {
@@ -39,39 +41,62 @@ func readStdin() {
 		switch ev := ev.(type) {
 		case *tcell.EventKey:
 			handleUserKeyPress(ev)
-			eventMap := map[string]interface{}{
-				"key":  int(ev.Key()),
-				"char": string(ev.Rune()),
-				"mod":  int(ev.Modifiers()),
-			}
-			marshalled, _ := json.Marshal(eventMap)
-			sendMessageToWebExtension("/stdin," + string(marshalled))
 		case *tcell.EventResize:
-			screen.Sync()
-			sendTtySize()
+			handleTTYResize()
 		case *tcell.EventMouse:
-			x, y := ev.Position()
-			button := ev.Buttons()
-			eventMap := map[string]interface{}{
-				"button":    int(button),
-				"mouse_x":   int(x + CurrentTab.frame.xScroll),
-				"mouse_y":   int(y - uiHeight + CurrentTab.frame.yScroll),
-				"modifiers": int(ev.Modifiers()),
-			}
-			marshalled, _ := json.Marshal(eventMap)
-			sendMessageToWebExtension("/stdin," + string(marshalled))
+			handleMouseEvent(ev)
 		}
 	}
 }
 
 func handleUserKeyPress(ev *tcell.EventKey) {
-	if ev.Key() == tcell.KeyCtrlQ {
-		if !*isUseExistingFirefox {
-			quitFirefox()
-		}
-		Shutdown(errors.New("normal"))
+	switch ev.Key() {
+	case tcell.KeyCtrlQ:
+		quitBrowsh()
+	case tcell.KeyCtrlL:
+		urlBarFocusToggle()
 	}
-	handleScrolling(ev)
+	if (ev.Rune() == 'm' && ev.Modifiers() == 4) {
+		toggleMonochromeMode()
+	}
+	forwardKeyPress(ev)
+	if activeInputBox != nil {
+		handleInputBoxInput(ev)
+	} else {
+		handleScrolling(ev) // TODO: shouldn't you be able to still use mouse scrolling?
+	}
+}
+
+func quitBrowsh() {
+	if !*isUseExistingFirefox {
+		quitFirefox()
+	}
+	Shutdown(errors.New("normal"))
+}
+
+func urlBarFocusToggle() {
+	if urlInputBox.isActive {
+		activeInputBox = nil
+		urlInputBox.isActive = false
+	} else {
+		activeInputBox = &urlInputBox
+		urlInputBox.isActive = true
+		urlInputBox.text = ""
+	}
+}
+
+func toggleMonochromeMode() {
+	IsMonochromeMode = !IsMonochromeMode
+}
+
+func forwardKeyPress(ev *tcell.EventKey) {
+	eventMap := map[string]interface{}{
+		"key":  int(ev.Key()),
+		"char": string(ev.Rune()),
+		"mod":  int(ev.Modifiers()),
+	}
+	marshalled, _ := json.Marshal(eventMap)
+	sendMessageToWebExtension("/stdin," + string(marshalled))
 }
 
 func handleScrolling(ev *tcell.EventKey) {
@@ -96,18 +121,25 @@ func handleScrolling(ev *tcell.EventKey) {
 	}
 }
 
-// Write a simple text string to the screen. Not for use in the browser frames
-// themselves. If you want anything to appear in the browser that must be done
-// through the webextension.
-func writeString(x, y int, str string) {
-	var defaultColours = tcell.StyleDefault
-	rgb := tcell.NewHexColor(int32(0xffffff))
-	defaultColours.Foreground(rgb)
-	for _, c := range str {
-		screen.SetContent(x, y, c, nil, defaultColours)
-		x++
+func handleMouseEvent(ev *tcell.EventMouse) {
+	x, y := ev.Position()
+	button := ev.Buttons()
+	eventMap := map[string]interface{}{
+		"button":    int(button),
+		"mouse_x":   int(x + CurrentTab.frame.xScroll),
+		"mouse_y":   int(y - uiHeight + CurrentTab.frame.yScroll),
+		"modifiers": int(ev.Modifiers()),
 	}
-	screen.Show()
+	marshalled, _ := json.Marshal(eventMap)
+	sendMessageToWebExtension("/stdin," + string(marshalled))
+}
+
+func handleTTYResize() {
+	width, _ := screen.Size()
+	// TODO: How does this work with wide UTF8 chars?
+	urlInputBox.Width = width - len(urlBarControls)
+	screen.Sync()
+	sendTtySize()
 }
 
 func renderAll() {
@@ -141,11 +173,19 @@ func renderCurrentTabWindow() {
 		for x := 0; x < width; x++ {
 			index = ((y + frame.yScroll) * frame.width) + ((x + frame.xScroll))
 			if (!checkCell(index, x + frame.xScroll, y + frame.yScroll)) { return }
-			styling = styling.Foreground(frame.cells[index].fgColour)
-			styling = styling.Background(frame.cells[index].bgColour)
 			runeChars = frame.cells[index].character
 			// TODO: do this is in isCharacterTransparent()
 			if (len(runeChars) == 0) { continue }
+			if IsMonochromeMode {
+				styling = styling.Foreground(tcell.ColorWhite)
+				styling = styling.Background(tcell.ColorBlack)
+				if runeChars[0] == '▄' {
+					runeChars[0] = ' '
+				}
+			} else {
+				styling = styling.Foreground(frame.cells[index].fgColour)
+				styling = styling.Background(frame.cells[index].bgColour)
+			}
 			screen.SetCell(x, y + uiHeight, styling, runeChars[0])
 		}
 	}

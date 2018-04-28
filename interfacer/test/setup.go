@@ -90,7 +90,7 @@ func WaitForPageLoad() {
 	start := time.Now()
 	for time.Since(start) < perTestTimeout {
 		if browsh.CurrentTab.PageState == "parsing_complete" {
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(200 * time.Millisecond)
 			return
 		}
 		time.Sleep(100 * time.Millisecond)
@@ -190,6 +190,7 @@ func runeCount(text string) int {
 }
 
 var _ =	ginkgo.BeforeEach(func() {
+	browsh.IsMonochromeMode = false
 	browsh.Log("\n---------")
 	browsh.Log(ginkgo.CurrentGinkgoTestDescription().FullTestText)
 	browsh.Log("---------")

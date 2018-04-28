@@ -62,13 +62,22 @@ var _ = Describe("Showing a basic webpage", func() {
 		})
 
 		It("should render dynamic content", func() {
-			Expect([3]int32{0, 255, 255}).To(Equal(GetFgColour(39, 3)))
-			waitForNextFrame()
-			Expect([3]int32{255, 0, 255}).To(Equal(GetFgColour(39, 3)))
+			var greens, pinks int
+			var colours [10][3]int32
+			for i := 0; i < 10; i++ {
+				colours[i] = GetFgColour(39, 3)
+				waitForNextFrame()
+			}
+			for i := 0; i < 10; i++ {
+				if colours[i] == [3]int32{0, 255, 255} { greens++ }
+				if colours[i] == [3]int32{255, 0, 255} { pinks++ }
+			}
+			Expect(greens).To(BeNumerically(">=", 1))
+			Expect(pinks).To(BeNumerically(">=", 1))
 		})
 
 		It("should switch to monochrome mode", func() {
-			simScreen.InjectKey(tcell.KeyRune, 'M', tcell.ModAlt)
+			simScreen.InjectKey(tcell.KeyRune, 'm', tcell.ModAlt)
 			waitForNextFrame()
 			Expect([3]int32{0, 0, 0}).To(Equal(GetBgColour(0, 2)))
 			Expect([3]int32{255, 255, 255}).To(Equal(GetFgColour(12, 11)))
