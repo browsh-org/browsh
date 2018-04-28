@@ -3,10 +3,21 @@ package browsh
 import (
 	"strings"
 	"fmt"
-	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/websocket"
+)
+
+var (
+	// TestServerPort is the port for the test web socket server
+	TestServerPort = "4444"
+	upgrader             = websocket.Upgrader{
+		CheckOrigin:     func(r *http.Request) bool { return true },
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+	stdinChannel   = make(chan string)
+	isConnectedToWebExtension = false
 )
 
 func sendMessageToWebExtension(message string) {
@@ -39,44 +50,18 @@ func handleWebextensionCommand(message []byte) {
 	command := parts[0]
 	switch command {
 	case "/frame_text":
-		frame.parseJSONFrameText(strings.Join(parts[1:], ","))
-		renderUI()
-		renderFrame()
+		parseJSONFrameText(strings.Join(parts[1:], ","))
+		renderCurrentTabWindow()
 	case "/frame_pixels":
-		frame.parseJSONFramePixels(strings.Join(parts[1:], ","))
+		parseJSONFramePixels(strings.Join(parts[1:], ","))
+		renderCurrentTabWindow()
+	case "/tab_state":
+		parseJSONTabState(strings.Join(parts[1:], ","))
 		renderUI()
-		renderFrame()
-	case "/state":
-		oldState := map[string]string{}
-		for k,v := range State{
-      oldState[k] = v
-    }
-		parseJSONState(strings.Join(parts[1:], ","))
-		handleStateChange(oldState)
 	case "/screenshot":
 		saveScreenshot(parts[1])
 	default:
 		Log("WEBEXT: " + string(message))
-	}
-}
-
-func parseJSONState(jsonString string) {
-	jsonBytes := []byte(jsonString)
-	if err := json.Unmarshal(jsonBytes, &State); err != nil {
-		Shutdown(err)
-	}
-}
-
-func handleStateChange(oldState map[string]string) {
-	if (State["page_state"] != oldState["page_state"]) {
-		Log("State change: page_state=" + State["page_state"])
-		if (State["page_state"] == "page_init") {
-			yScroll = 0
-		}
-	}
-	if (State["frame_width"] != "" && State["frame_height"] != "") {
-		frame.width = toInt(State["frame_width"])
-		frame.height = toInt(State["frame_height"])
 	}
 }
 
@@ -113,11 +98,8 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		Shutdown(err)
 	}
-
 	isConnectedToWebExtension = true
-
 	go webSocketWriter(ws)
 	go webSocketReader(ws)
-
 	sendTtySize()
 }

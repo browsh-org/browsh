@@ -5,8 +5,6 @@ import utils from 'utils';
 export default (MixinBase) => class extends MixinBase {
   constructor() {
     super();
-    this.isURLBarFocused = false;
-    this.urlBarUserContent = "";
   }
 
   handleTerminalMessage(message) {
@@ -28,24 +26,14 @@ export default (MixinBase) => class extends MixinBase {
           this.sendToCurrentTab('/request_frame')
         }, 250);
         break;
-      case '/status':
-        this.updateStatus('', parts.slice(1).join(','));
+      case '/url_bar':
+        this._handleURLBarInput(parts.slice(1).join(','));
         break;
     }
   }
 
   _handleUICommand(parts) {
     const input = JSON.parse(utils.rebuildArgsToSingleArg(parts));
-    if (this.isURLBarFocused) {
-      this._handleURLBarInput(input);
-      return true;
-    }
-    switch(input.key) {
-      case 12: // CTRL+L
-        this.isURLBarFocused = true;
-        this.urlBarUserContent = "";
-        return true;
-    }
     if (input.mod === 4) {
       switch(input.char) {
         case 'P':
@@ -62,9 +50,6 @@ export default (MixinBase) => class extends MixinBase {
         case x > 3 && x < 6:
           this.sendToCurrentTab('/window_stop');
           break;
-        default:
-          this.urlBarUserContent = "";
-          this.isURLBarFocused = true;
       }
       return true;
     }
@@ -72,30 +57,13 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   _handleURLBarInput(input) {
-    let char = input.char;
-    switch (input.key) {
-      case 12: // CTRL+L
-        this.isURLBarFocused = false;
-        return;
-      case 13: // enter
-        this.sendToCurrentTab(`/url,${this._getURLfromUserInput()}`);
-        this.isURLBarFocused = false;
-        return;
-      case 32: // spacebar
-        char = " ";
-        break;
-      case 127: // backspace
-        this.urlBarUserContent = this.urlBarUserContent.slice(0, -1);
-        return;
-    }
-    if (typeof char === 'undefined') return;
-    this.urlBarUserContent += char;
+    const final_url = this._getURLfromUserInput(input);
+    this.sendToCurrentTab(`/url,${final_url}`);
   }
 
-  _getURLfromUserInput() {
+  _getURLfromUserInput(input) {
     let url;
     const search_engine = 'https://www.google.com/search?q=';
-    let input = this.urlBarUserContent;
     // Basically just check to see if there is text either side of a dot
     const is_straddled_dot = RegExp(/^[^\s]+\.[^\s]+/);
     // More comprehensive URL pattern

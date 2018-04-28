@@ -13,11 +13,12 @@ import {
 } from 'fixtures/canvas_pixels';
 
 let graphics_builder, text_builder;
+let channel = {name: 1};
 
 function setup() {
   let dimensions = new Dimensions();
-  graphics_builder = new GraphicsBuilder(undefined, dimensions);
-  text_builder = new TextBuilder(undefined, dimensions, graphics_builder);
+  graphics_builder = new GraphicsBuilder(channel, dimensions);
+  text_builder = new TextBuilder(channel, dimensions, graphics_builder);
   graphics_builder.getScreenshotWithText();
   graphics_builder.getScreenshotWithoutText();
   graphics_builder.getScaledScreenshot();
@@ -68,12 +69,15 @@ describe('Text Builder', () => {
 
   it('should serialise a frame', () => {
     text_builder._serialiseFrame();
-    expect(text_builder.frame).to.deep.equal([
-      '255', '255', '255', 't',
-      '255', '255', '255', 'e',
-      '255', '255', '255', 's',
-      '255', '255', '255', 'n',
-      '0', '0', '0', '', '0', '0', '0', ''
+    expect(text_builder.frame.colours).to.deep.equal([
+      255, 255, 255,
+      255, 255, 255,
+      255, 255, 255,
+      255, 255, 255,
+      0, 0, 0, 0, 0, 0
+    ]);
+    expect(text_builder.frame.text).to.deep.equal([
+      "t", "e", "s", "n", "", ""
     ]);
   });
 });

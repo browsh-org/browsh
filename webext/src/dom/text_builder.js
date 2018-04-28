@@ -14,7 +14,6 @@ export default class extends utils.mixins(CommonMixin) {
     this.dimensions = dimensions;
     this.graphics_builder = graphics_builder;
     this.tty_grid = new TTYGrid(dimensions, graphics_builder);
-    this.frame = [];
     this._parse_started_elements = [];
     // A `range` is the DOM's representation of elements and nodes as they are rendered in
     // the DOM. Think of the 'range' that is created when you select/highlight text for
@@ -25,7 +24,9 @@ export default class extends utils.mixins(CommonMixin) {
   sendFrame() {
     this.buildFormattedText();
     this._serialiseFrame();
-    if (this.frame.length > 0) {
+    this.frame.width = this.dimensions.frame.width;
+    this.frame.height = this.dimensions.frame.height;
+    if (this.frame.text.length > 0) {
       this.sendMessage(`/frame_text,${JSON.stringify(this.frame)}`);
     } else {
       this.log("Not sending empty text frame");
@@ -297,7 +298,11 @@ export default class extends utils.mixins(CommonMixin) {
 
   __serialiseFrame() {
     let cell, index;
-    this.frame = [];
+    this.frame = {
+      id: parseInt(this.channel.name),
+      text: [],
+      colours: []
+    };
     const height = this.dimensions.frame.height / 2;
     const width = this.dimensions.frame.width;
     for (let y = 0; y < height; y++) {
@@ -305,13 +310,13 @@ export default class extends utils.mixins(CommonMixin) {
         index = (y * width) + x;
         cell = this.tty_grid.cells[index];
         if (cell === undefined) {
-          this.frame.push("0")
-          this.frame.push("0")
-          this.frame.push("0")
-          this.frame.push("")
+          this.frame.colours.push(0)
+          this.frame.colours.push(0)
+          this.frame.colours.push(0)
+          this.frame.text.push("")
         } else {
-          cell.fg_colour.map((c) => this.frame.push(c.toString()));
-          this.frame.push(cell.rune);
+          cell.fg_colour.map((c) => this.frame.colours.push(c));
+          this.frame.text.push(cell.rune);
         }
       }
     }

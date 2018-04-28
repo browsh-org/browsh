@@ -9,7 +9,7 @@ let graphics_builder;
 
 function setup() {
   let dimensions = new Dimensions();
-  graphics_builder = new GraphicsBuilder(undefined, dimensions);
+  graphics_builder = new GraphicsBuilder({name: "1"}, dimensions);
   graphics_builder.getScaledScreenshot();
 }
 
@@ -22,10 +22,11 @@ describe('Graphics Builder', () => {
 
   it('should serialise a scaled frame', () => {
     graphics_builder._serialiseFrame();
-    expect(graphics_builder.frame.length).to.equal(36);
-    expect(graphics_builder.frame[0]).to.equal('111');
-    expect(graphics_builder.frame[3]).to.equal('0');
-    expect(graphics_builder.frame[32]).to.equal('111');
-    expect(graphics_builder.frame[35]).to.equal('0');
+    const colours = graphics_builder.frame.colours
+    expect(colours.length).to.equal(36);
+    expect(colours[0]).to.equal(111);
+    expect(colours[3]).to.equal(0);
+    expect(colours[32]).to.equal(111);
+    expect(colours[35]).to.equal(0);
   });
 });

@@ -18,7 +18,9 @@ export default class extends utils.mixins(CommonMixin) {
   sendFrame() {
     this.getScaledScreenshot();
     this._serialiseFrame();
-    if (this.frame.length > 0) {
+    this.frame.width = this.dimensions.frame.width;
+    this.frame.height = this.dimensions.frame.height;
+    if (this.frame.colours.length > 0) {
       this.sendMessage(`/frame_pixels,${JSON.stringify(this.frame)}`);
     } else {
       this.log("Not sending empty pixels frame");
@@ -164,12 +166,16 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   _serialiseFrame() {
-    this.frame = [];
+    this.frame = {
+      id: parseInt(this.channel.name),
+      colours: []
+    };
     const height = this.dimensions.frame.height;
     const width = this.dimensions.frame.width;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        this.getScaledPixelAt(x, y).map((c) => this.frame.push(c.toString()));
+        // TODO: Explore sending as binary data
+        this.getScaledPixelAt(x, y).map((c) => this.frame.colours.push(c));
       }
     }
   }

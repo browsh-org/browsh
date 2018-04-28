@@ -13,8 +13,11 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   sendState() {
-    const state = _.mapValues(this.state, (v) => { return v.toString() });
-    this.sendToTerminal(`/state,${JSON.stringify(state)}`);
+    let state = _.mapValues(this.state, (v) => { return v.toString() });
+    state.id = this.currentTab().id;
+    state.title = this.currentTab().title;
+    state.uri = this.currentTab().url;
+    this.sendToTerminal(`/tab_state,${JSON.stringify(state)}`);
   }
 
   log(...messages) {

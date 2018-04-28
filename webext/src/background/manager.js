@@ -110,6 +110,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin, TabComm
     // TODO: Can we not just assume that channel.name is the same as this.active_tab_id?
     this.log(`Tab ${channel.name} connected for communication with background process`);
     this.tabs[channel.name] = {
+      id: parseInt(channel.name),
       channel: channel
     };
     channel.onMessage.addListener(this.handleTabMessage.bind(this));

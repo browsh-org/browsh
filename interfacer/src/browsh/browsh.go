@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strconv"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -19,7 +18,6 @@ import (
 	"github.com/gdamore/tcell"
 
 	"github.com/go-errors/errors"
-	"github.com/gorilla/websocket"
 	"github.com/shibukawa/configdir"
 )
 
@@ -33,51 +31,6 @@ var (
 	isDebug              = flag.Bool("debug", false, "Log to ./debug.log")
 	startupURL           = flag.String("startup-url", "https://google.com", "URL to launch at startup")
 	timeLimit            = flag.Int("time-limit", 0, "Kill Browsh after the specified number of seconds")
-	upgrader             = websocket.Upgrader{
-		CheckOrigin:     func(r *http.Request) bool { return true },
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-	}
-	stdinChannel   = make(chan string)
-	marionette     net.Conn
-	ffCommandCount = 0
-	isConnectedToWebExtension = false
-	screen tcell.Screen
-	uiHeight = 2
-	frame = Frame{}
-	State map[string]string
-	defaultFFPrefs = map[string]string{
-		"browser.startup.homepage":                "'https://www.google.com'",
-		"startup.homepage_welcome_url":            "'https://www.google.com'",
-		"startup.homepage_welcome_url.additional": "''",
-		"devtools.errorconsole.enabled":           "true",
-		"devtools.chrome.enabled":                 "true",
-
-		// Send Browser Console (different from Devtools console) output to
-		// STDOUT.
-		"browser.dom.window.dump.enabled": "true",
-
-		// From:
-		// http://hg.mozilla.org/mozilla-central/file/1dd81c324ac7/build/automation.py.in//l388
-		// Make url-classifier updates so rare that they won"t affect tests.
-		"urlclassifier.updateinterval": "172800",
-		// Point the url-classifier to a nonexistent local URL for fast failures.
-		"browser.safebrowsing.provider.0.gethashURL": "'http://localhost/safebrowsing-dummy/gethash'",
-		"browser.safebrowsing.provider.0.keyURL":     "'http://localhost/safebrowsing-dummy/newkey'",
-		"browser.safebrowsing.provider.0.updateURL":  "'http://localhost/safebrowsing-dummy/update'",
-
-		// Disable self repair/SHIELD
-		"browser.selfsupport.url": "'https://localhost/selfrepair'",
-		// Disable Reader Mode UI tour
-		"browser.reader.detectedFirstArticle": "true",
-
-		// Set the policy firstURL to an empty string to prevent
-		// the privacy info page to be opened on every "web-ext run".
-		// (See #1114 for rationale)
-		"datareporting.policy.firstRunURL": "''",
-	}
-	// TestServerPort ... Port for the test server
-	TestServerPort = "4444"
 )
 
 func setupLogging() {
@@ -94,7 +47,8 @@ func setupLogging() {
 	}
 }
 
-// Log ... general purpose logger
+// Log for general purpose logging
+// TODO: accept generic types
 func Log(msg string) {
 	if !*isDebug {
 		return
@@ -120,10 +74,12 @@ func initialise(isTesting bool) {
 	setupLogging()
 }
 
-// Shutdown ... Cleanly Shutdown browsh
+// Shutdown tries its best to cleanly shutdown browsh and the associated browser
 func Shutdown(err error) {
 	exitCode := 0
-	screen.Fini()
+	if screen != nil {
+		screen.Fini()
+	}
 	if err.Error() != "normal" {
 		exitCode = 1
 		println(err.Error())

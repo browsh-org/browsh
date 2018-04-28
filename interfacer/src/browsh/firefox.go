@@ -14,6 +14,41 @@ import (
 	"github.com/go-errors/errors"
 )
 
+var (
+	marionette     net.Conn
+	ffCommandCount = 0
+	defaultFFPrefs = map[string]string{
+		"browser.startup.homepage":                "'https://www.google.com'",
+		"startup.homepage_welcome_url":            "'https://www.google.com'",
+		"startup.homepage_welcome_url.additional": "''",
+		"devtools.errorconsole.enabled":           "true",
+		"devtools.chrome.enabled":                 "true",
+
+		// Send Browser Console (different from Devtools console) output to
+		// STDOUT.
+		"browser.dom.window.dump.enabled": "true",
+
+		// From:
+		// http://hg.mozilla.org/mozilla-central/file/1dd81c324ac7/build/automation.py.in//l388
+		// Make url-classifier updates so rare that they won"t affect tests.
+		"urlclassifier.updateinterval": "172800",
+		// Point the url-classifier to a nonexistent local URL for fast failures.
+		"browser.safebrowsing.provider.0.gethashURL": "'http://localhost/safebrowsing-dummy/gethash'",
+		"browser.safebrowsing.provider.0.keyURL":     "'http://localhost/safebrowsing-dummy/newkey'",
+		"browser.safebrowsing.provider.0.updateURL":  "'http://localhost/safebrowsing-dummy/update'",
+
+		// Disable self repair/SHIELD
+		"browser.selfsupport.url": "'https://localhost/selfrepair'",
+		// Disable Reader Mode UI tour
+		"browser.reader.detectedFirstArticle": "true",
+
+		// Set the policy firstURL to an empty string to prevent
+		// the privacy info page to be opened on every "web-ext run".
+		// (See #1114 for rationale)
+		"datareporting.policy.firstRunURL": "''",
+	}
+)
+
 func startHeadlessFirefox() {
 	Log("Starting Firefox in headless mode")
 	firefoxPath := Shell("which " + *firefoxBinary)

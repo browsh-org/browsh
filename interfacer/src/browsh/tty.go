@@ -12,6 +12,8 @@ import (
 var (
 	xScroll = 0
 	yScroll = 0
+	screen tcell.Screen
+	uiHeight = 2
 )
 
 func setupTcell() {
@@ -52,8 +54,8 @@ func readStdin() {
 			button := ev.Buttons()
 			eventMap := map[string]interface{}{
 				"button":    int(button),
-				"mouse_x":   int(x + xScroll),
-				"mouse_y":   int(y - uiHeight + yScroll),
+				"mouse_x":   int(x + CurrentTab.frame.xScroll),
+				"mouse_y":   int(y - uiHeight + CurrentTab.frame.yScroll),
 				"modifiers": int(ev.Modifiers()),
 			}
 			marshalled, _ := json.Marshal(eventMap)
@@ -73,31 +75,25 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 }
 
 func handleScrolling(ev *tcell.EventKey) {
-	yScrollOriginal := yScroll
+	yScrollOriginal := CurrentTab.frame.yScroll
 	_, height := screen.Size()
 	height -= uiHeight
 	if ev.Key() == tcell.KeyUp {
-		yScroll -= 2
+		CurrentTab.frame.yScroll -= 2
 	}
 	if ev.Key() == tcell.KeyDown {
-		yScroll += 2
+		CurrentTab.frame.yScroll += 2
 	}
 	if ev.Key() == tcell.KeyPgUp {
-		yScroll -= height
+		CurrentTab.frame.yScroll -= height
 	}
 	if ev.Key() == tcell.KeyPgDn {
-		yScroll += height
+		CurrentTab.frame.yScroll += height
 	}
-	limitScroll(height)
-	if (yScroll != yScrollOriginal) {
-		renderFrame()
+	CurrentTab.frame.limitScroll(height)
+	if (CurrentTab.frame.yScroll != yScrollOriginal) {
+		renderCurrentTabWindow()
 	}
-}
-
-func limitScroll(height int) {
-	maxYScroll := (frame.height / 2) - height
-	if (yScroll > maxYScroll) { yScroll = maxYScroll }
-	if (yScroll < 0) { yScroll = 0 }
 }
 
 // Write a simple text string to the screen. Not for use in the browser frames
@@ -111,42 +107,30 @@ func writeString(x, y int, str string) {
 		screen.SetContent(x, y, c, nil, defaultColours)
 		x++
 	}
-	screen.Sync()
+	screen.Show()
 }
 
 func renderAll() {
 	renderUI()
-	renderFrame()
-}
-
-// Render the tabs and URL bar
-// TODO: Temporary function, UI rendering should all be moved into this CLI app
-func renderUI() {
-	return
-	var styling = tcell.StyleDefault
-	var runeChars []rune
-	width, _ := screen.Size()
-	index := 0
-	for y := 0; y < uiHeight ; y++ {
-		for x := 0; x < width; x++ {
-			styling = styling.Foreground(frame.cells[index].fgColour)
-			styling = styling.Background(frame.cells[index].bgColour)
-			runeChars = frame.cells[index].character
-			index++
-			screen.SetCell(x, y, styling, runeChars[0])
-		}
-	}
-	screen.Show()
+	renderCurrentTabWindow()
 }
 
 // Tcell uses a buffer to collect screen updates on, it only actually sends
 // ANSI rendering commands to the terminal when we tell it to. And even then it
 // will try to minimise rendering commands by only rendering parts of the terminal
 // that have changed.
-func renderFrame() {
-	if (len(frame.pixels) == 0 || len(frame.text) == 0) { return }
+func renderCurrentTabWindow() {
+	if (len(CurrentTab.frame.pixels) == 0 || len(CurrentTab.frame.text) == 0) {
+		Log("Not rendering frame without complimentary pixels and text:")
+		Log(
+			fmt.Sprintf(
+				"pixels: %d, text: %d",
+				len(CurrentTab.frame.pixels), len(CurrentTab.frame.text)))
+		return
+	}
 	var styling = tcell.StyleDefault
 	var runeChars []rune
+	frame := &CurrentTab.frame
 	width, height := screen.Size()
 	if (frame.width == 0 || frame.height == 0) {
 		Log("Not rendering frame with a zero dimension")
@@ -155,38 +139,24 @@ func renderFrame() {
 	index := 0
 	for y := 0; y < height - uiHeight; y++ {
 		for x := 0; x < width; x++ {
-			index = ((y + yScroll) * frame.width) + ((x + xScroll))
-			if (!checkCell(index, x + xScroll, y + yScroll)) { return }
+			index = ((y + frame.yScroll) * frame.width) + ((x + frame.xScroll))
+			if (!checkCell(index, x + frame.xScroll, y + frame.yScroll)) { return }
 			styling = styling.Foreground(frame.cells[index].fgColour)
 			styling = styling.Background(frame.cells[index].bgColour)
 			runeChars = frame.cells[index].character
-			if (len(runeChars) == 0) { continue } // TODO: shouldn't need this
+			// TODO: do this is in isCharacterTransparent()
+			if (len(runeChars) == 0) { continue }
 			screen.SetCell(x, y + uiHeight, styling, runeChars[0])
 		}
 	}
-	overlayPageStatusMessage(height)
 	screen.Show()
 }
 
-func overlayPageStatusMessage(height int) {
-	message := State["page_status_message"]
-	x := 0
-	fg := tcell.NewHexColor(int32(0xffffff))
-	bg := tcell.NewHexColor(int32(0x000000))
-	style := tcell.StyleDefault
-	style.Foreground(fg)
-	style.Foreground(bg)
-	for _, c := range message {
-		screen.SetCell(x, height - 1, style, c)
-		x++
-	}
-}
-
 func checkCell(index, x, y int) bool {
-	if (index >= len(frame.cells)) {
+	if (index >= len(CurrentTab.frame.cells)) {
 		message := fmt.Sprintf(
 			"Blank frame data (size: %d) at %dx%d, index: %d",
-			len(frame.cells), x, y, index)
+			len(CurrentTab.frame.cells), x, y, index)
 		Log(message)
 		return false;
 	}

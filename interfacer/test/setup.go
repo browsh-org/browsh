@@ -89,7 +89,7 @@ func WaitForText(text string, x, y int) {
 func WaitForPageLoad() {
 	start := time.Now()
 	for time.Since(start) < perTestTimeout {
-		if browsh.State["page_state"] == "parsing_complete" {
+		if browsh.CurrentTab.PageState == "parsing_complete" {
 			time.Sleep(100 * time.Millisecond)
 			return
 		}
