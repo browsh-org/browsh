@@ -16,21 +16,17 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   sendFrame() {
-    this.getScaledScreenshot();
-    this._serialiseFrame();
-    this.frame.width = this.dimensions.frame.width;
-    this.frame.height = this.dimensions.frame.height;
-    if (this.frame.colours.length > 0) {
-      this.sendMessage(`/frame_pixels,${JSON.stringify(this.frame)}`);
-    } else {
-      this.log("Not sending empty pixels frame");
-    }
+    this.__getScaledScreenshot();
+    this._sendFrame();
   }
 
   // With full-block single-glyph font on
   getUnscaledFGPixelAt(x, y) {
+    [x, y] = this._convertDOMCoordsToRelative(x, y);
+    if (x === null || y === null) { return [null, null, null] }
+    const width = this.dimensions.dom.sub.width;
     const pixel_data_start = parseInt(
-      (y * this.dimensions.dom.width * 4) + (x * 4)
+      (y * width * 4) + (x * 4)
     );
     let fg_rgb = this.pixels_with_text.slice(
       pixel_data_start, pixel_data_start + 3
@@ -40,20 +36,16 @@ export default class extends utils.mixins(CommonMixin) {
 
   // Without any text showing at all
   getUnscaledBGPixelAt(x, y) {
+    [x, y] = this._convertDOMCoordsToRelative(x, y);
+    if (x === null || y === null) { return [null, null, null] }
+    const width = this.dimensions.dom.sub.width;
     const pixel_data_start = parseInt(
-      (y * this.dimensions.dom.width * 4) + (x * 4)
+      (y * width * 4) + (x * 4)
     );
     let bg_rgb = this.pixels_without_text.slice(
       pixel_data_start, pixel_data_start + 3
     );
     return [bg_rgb[0], bg_rgb[1], bg_rgb[2]];
-  }
-
-  // Scaled to so the size where each pixel is the same size as a TTY cell
-  getScaledPixelAt(x, y) {
-    const pixel_data_start = (y * this.dimensions.frame.width * 4) + (x * 4);
-    const rgb = this.scaled_pixels.slice(pixel_data_start, pixel_data_start + 3);
-    return [rgb[0], rgb[1], rgb[2]];
   }
 
   getScreenshotWithText() {
@@ -66,12 +58,6 @@ export default class extends utils.mixins(CommonMixin) {
     this.logPerformance(() => {
       this._getScreenshotWithoutText();
     }, 'get screenshot without text');
-  }
-
-  getScaledScreenshot() {
-    this.logPerformance(() => {
-      this._getScaledScreenshot();
-    }, 'get scaled screenshot');
   }
 
   _getScreenshotWithoutText() {
@@ -91,6 +77,41 @@ export default class extends utils.mixins(CommonMixin) {
     this.scaled_pixels = this._getScreenshot();
     this._unScaleCanvas();
     return this.scaled_pixels;
+  }
+
+  // It's either convert coords to relative in this class or TextBuilder. On balance it
+  // seems better to retain TextBuilder's reference in absolute coords, thus somewhat
+  // hiding the overhead of relative-to-the-frame coords in public methods.
+  _convertDOMCoordsToRelative(x, y) {
+    const top = this.dimensions.dom.sub.top;
+    const bottom = this.dimensions.dom.sub.top + this.dimensions.dom.sub.height;
+    const left = this.dimensions.dom.sub.left;
+    const right = this.dimensions.dom.sub.left + this.dimensions.dom.sub.width;
+    if (x >= left && x < right) {
+      x -= this.dimensions.dom.sub.left;
+    } else {
+      x = null;
+    }
+    if (y >= top && y < bottom) {
+      y -= this.dimensions.dom.sub.top;
+    } else {
+      y = null;
+    }
+    return [x, y]
+  }
+
+  // Scaled to the size where each pixel is the same size as a TTY cell
+  _getScaledPixelAt(x, y) {
+    const width = this.dimensions.frame.sub.width;
+    const pixel_data_start = (y * width * 4) + (x * 4);
+    const rgb = this.scaled_pixels.slice(pixel_data_start, pixel_data_start + 3);
+    return [rgb[0], rgb[1], rgb[2]];
+  }
+
+  __getScaledScreenshot() {
+    this.logPerformance(() => {
+      this._getScaledScreenshot();
+    }, 'get scaled screenshot');
   }
 
   _hideText() {
@@ -123,6 +144,7 @@ export default class extends utils.mixins(CommonMixin) {
   // Scale the screenshot so that 1 pixel approximates half a TTY cell.
   _scaleCanvas() {
     this._is_scaled = true;
+    // TODO: default to text hidden - show text only for big frames
     this._hideText();
     this._ctx.save();
     this._ctx.scale(
@@ -139,44 +161,60 @@ export default class extends utils.mixins(CommonMixin) {
 
   _updateCanvasSize() {
     if (this._is_scaled) return;
-    this._off_screen_canvas.width = this.dimensions.dom.width;
-    this._off_screen_canvas.height = this.dimensions.dom.height;
+    this._off_screen_canvas.width = this.dimensions.dom.sub.width;
+    this._off_screen_canvas.height = this.dimensions.dom.sub.height;
   }
 
   // Get an array of RGB values.
   // This is Firefox-only. Chrome has a nicer MediaStream for this.
   _getPixelData() {
     let width, height;
-    let background_colour = 'rgb(255,255,255)';
+    const background_colour = 'rgb(255,255,255)';
     if (this._is_scaled) {
-      width = this.dimensions.frame.width;
-      height = this.dimensions.frame.height;
+      width = this.dimensions.frame.sub.width;
+      height = this.dimensions.frame.sub.height;
     } else {
-      width = this.dimensions.dom.width;
-      height = this.dimensions.dom.height;
+      width = this.dimensions.dom.sub.width;
+      height = this.dimensions.dom.sub.height;
     }
     this._updateCanvasSize();
     this._ctx.drawWindow(
-      window, 0, 0,
-      this.dimensions.dom.width,
-      this.dimensions.dom.height,
+      window,
+      this.dimensions.dom.sub.left,
+      this.dimensions.dom.sub.top,
+      this.dimensions.dom.sub.width,
+      this.dimensions.dom.sub.height,
       background_colour
     );
     return this._ctx.getImageData(0, 0, width, height).data;
   }
 
+  _sendFrame() {
+    this._serialiseFrame();
+    if (this.frame.colours.length > 0) {
+      this.sendMessage(`/frame_pixels,${JSON.stringify(this.frame)}`);
+    } else {
+      this.log("Not sending empty pixels frame");
+    }
+  }
+
   _serialiseFrame() {
-    this.frame = {
-      id: parseInt(this.channel.name),
-      colours: []
-    };
-    const height = this.dimensions.frame.height;
-    const width = this.dimensions.frame.width;
+    this._setupFrameMeta();
+    const width = this.dimensions.frame.sub.width;
+    const height = this.dimensions.frame.sub.height;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         // TODO: Explore sending as binary data
-        this.getScaledPixelAt(x, y).map((c) => this.frame.colours.push(c));
+        this._getScaledPixelAt(x, y).map((c) => this.frame.colours.push(c));
       }
     }
+  }
+
+  _setupFrameMeta() {
+    this.frame = {
+      meta: this.dimensions.getFrameMeta(),
+      colours: []
+    };
+    this.frame.meta.id = parseInt(this.channel.name)
   }
 }

@@ -10,8 +10,6 @@ import (
 )
 
 var (
-	xScroll = 0
-	yScroll = 0
 	screen tcell.Screen
 	uiHeight = 2
 	// IsMonochromeMode decides whether to render the TTY in full colour or monochrome
@@ -116,6 +114,11 @@ func handleScrolling(ev *tcell.EventKey) {
 		CurrentTab.frame.yScroll += height
 	}
 	CurrentTab.frame.limitScroll(height)
+	sendMessageToWebExtension(
+		fmt.Sprintf(
+			"/tab_command,/scroll_status,%d,%d",
+			CurrentTab.frame.xScroll,
+			CurrentTab.frame.yScroll * 2))
 	if (CurrentTab.frame.yScroll != yScrollOriginal) {
 		renderCurrentTabWindow()
 	}
@@ -142,38 +145,20 @@ func handleTTYResize() {
 	sendTtySize()
 }
 
-func renderAll() {
-	renderUI()
-	renderCurrentTabWindow()
-}
-
 // Tcell uses a buffer to collect screen updates on, it only actually sends
 // ANSI rendering commands to the terminal when we tell it to. And even then it
 // will try to minimise rendering commands by only rendering parts of the terminal
 // that have changed.
 func renderCurrentTabWindow() {
-	if (len(CurrentTab.frame.pixels) == 0 || len(CurrentTab.frame.text) == 0) {
-		Log("Not rendering frame without complimentary pixels and text:")
-		Log(
-			fmt.Sprintf(
-				"pixels: %d, text: %d",
-				len(CurrentTab.frame.pixels), len(CurrentTab.frame.text)))
-		return
-	}
+	var currentCell cell
 	var styling = tcell.StyleDefault
 	var runeChars []rune
-	frame := &CurrentTab.frame
 	width, height := screen.Size()
-	if (frame.width == 0 || frame.height == 0) {
-		Log("Not rendering frame with a zero dimension")
-		return
-	}
-	index := 0
+	if CurrentTab.frame.cells == nil { return }
 	for y := 0; y < height - uiHeight; y++ {
 		for x := 0; x < width; x++ {
-			index = ((y + frame.yScroll) * frame.width) + ((x + frame.xScroll))
-			if (!checkCell(index, x + frame.xScroll, y + frame.yScroll)) { return }
-			runeChars = frame.cells[index].character
+			currentCell = getCell(x, y)
+			runeChars = currentCell.character
 			// TODO: do this is in isCharacterTransparent()
 			if (len(runeChars) == 0) { continue }
 			if IsMonochromeMode {
@@ -183,8 +168,8 @@ func renderCurrentTabWindow() {
 					runeChars[0] = ' '
 				}
 			} else {
-				styling = styling.Foreground(frame.cells[index].fgColour)
-				styling = styling.Background(frame.cells[index].bgColour)
+				styling = styling.Foreground(currentCell.fgColour)
+				styling = styling.Background(currentCell.bgColour)
 			}
 			screen.SetCell(x, y + uiHeight, styling, runeChars[0])
 		}
@@ -192,13 +177,30 @@ func renderCurrentTabWindow() {
 	screen.Show()
 }
 
-func checkCell(index, x, y int) bool {
-	if (index >= len(CurrentTab.frame.cells)) {
-		message := fmt.Sprintf(
-			"Blank frame data (size: %d) at %dx%d, index: %d",
-			len(CurrentTab.frame.cells), x, y, index)
-		Log(message)
-		return false;
+func getCell(x, y int) cell {
+	var currentCell cell
+	var ok bool
+	frame := &CurrentTab.frame
+	index := ((y + frame.yScroll) * frame.totalWidth) + ((x + frame.xScroll))
+	if currentCell, ok = frame.cells.load(index); !ok {
+		fgColour, bgColour := getHatchedCellColours(x)
+		currentCell = cell{
+			fgColour: fgColour,
+			bgColour: bgColour,
+			character: []rune("▄"),
+		}
 	}
-	return true;
+	return currentCell
+}
+
+func getHatchedCellColours(x int) (tcell.Color, tcell.Color) {
+	var bgColour, fgColour tcell.Color
+	if (x % 2 == 0) {
+		bgColour = tcell.NewHexColor(0xa9a9a9)
+		fgColour = tcell.NewHexColor(0x797979)
+	} else {
+		bgColour = tcell.NewHexColor(0x797979)
+		fgColour = tcell.NewHexColor(0xa9a9a9)
+	}
+	return fgColour, bgColour
 }

@@ -3,7 +3,6 @@ package browsh
 import (
 	"encoding/json"
 	"unicode"
-	"fmt"
 
 	"github.com/gdamore/tcell"
 )
@@ -11,40 +10,61 @@ import (
 // A frame is a single snapshot of the DOM. The TTY is merely a window onto a
 // region of this frame.
 type frame struct {
-	width int
-	height int
+	// Dimensions of the frame's real data. Can be less than the DOM dimensions because
+	// we cannot sync frames of unlimited size from the browser.
+	subWidth int
+	subHeight int
+	// If the frame is smaller than the DOM, then this is the frame's position
+	// within the overall DOM.
+	subLeft int
+	subTop int
+	// The total DOM dimensions. These are measured in the same units of the frame
+	totalWidth int
+	totalHeight int
+	// The current position of the scroll in the TTY. Should be synced with the real
+	// browser.
 	xScroll int
 	yScroll int
-	pixels [][2]tcell.Color
-	text [][]rune
-	textColours []tcell.Color
-	cells []cell
+	// Usually we want to just overlay new data. But if the DOM changes then all bets are off
+	// and we need to start from scratch again. It's just too unpredictable how data for a DOM
+	// of a different size and shape will interact with data from another DOM.
+	isDOMSizeChanged bool
+	// Raw data used to build a single, usable frame
+	pixels map[int][2]tcell.Color
+	text map[int][]rune
+	textColours map[int]tcell.Color
+	// The actual built frame, can be used to render cells to the TTY
+	cells *threadSafeCellsMap
 }
 
-type cell struct {
-	character []rune
-	fgColour tcell.Color
-	bgColour tcell.Color
+type jsonFrameBase struct {
+	TabID int `json:"id"`
+	SubWidth int `json:"sub_width"`
+	SubHeight int `json:"sub_height"`
+	SubLeft int `json:"sub_left"`
+	SubTop int `json:"sub_top"`
+	TotalWidth int `json:"total_width"`
+	TotalHeight int `json:"total_height"`
 }
 
 type incomingFrameText struct {
-	TabID int `json:"id"`
-	Width int `json:"width"`
-	Height int `json:"height"`
+	Meta jsonFrameBase `json:"meta"`
 	Text []string `json:"text"`
 	Colours []int32 `json:"colours"`
 }
 
 // TODO: Can these be sent as binary blobs?
 type incomingFramePixels struct {
-	TabID int `json:"id"`
-	Width int `json:"width"`
-	Height int `json:"height"`
+	Meta jsonFrameBase `json:"meta"`
 	Colours []int32 `json:"colours"`
 }
 
-func (f *frame) rowCount() int {
-	return f.height / 2
+func (f *frame) domRowCount() int {
+	return f.totalHeight / 2
+}
+
+func (f *frame) subRowCount() int {
+	return f.subHeight / 2
 }
 
 func parseJSONFrameText(jsonString string) {
@@ -53,15 +73,14 @@ func parseJSONFrameText(jsonString string) {
 	if err := json.Unmarshal(jsonBytes, &incoming); err != nil {
 		Shutdown(err)
 	}
-	ensureTabExists(incoming.TabID)
-	tabs[incoming.TabID].frame.buildFrameText(incoming)
+	ensureTabExists(incoming.Meta.TabID)
+	tabs[incoming.Meta.TabID].frame.buildFrameText(incoming)
 }
 
 func (f *frame) buildFrameText(incoming incomingFrameText) {
-	f.setup(incoming.Width, incoming.Height)
-	if (len(f.pixels) == 0) { f.preFillPixels() }
+	f.setup(incoming.Meta)
 	if (!f.isIncomingFrameTextValid(incoming)) { return }
-	CurrentTab = tabs[incoming.TabID]
+	CurrentTab = tabs[incoming.Meta.TabID]
 	f.populateFrameText(incoming)
 }
 
@@ -71,84 +90,78 @@ func parseJSONFramePixels(jsonString string) {
 	if err := json.Unmarshal(jsonBytes, &incoming); err != nil {
 		Shutdown(err)
 	}
-	ensureTabExists(incoming.TabID)
-	if (len(tabs[incoming.TabID].frame.text) == 0) { return }
-	tabs[incoming.TabID].frame.buildFramePixels(incoming)
+	ensureTabExists(incoming.Meta.TabID)
+	if (len(tabs[incoming.Meta.TabID].frame.text) == 0) { return }
+	tabs[incoming.Meta.TabID].frame.buildFramePixels(incoming)
 }
 
 func (f *frame) buildFramePixels(incoming incomingFramePixels) {
-	f.setup(incoming.Width, incoming.Height)
+	f.setup(incoming.Meta)
 	if (!f.isIncomingFramePixelsValid(incoming)) { return }
+	CurrentTab = tabs[incoming.Meta.TabID]
 	f.populateFramePixels(incoming)
 }
 
-func (f *frame) setup(width, height int) {
-	f.width = width
-	f.height = height
-	f.resetCells()
+func (f *frame) setup(meta jsonFrameBase) {
+	f.isDOMSizeChanged = meta.TotalWidth != f.totalWidth || meta.TotalHeight != f.totalHeight
+	if f.isDOMSizeChanged || f.cells == nil {
+		f.resetCells()
+	}
+	f.subWidth = meta.SubWidth
+	f.subHeight = meta.SubHeight
+	f.totalWidth = meta.TotalWidth
+	f.totalHeight = meta.TotalHeight
+	f.subLeft = meta.SubLeft
+	f.subTop = meta.SubTop
 }
 
 func (f *frame) resetCells() {
-	f.cells = make([]cell, (f.rowCount()) * f.width)
+	f.cells = newCellsMap()
 }
 
 func (f *frame) isIncomingFrameTextValid(incoming incomingFrameText) bool {
-	if (len(incoming.Text) < f.width * (f.rowCount())) {
-		Log(
-			fmt.Sprintf(
-				"Not parsing small text frame. Data length: %d, current dimensions: %dx(%d/2)=%d",
-				len(incoming.Text),
-				f.width,
-				f.height,
-				f.width * (f.rowCount())))
+	if (len(incoming.Text) == 0) {
+		Log("Not parsing zero-size text frame")
 		return false
 	}
 	return true
 }
 
 func (f *frame) populateFrameText(incoming incomingFrameText) {
-	var index, colourIndex int
-	f.text = make([][]rune, (f.rowCount()) * f.width)
-	f.textColours = make([]tcell.Color, (f.rowCount()) * f.width)
-	for y := 0; y < f.rowCount(); y++ {
-		for x := 0; x < f.width; x++ {
-			index = ((f.width * y) + x)
-			colourIndex = index * 3
-			f.textColours[index] = tcell.NewRGBColor(
+	var cellIndex, frameIndex, colourIndex int
+	if f.isDOMSizeChanged || f.text == nil {
+		f.text = make(map[int][]rune, (f.domRowCount()) * f.totalWidth)
+		f.textColours = make(map[int]tcell.Color, (f.domRowCount()) * f.totalWidth)
+	}
+	for y := 0; y < f.subRowCount(); y++ {
+		for x := 0; x < f.subWidth; x++ {
+			cellIndex = f.getCellIndexFromSubCoords(x, y * 2)
+			frameIndex = (y * f.subWidth) + x
+			colourIndex = frameIndex * 3
+			f.textColours[cellIndex] = tcell.NewRGBColor(
 				incoming.Colours[colourIndex + 0],
 				incoming.Colours[colourIndex + 1],
 				incoming.Colours[colourIndex + 2],
 			)
-			f.text[index] = []rune(incoming.Text[index])
-			f.buildCell(x, y);
-		}
-	}
-}
-
-// This covers the rare situation where a text frame has been sent before any pixel
-// data has been populated.
-func (f *frame) preFillPixels() {
-	f.pixels = make([][2]tcell.Color, f.height * f.width)
-	for i := range f.pixels {
-		f.pixels[i] = [2]tcell.Color{
-			tcell.NewRGBColor(255, 255, 255),
-			tcell.NewRGBColor(255, 255, 255),
+			f.text[cellIndex] = []rune(incoming.Text[frameIndex])
+			f.buildCell(f.subLeft + x, (f.subTop / 2) + y);
 		}
 	}
 }
 
 func (f *frame) populateFramePixels(incoming incomingFramePixels) {
-	var index, indexFg, indexBg, pixelIndexFg, pixelIndexBg int
-	f.resetCells()
-	f.pixels = make([][2]tcell.Color, f.height * f.width)
+	var cellIndex, frameIndexFg, frameIndexBg, pixelIndexFg, pixelIndexBg int
+	if f.isDOMSizeChanged || f.pixels == nil {
+		f.pixels = make(map[int][2]tcell.Color, f.totalHeight * f.totalWidth)
+	}
 	data := incoming.Colours
-	for y := 0; y < f.height; y += 2 {
-		for x := 0; x < f.width; x++ {
-			index = (f.width * (y / 2)) + x
-			indexBg = (f.width * y) + x
-			indexFg = (f.width * (y + 1)) + x
-			pixelIndexBg = indexBg * 3
-			pixelIndexFg = indexFg * 3
+	for y := 0; y < f.subHeight; y += 2 {
+		for x := 0; x < f.subWidth; x++ {
+			cellIndex = f.getCellIndexFromSubCoords(x, y)
+			frameIndexBg = (y * f.subWidth) + x
+			frameIndexFg = ((y + 1) * f.subWidth) + x
+			pixelIndexBg = frameIndexBg * 3
+			pixelIndexFg = frameIndexFg * 3
 			pixels := [2]tcell.Color{
 				tcell.NewRGBColor(
 					data[pixelIndexBg + 0],
@@ -161,21 +174,15 @@ func (f *frame) populateFramePixels(incoming incomingFramePixels) {
 					data[pixelIndexFg + 2],
 				),
 			}
-			f.pixels[index] = pixels
-			f.buildCell(x, y / 2);
+			f.pixels[cellIndex] = pixels
+			f.buildCell(f.subLeft + x, (f.subTop + y) / 2);
 		}
 	}
 }
 
 func (f *frame) isIncomingFramePixelsValid(incoming incomingFramePixels) bool {
-	if (len(incoming.Colours) != f.width * f.height * 3) {
-		Log(
-			fmt.Sprintf(
-				"Not parsing pixels frame. Data length: %d, current dimensions: %dx%d*3=%d",
-				len(incoming.Colours),
-				f.width,
-				f.height,
-				f.width * f.height * 3))
+	if (len(incoming.Colours) == 0) {
+		Log("Not parsing zero-size text frame")
 		return false
 	}
 	return true
@@ -187,7 +194,7 @@ func (f *frame) isIncomingFramePixelsValid(incoming incomingFramePixels) bool {
 // the background colour and the bottom pixel comes from setting the foreground
 // colour, namely the colour of the text.
 func (f *frame) buildCell(x int, y int) {
-	index := ((f.width * y) + x)
+	index := (y * f.totalWidth) + x
 	character, fgColour := f.getCharacterAt(index)
 	pixelFg, bgColour := f.getPixelColoursAt(index)
 	if (isCharacterTransparent(character)) {
@@ -198,14 +205,27 @@ func (f *frame) buildCell(x int, y int) {
 }
 
 func (f *frame) getCharacterAt(index int) ([]rune, tcell.Color) {
-	character := f.text[index]
-	colour := f.textColours[index]
+	var colour tcell.Color
+	var character []rune
+	if result, ok := f.text[index]; ok {
+		character = result
+		colour = f.textColours[index]
+	} else {
+		character = []rune(" ")
+		colour = tcell.ColorBlack
+	}
 	return character, colour
 }
 
 func (f *frame) getPixelColoursAt(index int) (tcell.Color, tcell.Color) {
-	bgColour := f.pixels[index][0]
-	fgColour := f.pixels[index][1]
+	var fgColour, bgColour tcell.Color
+	if result, ok := f.pixels[index]; ok {
+		bgColour = result[0]
+		fgColour = result[1]
+	} else {
+		x := index % f.subWidth
+		fgColour, bgColour = getHatchedCellColours(x)
+	}
 	return fgColour, bgColour
 }
 
@@ -219,11 +239,20 @@ func (f *frame) addCell(index int, fgColour, bgColour tcell.Color, character []r
 		bgColour: bgColour,
 		character: character,
 	}
-	f.cells[index] = newCell
+	f.cells.store(index, newCell)
+}
+
+// When iterating over a sub frame we still need to place the resulting data into the
+// overall frame grid. So here we're essentially mapping relative coordinates to
+// absolute ones. Also note that the y coord is converted from the frame pixels value
+// to the TTY row value.
+func (f *frame) getCellIndexFromSubCoords(x, y int) int {
+	yInAbsoluteFrameTTY := (y + f.subTop) / 2
+	return (yInAbsoluteFrameTTY * f.totalWidth) + (x + f.subLeft)
 }
 
 func (f *frame) limitScroll(height int) {
-	maxYScroll := f.rowCount() - height
+	maxYScroll := f.domRowCount() - height
 	if (f.yScroll > maxYScroll) { f.yScroll = maxYScroll }
 	if (f.yScroll < 0) { f.yScroll = 0 }
 }

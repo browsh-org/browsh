@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import utils from 'utils';
 
 // Handle commands coming in from the terminal, like; STDIN keystrokes, TTY resize, etc
@@ -11,22 +10,23 @@ export default (MixinBase) => class extends MixinBase {
     const parts = message.split(',');
     const command = parts[0];
     switch(command) {
+      case '/tab_command':
+        this.sendToCurrentTab(message.slice(13));
+        break;
       case '/tty_size':
-        this.tty_width = parts[1];
-        this.tty_height = parts[2];
+        this.tty_width = parseInt(parts[1]);
+        this.tty_height = parseInt(parts[2]);
+        if (this.currentTab()) {
+          this.sendToCurrentTab(`/tty_size,${this.tty_width},${this.tty_height}`)
+        }
         this.resizeBrowserWindow();
         break;
       case '/stdin':
-        if (!this._handleUICommand(parts)) {
-          this.sendToCurrentTab(message);
-        }
-        // Trigger a faster feedback response
-        // TODO: cancel the current FPS iteration when using this
-        _.throttle(() => {
-          this.sendToCurrentTab('/request_frame')
-        }, 250);
+        this._handleUICommand(parts);
+        this.sendToCurrentTab(message);
         break;
       case '/url_bar':
+        // TODO: move to CLI client
         this._handleURLBarInput(parts.slice(1).join(','));
         break;
     }
@@ -40,18 +40,6 @@ export default (MixinBase) => class extends MixinBase {
           this.screenshotActiveTab();
           break;
       }
-    }
-    if (input.button === 0 && input.mouse_y === 1) {
-      const x = input.mouse_x;
-      switch(true) {
-        case x > 0 && x < 3:
-          this.sendToCurrentTab('/location_back');
-          break;
-        case x > 3 && x < 6:
-          this.sendToCurrentTab('/window_stop');
-          break;
-      }
-      return true;
     }
     return false;
   }

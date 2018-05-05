@@ -57,7 +57,9 @@ func handleWebextensionCommand(message []byte) {
 		renderCurrentTabWindow()
 	case "/tab_state":
 		parseJSONTabState(strings.Join(parts[1:], ","))
-		renderUI()
+		if CurrentTab != nil {
+			renderUI()
+		}
 	case "/screenshot":
 		saveScreenshot(parts[1])
 	default:

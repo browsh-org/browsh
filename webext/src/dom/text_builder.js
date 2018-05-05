@@ -23,14 +23,7 @@ export default class extends utils.mixins(CommonMixin) {
 
   sendFrame() {
     this.buildFormattedText();
-    this._serialiseFrame();
-    this.frame.width = this.dimensions.frame.width;
-    this.frame.height = this.dimensions.frame.height;
-    if (this.frame.text.length > 0) {
-      this.sendMessage(`/frame_text,${JSON.stringify(this.frame)}`);
-    } else {
-      this.log("Not sending empty text frame");
-    }
+    this._sendFrame();
   }
 
   buildFormattedText() {
@@ -72,19 +65,51 @@ export default class extends utils.mixins(CommonMixin) {
     const walker = document.createTreeWalker(
       document.body,
       NodeFilter.SHOW_TEXT,
-      { acceptNode: this._isRelevantTextNode },
+      null,
       false
     );
-    while(walker.nextNode()) this._text_nodes.push(walker.currentNode);
+    while(walker.nextNode()) {
+      //if (this._isRelevantTextNode(walker.currentNode)) {
+        this._text_nodes.push(walker.currentNode)
+      //}
+    }
   }
 
-  // Does the node contain text that we want to display?
+  // Does the node contain text that we want to parse?
   _isRelevantTextNode(node) {
+    // Ignore text outside of the sub-frame, therefore outside either the TTY view or
+    // outside the larger buffered TTY view.
+    const dom_rect = node.parentElement.getBoundingClientRect()
+    if (!this._isDOMRectInSubFrame(dom_rect)) {
+      return false;
+    }
+
     // Ignore nodes with only whitespace
     if (/^\s+$/.test(node.textContent) || node.textContent === '') {
-      return NodeFilter.FILTER_REJECT;
+      return false;
     }
-    return NodeFilter.FILTER_ACCEPT;
+
+    return true;
+  }
+
+  _isDOMRectInSubFrame(dom_rect) {
+    const isBottomIn = (
+      dom_rect.bottom >= this.dimensions.dom.sub.top &&
+      dom_rect.bottom <= this.dimensions.dom.sub.top + this.dimensions.dom.sub.height
+    )
+    const isTopIn = (
+      dom_rect.top >= this.dimensions.dom.sub.top &&
+      dom_rect.top <= this.dimensions.dom.sub.top + this.dimensions.dom.sub.height
+    )
+    const isLeftIn = (
+      dom_rect.left >= this.dimensions.dom.sub.left &&
+      dom_rect.left <= this.dimensions.dom.sub.left + this.dimensions.dom.sub.width
+    )
+    const isRightIn = (
+      dom_rect.right >= this.dimensions.dom.sub.left &&
+      dom_rect.right <= this.dimensions.dom.sub.left + this.dimensions.dom.sub.width
+    )
+    return (isBottomIn || isTopIn) && (isLeftIn || isRightIn);
   }
 
   __positionTextNodes() {
@@ -182,6 +207,7 @@ export default class extends utils.mixins(CommonMixin) {
     this._dom_box = {};
     this._previous_dom_box = {};
     for (const dom_box of this._getNodeDOMBoxes()) {
+      //if (!this._isDOMRectInSubFrame(dom_box)) { continue }
       this._dom_box.top = dom_box.top;
       this._dom_box.left = dom_box.left;
       this._dom_box.width = dom_box.width;
@@ -223,8 +249,8 @@ export default class extends utils.mixins(CommonMixin) {
     this._setCurrentCharacter();
   }
 
+  // Note that it's possible for this._text to straddle many DOM boxes
   _setCurrentCharacter() {
-    // Note that it's possible for text to straddle many DOM boxes
     this._current_character = this._text.charAt(this._character_index);
   }
 
@@ -283,31 +309,38 @@ export default class extends utils.mixins(CommonMixin) {
   // entire DOM as a single frame, then we need the coords to be relative to the top-left
   // of the DOM itself.
   _convertDOMBoxToAbsoluteCoords() {
-    this._dom_box.left += this.dimensions.dom.x_scroll;
-    this._dom_box.top += this.dimensions.dom.y_scroll;
+    this._dom_box.left += window.scrollX;
+    this._dom_box.top += window.scrollY;
   }
 
   // Round and snap a DOM rectangle as if it were placed in the TTY frame
   _createSyncedTTYBox() {
     this._tty_box = {
-      col_start: utils.snap(this._dom_box.left / this.dimensions.char.width),
-      row: utils.snap(this._dom_box.top / this.dimensions.char.height),
-      width: utils.snap(this._dom_box.width / this.dimensions.char.width),
+      col_start: utils.snap(this._dom_box.left * this.dimensions.scale_factor.width),
+      row: utils.snap(this._dom_box.top * this.dimensions.scale_factor.height / 2),
+      width: utils.snap(this._dom_box.width * this.dimensions.scale_factor.width),
+    }
+  }
+
+  _sendFrame() {
+    this._serialiseFrame();
+    if (this.frame.text.length > 0) {
+      this.sendMessage(`/frame_text,${JSON.stringify(this.frame)}`);
+    } else {
+      this.log("Not sending empty text frame");
     }
   }
 
   __serialiseFrame() {
     let cell, index;
-    this.frame = {
-      id: parseInt(this.channel.name),
-      text: [],
-      colours: []
-    };
-    const height = this.dimensions.frame.height / 2;
-    const width = this.dimensions.frame.width;
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        index = (y * width) + x;
+    const top = this.dimensions.frame.sub.top / 2;
+    const left = this.dimensions.frame.sub.left;
+    const bottom = top + (this.dimensions.frame.sub.height / 2);
+    const right = left + this.dimensions.frame.sub.width;
+    this._setupFrameMeta();
+    for (let y = top; y < bottom; y++) {
+      for (let x = left; x < right; x++) {
+        index = (y * this.dimensions.frame.width) + x;
         cell = this.tty_grid.cells[index];
         if (cell === undefined) {
           this.frame.colours.push(0)
@@ -320,6 +353,15 @@ export default class extends utils.mixins(CommonMixin) {
         }
       }
     }
+  }
+
+  _setupFrameMeta() {
+    this.frame = {
+      meta: this.dimensions.getFrameMeta(),
+      text: [],
+      colours: []
+    };
+    this.frame.meta.id = parseInt(this.channel.name)
   }
 
   // Purely for debugging.

@@ -17,21 +17,52 @@ export default class extends utils.mixins(CommonMixin) {
     this.dimensions.channel = this.channel;
     this.dimensions.update();
     this.graphics_builder = new GraphicsBuilder(this.channel, this.dimensions);
-    this.text_builder = new TextBuilder(this.channel, this.dimensions, this.graphics_builder);
-    this.text_builder.sendFrame();
+    this.text_builder = new TextBuilder(
+      this.channel,
+      this.dimensions,
+      this.graphics_builder
+    );
+    if (!this._is_first_frame_finished) {
+      this.sendAllBigFrames();
+    }
   }
 
   sendFrame() {
     this.dimensions.update()
     if (this.dimensions.dom.is_new) {
-      this.text_builder.sendFrame();
+      this.sendAllBigFrames();
     }
-    this.graphics_builder.sendFrame();
+    this.sendSmallPixelFrame();
     this._sendTabInfo();
     if (!this._is_first_frame_finished) {
       this.sendMessage('/status,parsing_complete');
     }
     this._is_first_frame_finished = true;
+  }
+
+  sendAllBigFrames() {
+    if (!this.dimensions.tty.width) {
+      this.log("Not sending big frames without TTY data")
+      return
+    } else {
+      this.log("Sending big frames...")
+    }
+    this.dimensions.update();
+    this.dimensions.setSubFrameDimensions('big');
+    this.text_builder.sendFrame();
+    this.graphics_builder.sendFrame();
+    this.dimensions.frame.x_last_big_frame = this.dimensions.frame.x_scroll;
+    this.dimensions.frame.y_last_big_frame = this.dimensions.frame.y_scroll;
+  }
+
+  sendSmallPixelFrame() {
+    if (!this.dimensions.tty.width) {
+      this.log("Not sending small frames without TTY data")
+      return
+    }
+    this.dimensions.update()
+    this.dimensions.setSubFrameDimensions('small');
+    this.graphics_builder.sendFrame();
   }
 
   _postCommsInit() {
@@ -115,7 +146,21 @@ export default class extends utils.mixins(CommonMixin) {
         this.sendFrame();
         break;
       case '/rebuild_text':
-        this._buildText();
+        break;
+      case '/scroll_status':
+        this.dimensions.frame.x_scroll = parseInt(parts[1]);
+        this.dimensions.frame.y_scroll = parseInt(parts[2]);
+        this.dimensions.update();
+        this._handleScroll();
+        this._mightSendBigFrames();
+        break;
+      case '/tty_size':
+        this.dimensions.tty.width = parseInt(parts[1]);
+        this.dimensions.tty.height = parseInt(parts[2]);
+        this.dimensions.update();
+        if (!this._is_first_frame_finished) {
+          this.sendAllBigFrames();
+        }
         break;
       case '/stdin':
         input = JSON.parse(utils.rebuildArgsToSingleArg(parts));
@@ -144,18 +189,6 @@ export default class extends utils.mixins(CommonMixin) {
 
   _handleSpecialKeys(input) {
     switch (input.key) {
-      case 257: // up arow
-        window.scrollBy(0, -2 * this.dimensions.char.height);
-        break;
-      case 258: // down arrow
-        window.scrollBy(0, 2 * this.dimensions.char.height);
-        break;
-      case 266: // page up
-        window.scrollBy(0, -window.innerHeight);
-        break;
-      case 267: // page down
-        window.scrollBy(0, window.innerHeight);
-        break;
       case 18: // CTRL+r
         window.location.reload();
         break;
@@ -168,12 +201,6 @@ export default class extends utils.mixins(CommonMixin) {
 
   _handleMouse(input) {
     switch (input.button) {
-      case 256: // scroll up
-        window.scrollBy(0, -2);
-        break;
-      case 512: // scroll down
-        window.scrollBy(0, 2);
-        break;
       case 1: // mousedown
         this._mouseAction('click', input.mouse_x, input.mouse_y);
         this._mouseAction('mousedown', input.mouse_x, input.mouse_y);
@@ -182,6 +209,13 @@ export default class extends utils.mixins(CommonMixin) {
         this._mouseAction('mouseup', input.mouse_x, input.mouse_y);
         break;
     }
+  }
+
+  _handleScroll() {
+    window.scrollTo(
+      this.dimensions.frame.x_scroll / this.dimensions.scale_factor.width,
+      this.dimensions.frame.y_scroll / this.dimensions.scale_factor.height,
+    );
   }
 
   _mouseAction(type, x, y) {
@@ -237,5 +271,20 @@ export default class extends utils.mixins(CommonMixin) {
       title: title_object.length ? title_object[0].innerHTML : ""
     }
     this.sendMessage(`/tab_info,${JSON.stringify(info)}`);
+  }
+
+  _mightSendBigFrames() {
+    const y_diff = this.dimensions.frame.y_last_big_frame - this.dimensions.frame.y_scroll;
+    const max_y_scroll_without_new_big_frame = 2 * this.dimensions.tty.height;
+    if (Math.abs(y_diff) > max_y_scroll_without_new_big_frame) {
+      this.log(
+        `Parsing big frames: ` +
+        `previous-y: ${this.dimensions.frame.y_last_big_frame}, ` +
+        `y-scroll: ${this.dimensions.frame.y_scroll}, ` +
+        `diff: ${y_diff}, ` +
+        `max-scroll: ${max_y_scroll_without_new_big_frame} `
+      )
+      this.sendAllBigFrames();
+    }
   }
 }

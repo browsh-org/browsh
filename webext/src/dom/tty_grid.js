@@ -5,6 +5,7 @@ export default class {
   constructor(dimensions, graphics_builder) {
     this.dimensions = dimensions;
     this.graphics_builder = graphics_builder;
+    this._setMiddleOfEm();
   }
 
   getCell(index) {
@@ -46,15 +47,31 @@ export default class {
   // Get the colours right in the middle of the character's font. Returns both the colour
   // when the text is displayed and when it's hidden.
   _getColours(cell) {
-    // Don't use a full half, just because it means that we can use very small mock pixel
-    // arrays during testing - rounding to the top-left saves having to write an extra
-    // column and row.
-    const half = 0.449;
-    const offset_x = utils.snap(cell.dom_coords.x + (this.dimensions.char.width * half));
-    const offset_y = utils.snap(cell.dom_coords.y + (this.dimensions.char.height * half));
+    const offset_x = utils.snap(
+      cell.dom_coords.x + (this.dimensions.char.width * this._middle_of_em)
+    );
+    const offset_y = utils.snap(
+      cell.dom_coords.y + (this.dimensions.char.height * this._middle_of_em)
+    );
     const fg_colour = this.graphics_builder.getUnscaledFGPixelAt(offset_x, offset_y);
     const bg_colour = this.graphics_builder.getUnscaledBGPixelAt(offset_x, offset_y);
     return [fg_colour, bg_colour]
+  }
+
+  // This is the value to reach the middle of a uni-glyph font character in order to
+  // sample its colour. Obviosuly it is better to reach for the middle in case there are
+  // vagaries of rendering, it increases our chances of actually getting the characters
+  // own colour and not some other colour nearby.
+  //
+  // However during testing, we use very small self-generated pixel arrays which makes
+  // the snapped values rather unintuitive. So we just encourage the snaped values to
+  // snap lower which just lends itself to more readable test values.
+  _setMiddleOfEm() {
+    if (TEST) {
+      this._middle_of_em = 0.49;
+    } else {
+      this._middle_of_em = 0.5;
+    }
   }
 
   // This is somewhat of a, hopefully elegant, hack. So, imagine that situation where you're

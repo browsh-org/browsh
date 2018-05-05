@@ -22,6 +22,7 @@ export default {
   },
 
   ensureEven: function (number) {
+    number = this.snap(number);
     if (number % 2) { number++ }
     return number;
   },

@@ -20,7 +20,13 @@ type tab struct {
 
 func ensureTabExists(id int) {
 	if _, ok := tabs[id]; !ok {
-		tabs[id] = &tab{ID: id}
+		tabs[id] = &tab{
+			ID: id,
+			frame: frame{
+				xScroll: 0,
+				yScroll: 0,
+			},
+		}
 	}
 }
 
@@ -31,11 +37,12 @@ func parseJSONTabState(jsonString string) {
 		Shutdown(err)
 	}
 	ensureTabExists(incoming.ID)
-	tabs[incoming.ID].handleStateChange(incoming)
+	CurrentTab = tabs[incoming.ID]
+	tabs[incoming.ID].handleStateChange(&incoming)
 }
 
 
-func (t *tab) handleStateChange(incoming tab) {
+func (t *tab) handleStateChange(incoming *tab) {
 	if (t.PageState != incoming.PageState) {
 		// TODO: Take the browser's scroll events as lead
 		if (incoming.PageState == "page_init") {
@@ -48,6 +55,4 @@ func (t *tab) handleStateChange(incoming tab) {
 	t.URI = incoming.URI
 	t.PageState = incoming.PageState
 	t.StatusMessage = incoming.StatusMessage
-
-	renderUI()
 }

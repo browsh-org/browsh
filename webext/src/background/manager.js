@@ -98,7 +98,9 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin, TabComm
     if (this._checkForMozillaCliqzTab(sender.tab)) return;
     // Send the tab back to itself, such that it can be enlightened unto its own nature
     sendResponse(sender.tab);
-    if (sender.tab.active) this.active_tab_id = sender.tab.id;
+    if (sender.tab.active) {
+      this.active_tab_id = sender.tab.id;
+    }
   }
 
   // This is the main communication channel for all back and forth messages to tabs
@@ -113,6 +115,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin, TabComm
       id: parseInt(channel.name),
       channel: channel
     };
+    channel.postMessage(`/tty_size,${this.tty_width},${this.tty_height}`);
     channel.onMessage.addListener(this.handleTabMessage.bind(this));
   }
 

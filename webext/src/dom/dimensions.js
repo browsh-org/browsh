@@ -6,16 +6,30 @@ import CommonMixin from 'dom/common_mixin';
 export default class extends utils.mixins(CommonMixin) {
   constructor() {
     super()
+
     // ID for element we place in the DOM to measure the size of a single monospace
     // character.
     this._measuring_box_id = 'browsh_em_measuring_box';
+
     // TODO: WTF is this magic number?
     if (TEST) {
-      this._char_height_magic_number = 2
+      this._char_height_magic_number = 0;
     } else {
-      this._char_height_magic_number = 4
+      this._char_height_magic_number = 4;
     }
+
+    // This is the region outside the visible area of the TTY that is pre-parsed and
+    // sent to the TTY to be buffered to support faster scrolling.
+    this._big_sub_frame_factor = 3;
+
     this.dom = {};
+    this.tty = {};
+    this.frame = {
+      x_scroll: 0,
+      y_scroll: 0,
+      x_last_big_frame: 0,
+      y_last_big_frame: 0
+    }
     if (document.body) {
       this.update();
     }
@@ -27,6 +41,74 @@ export default class extends utils.mixins(CommonMixin) {
     this._calculateScaleFactor();
     this._updateFrameDimensions();
     this._notifyBackground();
+  }
+
+  setSubFrameDimensions(size) {
+    this._calculateSmallSubFrame();
+    if (size === 'big' || size === 'all') {
+      this._calculateBigSubFrame();
+    }
+    // Only the height needs to be even because of the UTF8 half-block trick. A single
+    // TTY cell always contains exactly 2 pseudo pixels.
+    this.frame.sub.height = utils.ensureEven(this.frame.sub.height);
+  }
+
+  // This is the data that is sent with the JSON payload of every frame to the TTY
+  getFrameMeta() {
+    return {
+      sub_left: utils.snap(this.frame.sub.left),
+      sub_top: utils.snap(this.frame.sub.top),
+      sub_width: utils.snap(this.frame.sub.width),
+      sub_height: utils.snap(this.frame.sub.height),
+      total_width: utils.snap(this.frame.width),
+      total_height: utils.snap(this.frame.height)
+    }
+  }
+
+  // This is the sub frame that is the view onto the frame that is visible by the user
+  // in the TTY at any given time.
+  _calculateSmallSubFrame() {
+    this.frame.sub = {
+      left: this.frame.x_scroll,
+      top: this.frame.y_scroll,
+      width: this.tty.width,
+      height: this.tty.height * 2
+    }
+
+    this._scaleSubFrameToSubDOM()
+  }
+
+  // This is the sub frame that is a few factors bigger than what the user can see
+  // in the TTY.
+  _calculateBigSubFrame() {
+    this.frame.sub = {
+      left: this.frame.x_scroll - (this._big_sub_frame_factor * this.tty.width),
+      top: this.frame.y_scroll - (this._big_sub_frame_factor * this.tty.height),
+      width: this.tty.width + (this._big_sub_frame_factor * 2 * this.tty.width),
+      height: this.tty.height + (this._big_sub_frame_factor * 2 * this.tty.height),
+    }
+    this._limitSubFrameDimensions();
+    this._scaleSubFrameToSubDOM();
+  }
+
+  _limitSubFrameDimensions() {
+    if (this.frame.sub.left < 0) { this.frame.sub.left = 0 }
+    if (this.frame.sub.top < 0) { this.frame.sub.top = 0 }
+    if (this.frame.sub.width > this.frame.width) {
+      this.frame.sub.width = this.frame.width;
+    }
+    if (this.frame.sub.height > this.frame.height) {
+      this.frame.sub.height = this.frame.height;
+    }
+  }
+
+  _scaleSubFrameToSubDOM() {
+    this.dom.sub = {
+      left: this.frame.sub.left / this.scale_factor.width,
+      top: this.frame.sub.top / this.scale_factor.height,
+      width: this.frame.sub.width / this.scale_factor.width,
+      height: this.frame.sub.height / this.scale_factor.height
+    }
   }
 
   // This is critical in order for the terminal to match the browser as closely as possible.
@@ -74,11 +156,7 @@ export default class extends utils.mixins(CommonMixin) {
     const [new_width, new_height] = this._calculateDOMDimensions();
     const is_new = this.dom.width != new_width || this.dom.height != new_height
     this.dom = {
-      // Even though it is the TTY's responsibility to scroll the DOM, the browser still
-      // needs to do scrolling because various events can be triggered by it - think of
-      // lazy image loading.
-      x_scroll: window.scrollX,
-      y_scroll: window.scrollY,
+      sub: this.dom.sub,
       width: new_width,
       height: new_height,
       is_new: is_new
@@ -103,17 +181,8 @@ export default class extends utils.mixins(CommonMixin) {
   _updateFrameDimensions() {
     let width = this.dom.width * this.scale_factor.width;
     let height = this.dom.height * this.scale_factor.height;
-    width = utils.snap(width);
-    height = utils.snap(height);
-
-    // Only the height needs to be even because of the UTF8 half-block trick. A single
-    // TTY cell always contains exactly 2 pseudo pixels.
-    height = utils.ensureEven(height);
-
-    this.frame = {
-      width: width,
-      height: height
-    }
+    this.frame.width = utils.snap(width);
+    this.frame.height = utils.snap(height);
   }
 
   // The scale factor is the ratio of the TTY's representation of the DOM to the browser's
