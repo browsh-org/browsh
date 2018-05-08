@@ -37,6 +37,7 @@ export default class extends utils.mixins(CommonMixin) {
   _updateState() {
     this.tty_grid.cells = [];
     this._parse_started_elements = [];
+    this._convertSubFrameToViewportCoords();
   }
 
   // This is relatively cheap: around 50ms for a 13,000 word Wikipedia page
@@ -69,9 +70,9 @@ export default class extends utils.mixins(CommonMixin) {
       false
     );
     while(walker.nextNode()) {
-      //if (this._isRelevantTextNode(walker.currentNode)) {
+      if (this._isRelevantTextNode(walker.currentNode)) {
         this._text_nodes.push(walker.currentNode)
-      //}
+      }
     }
   }
 
@@ -92,22 +93,35 @@ export default class extends utils.mixins(CommonMixin) {
     return true;
   }
 
+  // In order to decide if a particular DOM rect is inside the current sub frame then we need
+  // to compare the sub frame's dimensions to those of the DOM rect. However DOM rects are in
+  // viewport-relative coords. In order to save on some CPU cycles, we can just apply the
+  // transform to the sub frame.
+  _convertSubFrameToViewportCoords() {
+    this._viewport_relative_sub_frame = {
+      top: this.dimensions.dom.sub.top - window.scrollY,
+      bottom: this.dimensions.dom.sub.top + this.dimensions.dom.sub.height - window.scrollY,
+      left: this.dimensions.dom.sub.left - window.scrollX,
+      right: this.dimensions.dom.sub.left + this.dimensions.dom.sub.width - window.scrollX
+    }
+  }
+
   _isDOMRectInSubFrame(dom_rect) {
     const isBottomIn = (
-      dom_rect.bottom >= this.dimensions.dom.sub.top &&
-      dom_rect.bottom <= this.dimensions.dom.sub.top + this.dimensions.dom.sub.height
+      dom_rect.bottom >= this._viewport_relative_sub_frame.top &&
+      dom_rect.bottom <= this._viewport_relative_sub_frame.bottom
     )
     const isTopIn = (
-      dom_rect.top >= this.dimensions.dom.sub.top &&
-      dom_rect.top <= this.dimensions.dom.sub.top + this.dimensions.dom.sub.height
+      dom_rect.top >= this._viewport_relative_sub_frame.top &&
+      dom_rect.top <= this._viewport_relative_sub_frame.bottom
     )
     const isLeftIn = (
-      dom_rect.left >= this.dimensions.dom.sub.left &&
-      dom_rect.left <= this.dimensions.dom.sub.left + this.dimensions.dom.sub.width
+      dom_rect.left >= this._viewport_relative_sub_frame.left &&
+      dom_rect.left <= this._viewport_relative_sub_frame.right
     )
     const isRightIn = (
-      dom_rect.right >= this.dimensions.dom.sub.left &&
-      dom_rect.right <= this.dimensions.dom.sub.left + this.dimensions.dom.sub.width
+      dom_rect.right >= this._viewport_relative_sub_frame.left &&
+      dom_rect.right <= this._viewport_relative_sub_frame.right
     )
     return (isBottomIn || isTopIn) && (isLeftIn || isRightIn);
   }
@@ -207,7 +221,7 @@ export default class extends utils.mixins(CommonMixin) {
     this._dom_box = {};
     this._previous_dom_box = {};
     for (const dom_box of this._getNodeDOMBoxes()) {
-      //if (!this._isDOMRectInSubFrame(dom_box)) { continue }
+      if (!this._isDOMRectInSubFrame(dom_box)) { continue }
       this._dom_box.top = dom_box.top;
       this._dom_box.left = dom_box.left;
       this._dom_box.width = dom_box.width;
