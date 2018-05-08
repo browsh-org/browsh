@@ -13,6 +13,7 @@ export default class extends utils.mixins(CommonMixin) {
     this.dimensions = dimensions;
     this._off_screen_canvas = document.createElement('canvas');
     this._ctx = this._off_screen_canvas.getContext('2d');
+    this._hideText();
   }
 
   sendFrame() {
@@ -61,14 +62,14 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   _getScreenshotWithoutText() {
-    this._hideText();
     this.pixels_without_text = this._getScreenshot();
-    this._showText();
     return this.pixels_without_text;
   }
 
   _getScreenshotWithText() {
+    this._showText();
     this.pixels_with_text = this._getScreenshot();
+    this._hideText();
     return this.pixels_with_text;
   }
 
@@ -145,7 +146,6 @@ export default class extends utils.mixins(CommonMixin) {
   _scaleCanvas() {
     this._is_scaled = true;
     // TODO: default to text hidden - show text only for big frames
-    this._hideText();
     this._ctx.save();
     this._ctx.scale(
       this.dimensions.scale_factor.width,
@@ -155,7 +155,6 @@ export default class extends utils.mixins(CommonMixin) {
 
   _unScaleCanvas() {
     this._ctx.restore();
-    this._showText();
     this._is_scaled = false;
   }
 

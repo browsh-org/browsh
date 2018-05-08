@@ -70,7 +70,7 @@ func Keyboard(keys string) {
 func waitForNextFrame() {
 	// Need to wait so long because the frame rate is currently so slow
 	// TODO: Reduce the wait when the FPS is higher
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(250 * time.Millisecond)
 }
 
 // WaitForText waits for a particular string at particular position in the frame

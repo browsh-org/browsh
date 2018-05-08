@@ -256,6 +256,6 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin, TabComm
         return;
       }
       this.sendToCurrentTab('/request_frame');
-    }, 500);
+    }, 250);
   }
 }
