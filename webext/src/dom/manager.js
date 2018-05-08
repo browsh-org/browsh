@@ -146,6 +146,7 @@ export default class extends utils.mixins(CommonMixin) {
         this.sendFrame();
         break;
       case '/rebuild_text':
+        this.sendAllBigFrames();
         break;
       case '/scroll_status':
         this.dimensions.frame.x_scroll = parseInt(parts[1]);

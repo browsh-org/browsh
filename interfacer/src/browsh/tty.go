@@ -154,7 +154,9 @@ func renderCurrentTabWindow() {
 	var styling = tcell.StyleDefault
 	var runeChars []rune
 	width, height := screen.Size()
-	if CurrentTab.frame.cells == nil { return }
+	if CurrentTab == nil || CurrentTab.frame.cells == nil {
+		return
+	}
 	for y := 0; y < height - uiHeight; y++ {
 		for x := 0; x < width; x++ {
 			currentCell = getCell(x, y)

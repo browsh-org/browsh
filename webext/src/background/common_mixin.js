@@ -9,7 +9,9 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   sendToTerminal(message) {
-    this.terminal.send(message);
+    if (this.terminal.readyState === 1) {
+      this.terminal.send(message);
+    }
   }
 
   sendState() {

@@ -152,7 +152,6 @@ var _ = Describe("Frame struct", func() {
 		})
 
 		It("should parse text for an offset sub-frame", func() {
-			debugCells()
 			Expect(testGetCell(4).character[0]).To(Equal('A'))
 			Expect(testGetCell(5).character[0]).To(Equal('b'))
 			Expect(testGetCell(7).character[0]).To(Equal('c'))

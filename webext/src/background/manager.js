@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import utils from 'utils';
 import CommonMixin from 'background/common_mixin';
 import TTYCommandsMixin from 'background/tty_commands_mixin';
@@ -25,6 +26,9 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin, TabComm
     this._tab_reloads = [];
     // When the real GUI browser first launches it's sized to the same size as the desktop
     this._is_initial_window_pending = true;
+    // Used so that reconnections to the terminal don't also attempt to reconnect to the
+    // browser.
+    this._is_connected_to_browser = false;
     this._connectToTerminal();
   }
 
@@ -45,6 +49,18 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin, TabComm
       this._listenForTerminalMessages();
       this._connectToBrowser();
     });
+    this.terminal.addEventListener('close', (_event) => {
+      this._reconnectToTerminal();
+    });
+  }
+
+  // TODO: Why is this so slow to reconnect?
+  _reconnectToTerminal() {
+    try {
+      this._connectToTerminal();
+    } catch (_e) {
+      _.throttle(() => this._reconnectToTerminal(), 100);
+    }
   }
 
   // Mostly listening for forwarded STDIN from the terminal. Therefore, the user
@@ -59,11 +75,17 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin, TabComm
   }
 
   _connectToBrowser() {
+    if (this._is_connected_to_browser) {
+      this.sendState();
+      this.sendToCurrentTab('/rebuild_text');
+      return;
+    }
     this._listenForNewTab();
     this._listenForTabUpdates();
     this._listenForTabChannelOpen();
     this._listenForFocussedTab();
     this._startFrameRequestLoop();
+    this._is_connected_to_browser = true;
   }
 
   // For when a tab's content script, triggered by `onDOMContentLoaded`,
