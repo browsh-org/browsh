@@ -57,6 +57,7 @@ func GetFrame() string {
 // the available special keys.
 func SpecialKey(key tcell.Key) {
 	simScreen.InjectKey(key, 0, tcell.ModNone)
+	time.Sleep(100 * time.Millisecond)
 }
 
 // Keyboard types a string of keys into the TTY, as if a user would
@@ -90,10 +91,10 @@ func WaitForPageLoad() {
 	start := time.Now()
 	for time.Since(start) < perTestTimeout {
 		if browsh.CurrentTab.PageState == "parsing_complete" {
-			time.Sleep(200 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			return
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 	}
 	panic("Page didn't load within timeout")
 }
@@ -101,12 +102,23 @@ func WaitForPageLoad() {
 // GotoURL sends the browsh browser to the specified URL
 func GotoURL(url string) {
 	SpecialKey(tcell.KeyCtrlL)
+	BackspaceRemoveURL()
 	Keyboard(url)
 	SpecialKey(tcell.KeyEnter)
 	WaitForPageLoad()
 	// TODO: Looking for the URL isn't optimal because it could be the same URL
 	// as the previous test.
 	gomega.Expect(url).To(BeInFrameAt(9, 1))
+}
+
+// BackspaceRemoveURL holds down the backspace key to delete the existing URL
+// TODO: Remove when text input supports selecting all and pressing any key to overwrite
+// the selection.
+func BackspaceRemoveURL() {
+	for i := 1; i <= 50; i++ {
+		simScreen.InjectKey(tcell.KeyBackspace2, 0, tcell.ModNone)
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 func elementColourForTTY(element tcell.SimCell) string {

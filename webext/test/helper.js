@@ -20,6 +20,7 @@ beforeEach(() => {
   sandbox.stub(GraphicsBuilder.prototype, '_showText').returns(true);
   sandbox.stub(GraphicsBuilder.prototype, '_scaleCanvas').returns(true);
   sandbox.stub(GraphicsBuilder.prototype, '_unScaleCanvas').returns(true);
+  sandbox.stub(TextBuilder.prototype, '_getAllInputBoxes').returns([]);
   sandbox.stub(TTYCell.prototype, 'isHighestLayer').returns(true);
   getPixelsStub = sandbox.stub(GraphicsBuilder.prototype, '_getPixelData');
 });

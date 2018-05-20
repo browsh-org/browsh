@@ -80,7 +80,7 @@ export default class extends utils.mixins(CommonMixin) {
   _isRelevantTextNode(node) {
     // Ignore text outside of the sub-frame, therefore outside either the TTY view or
     // outside the larger buffered TTY view.
-    const dom_rect = node.parentElement.getBoundingClientRect()
+    const dom_rect = node.parentElement.getBoundingClientRect();
     if (!this._isDOMRectInSubFrame(dom_rect)) {
       return false;
     }
@@ -256,7 +256,7 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   _prepareToParseDOMBox() {
-    this._convertDOMBoxToAbsoluteCoords()
+    this._dom_box = this._convertDOMRectToAbsoluteCoords(this._dom_box);
     this._createSyncedTTYBox();
     this._createTrackers()
     this._ignoreUnrenderedWhitespace();
@@ -322,9 +322,15 @@ export default class extends utils.mixins(CommonMixin) {
   // The DOM returns box coordinates relative to the viewport. As we are rendering the
   // entire DOM as a single frame, then we need the coords to be relative to the top-left
   // of the DOM itself.
-  _convertDOMBoxToAbsoluteCoords() {
-    this._dom_box.left += window.scrollX;
-    this._dom_box.top += window.scrollY;
+  _convertDOMRectToAbsoluteCoords(dom_rect) {
+    return {
+      top: dom_rect.top + window.scrollY,
+      bottom: dom_rect.bottom + window.scrollY,
+      left: dom_rect.left + window.scrollX,
+      right: dom_rect.right + window.scrollX,
+      height: dom_rect.height,
+      width: dom_rect.width
+    }
   }
 
   // Round and snap a DOM rectangle as if it were placed in the TTY frame
@@ -333,6 +339,44 @@ export default class extends utils.mixins(CommonMixin) {
       col_start: utils.snap(this._dom_box.left * this.dimensions.scale_factor.width),
       row: utils.snap(this._dom_box.top * this.dimensions.scale_factor.height / 2),
       width: utils.snap(this._dom_box.width * this.dimensions.scale_factor.width),
+    }
+  }
+
+  // TODO: Ultimately we're going to need to know exactly which parts of the input
+  //       box are obscured. This is partly possible using the element's computed
+  //       styles, however this isn't comprehensive - think partially obscuring.
+  //       So the best solution is to use the same trick as we do for normal text,
+  //       except that we can't fill the input box with text, however we can
+  //       temporarily change the background to a contrasting colour.
+  _getAllInputBoxes() {
+    let dom_rect, styles, font_rgb;
+    let parsed_input_boxes = {};
+    let raw_input_boxes = document.querySelectorAll(
+      'input[type="text"], ' +
+      'input[type="email"], ' +
+      'input[type="password"], ' +
+      'textarea'
+    );
+    raw_input_boxes.forEach((i) => {
+      this._ensureBrowshID(i);
+      dom_rect = this._convertDOMRectToAbsoluteCoords(i.getBoundingClientRect());
+      styles = window.getComputedStyle(i);
+      font_rgb = styles['color'].replace(/[^\d,]/g, '').split(',').map((i) => parseInt(i));
+      parsed_input_boxes[i.getAttribute('data-browsh-id')] = {
+        id: i.getAttribute('data-browsh-id'),
+        x: utils.snap(dom_rect.left * this.dimensions.scale_factor.width),
+        y: utils.snap(dom_rect.top * this.dimensions.scale_factor.height),
+        width: utils.snap(dom_rect.width * this.dimensions.scale_factor.width),
+        height: utils.snap(dom_rect.height * this.dimensions.scale_factor.height),
+        colour: [font_rgb[0], font_rgb[1], font_rgb[2]]
+      };
+    });
+    return parsed_input_boxes;
+  }
+
+  _ensureBrowshID(element) {
+    if (element.getAttribute('data-browsh-id') === null) {
+      element.setAttribute('data-browsh-id', utils.uuidv4());
     }
   }
 
@@ -352,6 +396,7 @@ export default class extends utils.mixins(CommonMixin) {
     const bottom = top + (this.dimensions.frame.sub.height / 2);
     const right = left + this.dimensions.frame.sub.width;
     this._setupFrameMeta();
+    this._serialiseInputBoxes();
     for (let y = top; y < bottom; y++) {
       for (let x = left; x < right; x++) {
         index = (y * this.dimensions.frame.width) + x;
@@ -376,6 +421,10 @@ export default class extends utils.mixins(CommonMixin) {
       colours: []
     };
     this.frame.meta.id = parseInt(this.channel.name)
+  }
+
+  _serialiseInputBoxes() {
+    this.frame.input_boxes = this._getAllInputBoxes();
   }
 
   // Purely for debugging.

@@ -30,6 +30,7 @@ var _ = Describe("Showing a basic webpage", func() {
 		Describe("Interaction", func() {
 			It("should navigate to a new page by using the URL bar", func() {
 				SpecialKey(tcell.KeyCtrlL)
+				BackspaceRemoveURL()
 				Keyboard(testSiteURL + "/smorgasbord/another.html")
 				SpecialKey(tcell.KeyEnter)
 				Expect("Another").To(BeInFrameAt(0, 0))
@@ -49,6 +50,31 @@ var _ = Describe("Showing a basic webpage", func() {
 			It("should scroll the page by one page", func() {
 				SpecialKey(tcell.KeyPgDn)
 				Expect("continuing▄with▄a▄variety▄of▄fish").To(BeInFrameAt(12, 12))
+			})
+
+			Describe("Text Input", func() {
+				BeforeEach(func() {
+					SpecialKey(tcell.KeyDown)
+					SpecialKey(tcell.KeyDown)
+					simScreen.InjectMouse(12, 17, tcell.Button1, tcell.ModNone)
+				})
+
+				It("should have basic cursor movement", func() {
+					Keyboard("|||")
+					SpecialKey(tcell.KeyLeft)
+					Keyboard("2")
+					SpecialKey(tcell.KeyLeft)
+					SpecialKey(tcell.KeyLeft)
+					Keyboard("1")
+					Expect("|1|2|").To(BeInFrameAt(12, 17))
+				})
+
+				It("should submit text into an input box", func() {
+					Expect("Unsubmitted").To(BeInFrameAt(12, 21))
+					Keyboard("Reverse Me!")
+					SpecialKey(tcell.KeyEnter)
+					Expect("!eM▄esreveR").To(BeInFrameAt(12, 21))
+				})
 			})
 		})
 	})

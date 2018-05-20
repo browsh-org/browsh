@@ -17,7 +17,10 @@ export default (MixinBase) => class extends MixinBase {
     let start = performance.now();
     work();
     let end = performance.now();
-    this.firstFrameLog(`${reference}: ${end - start}ms`);
+    let duration = end - start;
+    if (duration > 10) {
+      this.firstFrameLog(`${reference}: ${duration}ms`);
+    }
   }
 
   // If you're logging large objects and using a high-ish FPS (<1000ms) then you might

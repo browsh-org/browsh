@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 import utils from 'utils';
 
 import CommonMixin from 'dom/common_mixin';
@@ -58,11 +60,21 @@ export default class extends utils.mixins(CommonMixin) {
   sendSmallPixelFrame() {
     if (!this.dimensions.tty.width) {
       this.log("Not sending small frames without TTY data")
-      return
+      return;
     }
     this.dimensions.update()
     this.dimensions.setSubFrameDimensions('small');
     this.graphics_builder.sendFrame();
+  }
+
+  sendSmallTextFrame() {
+    if (!this.dimensions.tty.width) {
+      this.log("Not sending small frames without TTY data")
+      return;
+    }
+    this.dimensions.update()
+    this.dimensions.setSubFrameDimensions('small');
+    this.text_builder.sendFrame();
   }
 
   _postCommsInit() {
@@ -71,7 +83,17 @@ export default class extends utils.mixins(CommonMixin) {
     this._sendTabInfo();
     this.sendMessage('/status,page_init');
     this._listenForBackgroundMessages();
-    this._startWindowEventListeners()
+    this._setupDebouncedFunctions();
+    this._startWindowEventListeners();
+    this._startMutationObserver();
+  }
+
+  _setupDebouncedFunctions() {
+    this._debouncedSmallTextFrame = _.debounce(
+      this.sendSmallTextFrame,
+      100,
+      {leading: true}
+    );
   }
 
   _setupInit() {
@@ -124,6 +146,17 @@ export default class extends utils.mixins(CommonMixin) {
     });
   }
 
+  _startMutationObserver() {
+    let target = document.querySelector('body');
+    let observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        this.log("!!MUTATION!!", mutation);
+        this._debouncedSmallTextFrame();
+      });
+    });
+    observer.observe(target, {subtree: true, characterData: true, childList: true });
+  }
+
   _listenForBackgroundMessages() {
     this.channel.onMessage.addListener((message) => {
       try {
@@ -167,6 +200,10 @@ export default class extends utils.mixins(CommonMixin) {
         input = JSON.parse(utils.rebuildArgsToSingleArg(parts));
         this._handleUserInput(input);
         break;
+      case '/input_box':
+        input = JSON.parse(utils.rebuildArgsToSingleArg(parts));
+        this._handleInputBoxContent(input);
+        break;
       case '/url':
         url = utils.rebuildArgsToSingleArg(parts);
         document.location.href = url;
@@ -197,7 +234,17 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   _handleCharBasedKeys(input) {
-    switch (input.char) { default: }
+    switch (input.char) {
+      default:
+        this._triggerKeyPress(input);
+    }
+  }
+
+  _handleInputBoxContent(input) {
+    let input_box = document.querySelectorAll(`[data-browsh-id="${input.id}"]`)[0];
+    if (input_box) {
+      input_box.value = input.text;
+    }
   }
 
   _handleMouse(input) {
@@ -219,6 +266,14 @@ export default class extends utils.mixins(CommonMixin) {
     );
   }
 
+  _triggerKeyPress(key) {
+    let el = document.activeElement;
+    el.dispatchEvent(new KeyboardEvent('keypress', {
+      'key': key.char,
+      'keyCode': key.key
+    }));
+  }
+
   _mouseAction(type, x, y) {
     const [dom_x, dom_y] = this._getDOMCoordsFromMouseCoords(x, y);
     const element = document.elementFromPoint(
@@ -231,6 +286,7 @@ export default class extends utils.mixins(CommonMixin) {
       pageX: dom_x,
       pageY: dom_y
     });
+    element.focus();
     element.dispatchEvent(event);
   }
 

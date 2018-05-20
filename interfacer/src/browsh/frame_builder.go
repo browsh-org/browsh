@@ -35,6 +35,8 @@ type frame struct {
 	textColours map[int]tcell.Color
 	// The actual built frame, can be used to render cells to the TTY
 	cells *threadSafeCellsMap
+	// Input boxes, like for entering passwords, sending emails etc
+	inputBoxes map[string]*inputBox
 }
 
 type jsonFrameBase struct {
@@ -51,6 +53,7 @@ type incomingFrameText struct {
 	Meta jsonFrameBase `json:"meta"`
 	Text []string `json:"text"`
 	Colours []int32 `json:"colours"`
+	InputBoxes map[string]inputBox `json:"input_boxes"`
 }
 
 // TODO: Can these be sent as binary blobs?
@@ -81,6 +84,7 @@ func (f *frame) buildFrameText(incoming incomingFrameText) {
 	f.setup(incoming.Meta)
 	if (!f.isIncomingFrameTextValid(incoming)) { return }
 	CurrentTab = tabs[incoming.Meta.TabID]
+	f.updateInputBoxes(incoming)
 	f.populateFrameText(incoming)
 }
 
@@ -107,6 +111,9 @@ func (f *frame) setup(meta jsonFrameBase) {
 	if f.isDOMSizeChanged || f.cells == nil {
 		f.resetCells()
 	}
+	if f.inputBoxes == nil {
+		f.inputBoxes = make(map[string]*inputBox)
+	}
 	f.subWidth = meta.SubWidth
 	f.subHeight = meta.SubHeight
 	f.totalWidth = meta.TotalWidth
@@ -125,6 +132,30 @@ func (f *frame) isIncomingFrameTextValid(incoming incomingFrameText) bool {
 		return false
 	}
 	return true
+}
+
+// TODO: There must be a more idiomatic way of doing this?
+func (f *frame) updateInputBoxes(incoming incomingFrameText) {
+	for _, existingInputBox := range f.inputBoxes {
+		if _, ok := incoming.InputBoxes[existingInputBox.ID]; !ok {
+			// TODO: Does this also delete the memory pointed to by the reference?
+			delete(f.inputBoxes, existingInputBox.ID)
+		}
+	}
+	for _, incomingInputBox := range incoming.InputBoxes {
+		if _, ok := f.inputBoxes[incomingInputBox.ID]; !ok {
+			f.inputBoxes[incomingInputBox.ID] = &inputBox{
+				ID: incomingInputBox.ID,
+			}
+		}
+		inputBox := f.inputBoxes[incomingInputBox.ID]
+		inputBox.X = incomingInputBox.X
+		// TODO: Why do we have to add the 1 to the y coord??
+		inputBox.Y = (incomingInputBox.Y + 1) / 2
+		inputBox.Width = incomingInputBox.Width
+		inputBox.Height = incomingInputBox.Height / 2
+		inputBox.FgColour = incomingInputBox.FgColour
+	}
 }
 
 func (f *frame) populateFrameText(incoming incomingFrameText) {
@@ -255,4 +286,24 @@ func (f *frame) limitScroll(height int) {
 	maxYScroll := f.domRowCount() - height
 	if (f.yScroll > maxYScroll) { f.yScroll = maxYScroll }
 	if (f.yScroll < 0) { f.yScroll = 0 }
+}
+
+func (f *frame) maybeFocusInputBox(x, y int) {
+	activeInputBox = nil
+	for _, inputBox := range f.inputBoxes {
+		top := inputBox.Y
+		bottom := inputBox.Y + inputBox.Height
+		left := inputBox.X
+		right := inputBox.X + inputBox.Width
+		if x >= left && x < right && y >= top && y < bottom {
+			urlBarFocus(false)
+			activeInputBox = inputBox
+		}
+	}
+}
+
+func (f *frame) overlayInputBoxContent() {
+	for _, inputBox := range f.inputBoxes {
+		inputBox.setCells()
+	}
 }

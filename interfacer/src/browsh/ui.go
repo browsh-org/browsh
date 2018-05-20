@@ -9,10 +9,12 @@ import (
 var (
 	urlBarControls = " ← | x | "
 	urlInputBox = inputBox{
-		X: len(urlBarControls),
+		X: utf8.RuneCountInString(urlBarControls),
 		Y: 1,
 		Height: 1,
 		text: "",
+		FgColour: [3]int32{255, 255, 255},
+		bgColour: [3]int32{-1, -1, -1},
 	}
 )
 // Render tabs, URL bar, status messages, etc
@@ -59,9 +61,36 @@ func renderTabs() {
 }
 
 func renderURLBar() {
-	content := urlBarControls + getCurrentURLBarContents()
-	writeString(0, 1, content)
+	content := urlBarControls
+	if urlInputBox.isActive {
+		writeString(0, 1, content)
+		content += urlInputBox.text + " "
+		urlInputBox.renderURLBox()
+	} else {
+		content += CurrentTab.URI
+		writeString(0, 1, content)
+	}
 	fillLineToEnd(utf8.RuneCountInString(content), 1)
+}
+
+func urlBarFocusToggle() {
+	if urlInputBox.isActive {
+		urlBarFocus(false)
+	} else {
+		urlBarFocus(true)
+	}
+}
+
+func urlBarFocus(on bool) {
+	if !on {
+		activeInputBox = nil
+		urlInputBox.isActive = false
+	} else {
+		activeInputBox = &urlInputBox
+		urlInputBox.isActive = true
+		urlInputBox.text = CurrentTab.URI
+		urlInputBox.putCursorAtEnd()
+	}
 }
 
 func overlayPageStatusMessage() {
@@ -69,12 +98,3 @@ func overlayPageStatusMessage() {
 	writeString(0, height - 1, CurrentTab.StatusMessage)
 }
 
-func getCurrentURLBarContents() string {
-	var contents string
-	if urlInputBox.isActive {
-		contents = urlInputBox.text
-	} else {
-		contents = CurrentTab.URI
-	}
-	return contents
-}

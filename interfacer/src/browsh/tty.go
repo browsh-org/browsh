@@ -3,6 +3,7 @@ package browsh
 import (
 	"fmt"
 	"os"
+	"unicode/utf8"
 	"encoding/json"
 
 	"github.com/gdamore/tcell"
@@ -72,17 +73,6 @@ func quitBrowsh() {
 	Shutdown(errors.New("normal"))
 }
 
-func urlBarFocusToggle() {
-	if urlInputBox.isActive {
-		activeInputBox = nil
-		urlInputBox.isActive = false
-	} else {
-		activeInputBox = &urlInputBox
-		urlInputBox.isActive = true
-		urlInputBox.text = ""
-	}
-}
-
 func toggleMonochromeMode() {
 	IsMonochromeMode = !IsMonochromeMode
 }
@@ -126,11 +116,16 @@ func handleScrolling(ev *tcell.EventKey) {
 
 func handleMouseEvent(ev *tcell.EventMouse) {
 	x, y := ev.Position()
+	xInFrame := x + CurrentTab.frame.xScroll
+	yInFrame := y - uiHeight + CurrentTab.frame.yScroll
 	button := ev.Buttons()
+	if button == 1 {
+		CurrentTab.frame.maybeFocusInputBox(xInFrame, yInFrame)
+	}
 	eventMap := map[string]interface{}{
 		"button":    int(button),
-		"mouse_x":   int(x + CurrentTab.frame.xScroll),
-		"mouse_y":   int(y - uiHeight + CurrentTab.frame.yScroll),
+		"mouse_x":   int(xInFrame),
+		"mouse_y":   int(yInFrame),
 		"modifiers": int(ev.Modifiers()),
 	}
 	marshalled, _ := json.Marshal(eventMap)
@@ -140,7 +135,7 @@ func handleMouseEvent(ev *tcell.EventMouse) {
 func handleTTYResize() {
 	width, _ := screen.Size()
 	// TODO: How does this work with wide UTF8 chars?
-	urlInputBox.Width = width - len(urlBarControls)
+	urlInputBox.Width = width - utf8.RuneCountInString(urlBarControls)
 	screen.Sync()
 	sendTtySize()
 }
@@ -157,6 +152,7 @@ func renderCurrentTabWindow() {
 	if CurrentTab == nil || CurrentTab.frame.cells == nil {
 		return
 	}
+	CurrentTab.frame.overlayInputBoxContent()
 	for y := 0; y < height - uiHeight; y++ {
 		for x := 0; x < width; x++ {
 			currentCell = getCell(x, y)
@@ -176,6 +172,7 @@ func renderCurrentTabWindow() {
 			screen.SetCell(x, y + uiHeight, styling, runeChars[0])
 		}
 	}
+	if activeInputBox != nil { activeInputBox.setCursor() }
 	screen.Show()
 }
 
