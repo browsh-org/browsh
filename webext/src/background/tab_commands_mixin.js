@@ -1,8 +1,10 @@
 import utils from 'utils';
 
 // Handle commands from tabs, like sending a frame or information about
-// the current character dimensions .
+// the current character dimensions.
 export default (MixinBase) => class extends MixinBase {
+  // TODO: There needs to be some consistency in this message sending protocol.
+  //       Eg; always requiring JSON.
   handleTabMessage(message) {
     let incoming;
     const parts = message.split(',');
@@ -16,18 +18,14 @@ export default (MixinBase) => class extends MixinBase {
         break;
       case '/tab_info':
         incoming = JSON.parse(utils.rebuildArgsToSingleArg(parts));
-        this.currentTab().title = incoming.title
-        this.currentTab().url = incoming.url
-        this.sendState();
+        this._updateTabInfo(incoming);
         break;
       case '/dimensions':
         incoming = JSON.parse(message.slice(12));
-        this._mightResizeWindow(incoming);
-        this.dimensions = incoming;
+        this.dimensions.setCharValues(incoming.char);
         break;
       case '/status':
-        this.updateStatus(parts[1]);
-        this.sendState();
+        this.updateStatus(parts[1], parts[2]);
         break;
       case '/log':
         this.log(message.slice(5));
@@ -37,31 +35,9 @@ export default (MixinBase) => class extends MixinBase {
     }
   }
 
-  _mightResizeWindow(incoming) {
-    if (this.dimensions.char.width != incoming.char.width ||
-        this.dimensions.char.height != incoming.char.height) {
-      this.dimensions = incoming;
-      this.resizeBrowserWindow();
-    }
-  }
-
-  updateStatus(status, message = '') {
-    let status_message;
-    switch (status) {
-      case 'page_init':
-        status_message = `Loading ${this.currentTab().url}`;
-        break;
-      case 'parsing_complete':
-        status_message = '';
-        break;
-      case 'window_unload':
-        status_message = 'Loading...';
-        break;
-      default:
-        if (message != '') status_message = message;
-    }
-    this.state['page_state'] = status;
-    this.state['status_message'] = status_message;
-    this.sendState();
+  _updateTabInfo(incoming) {
+    this.title = incoming.title;
+    this.url = incoming.url;
+    this.sendStateToTerminal();
   }
 };

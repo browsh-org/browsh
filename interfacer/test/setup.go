@@ -1,9 +1,7 @@
 package test
 
 import (
-	"strings"
 	"time"
-	"strconv"
 	"net/http"
 	"unicode/utf8"
 
@@ -16,9 +14,8 @@ import (
 )
 
 var simScreen tcell.SimulationScreen
-var startupWait = 10
+var startupWait = 10 * time.Second
 var perTestTimeout = 2000 * time.Millisecond
-var browserFingerprint = " ← | x | "
 var rootDir = browsh.Shell("git rev-parse --show-toplevel")
 var testSiteURL = "http://localhost:" + browsh.TestServerPort
 var ti *terminfo.Terminfo
@@ -88,11 +85,18 @@ func WaitForText(text string, x, y int) {
 
 // WaitForPageLoad waits for the page to load
 func WaitForPageLoad() {
+	sleepUntilPageLoad(perTestTimeout)
+}
+
+func sleepUntilPageLoad(maxTime time.Duration) {
 	start := time.Now()
-	for time.Since(start) < perTestTimeout {
-		if browsh.CurrentTab.PageState == "parsing_complete" {
-			time.Sleep(100 * time.Millisecond)
-			return
+	time.Sleep(50 * time.Millisecond)
+	for time.Since(start) < maxTime {
+		if browsh.CurrentTab != nil {
+			if browsh.CurrentTab.PageState == "parsing_complete" {
+				time.Sleep(100 * time.Millisecond)
+				return
+			}
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
@@ -108,7 +112,7 @@ func GotoURL(url string) {
 	WaitForPageLoad()
 	// TODO: Looking for the URL isn't optimal because it could be the same URL
 	// as the previous test.
-	gomega.Expect(url).To(BeInFrameAt(9, 1))
+	gomega.Expect(url).To(BeInFrameAt(0, 1))
 }
 
 // BackspaceRemoveURL holds down the backspace key to delete the existing URL
@@ -168,7 +172,7 @@ func GetBgColour(x, y int) [3]int32 {
 }
 
 func startHTTPServer() {
-	// Use `NewServerMux()` so as not to conflict with browsh's websocket server
+	// Using `NewServeMux()` so as not to conflict with browsh's websocket server
 	serverMux := http.NewServeMux()
 	serverMux.Handle("/", http.FileServer(http.Dir(rootDir + "/interfacer/test/sites")))
 	http.ListenAndServe(":" + browsh.TestServerPort, serverMux)
@@ -177,24 +181,6 @@ func startHTTPServer() {
 func startBrowsh() {
 	simScreen = tcell.NewSimulationScreen("UTF-8")
 	browsh.Start(simScreen)
-}
-
-func waitForBrowsh() {
-	var count = 0
-	for {
-		if count > startupWait {
-			var message = "Couldn't find browsh " +
-				"startup signature within " +
-				strconv.Itoa(startupWait) +
-				" seconds"
-			panic(message)
-		}
-		time.Sleep(time.Second)
-		if (strings.Contains(GetFrame(), browserFingerprint)) {
-			break
-		}
-		count++
-	}
 }
 
 func runeCount(text string) int {
@@ -212,7 +198,7 @@ var _ = ginkgo.BeforeSuite(func() {
 	initTerm()
 	go startHTTPServer()
 	go startBrowsh()
-	waitForBrowsh()
+	sleepUntilPageLoad(startupWait)
 })
 
 var _	= ginkgo.AfterSuite(func() {

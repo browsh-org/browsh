@@ -168,7 +168,11 @@ func handleInputBoxInput(ev *tcell.EventKey) {
 		activeInputBox.cursorBackspace()
 	case tcell.KeyEnter:
 		if urlInputBox.isActive {
-			sendMessageToWebExtension("/url_bar," + activeInputBox.text)
+			if isNewEmptyTabActive() {
+				sendMessageToWebExtension("/new_tab," + activeInputBox.text)
+			} else {
+				sendMessageToWebExtension("/url_bar," + activeInputBox.text)
+			}
 			urlBarFocus(false)
 		}
 	case tcell.KeyRune:

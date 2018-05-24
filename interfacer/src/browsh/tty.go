@@ -3,7 +3,6 @@ package browsh
 import (
 	"fmt"
 	"os"
-	"unicode/utf8"
 	"encoding/json"
 
 	"github.com/gdamore/tcell"
@@ -54,9 +53,16 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 		quitBrowsh()
 	case tcell.KeyCtrlL:
 		urlBarFocusToggle()
+	case tcell.KeyCtrlT:
+		createNewEmptyTab()
+	case tcell.KeyCtrlW:
+		removeTab(CurrentTab.ID)
 	}
 	if (ev.Rune() == 'm' && ev.Modifiers() == 4) {
 		toggleMonochromeMode()
+	}
+	if (ev.Key() == 9 && ev.Modifiers() == 0) {
+		nextTab()
 	}
 	forwardKeyPress(ev)
 	if activeInputBox != nil {
@@ -135,7 +141,7 @@ func handleMouseEvent(ev *tcell.EventMouse) {
 func handleTTYResize() {
 	width, _ := screen.Size()
 	// TODO: How does this work with wide UTF8 chars?
-	urlInputBox.Width = width - utf8.RuneCountInString(urlBarControls)
+	urlInputBox.Width = width
 	screen.Sync()
 	sendTtySize()
 }

@@ -142,21 +142,21 @@ func Shell(command string) string {
 	return stripWhitespace(string(out))
 }
 
-// Start ... Start Browsh
+// Start starts Browsh
 func Start(injectedScreen tcell.Screen) {
 	var isTesting = fmt.Sprintf("%T", injectedScreen) == "*tcell.simscreen"
 	screen = injectedScreen
 	initialise(isTesting)
 	if !*isUseExistingFirefox {
 		if isTesting {
-			writeString(0, 0, "Starting Browsh in test mode...")
+			writeString(0, 0, "Starting Browsh in test mode...", tcell.StyleDefault)
 			go startWERFirefox()
 		} else {
-			writeString(0, 0, "Starting Browsh, the modern terminal web browser...")
+			writeString(0, 0, "Starting Browsh, the modern terminal web browser...", tcell.StyleDefault)
 			setupFirefox()
 		}
 	} else {
-		writeString(0, 0, "Waiting for a Firefox instance to connect...")
+		writeString(0, 0, "Waiting for a Firefox instance to connect...", tcell.StyleDefault)
 	}
 	Log("Starting Browsh CLI client")
 	go readStdin()

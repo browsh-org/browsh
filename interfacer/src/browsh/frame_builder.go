@@ -1,6 +1,7 @@
 package browsh
 
 import (
+	"fmt"
 	"encoding/json"
 	"unicode"
 
@@ -76,14 +77,16 @@ func parseJSONFrameText(jsonString string) {
 	if err := json.Unmarshal(jsonBytes, &incoming); err != nil {
 		Shutdown(err)
 	}
-	ensureTabExists(incoming.Meta.TabID)
+	if (!isTabPresent(incoming.Meta.TabID)) {
+		Log(fmt.Sprintf("Not building frame for non-existent tab ID: %d", incoming.Meta.TabID))
+		return
+	}
 	tabs[incoming.Meta.TabID].frame.buildFrameText(incoming)
 }
 
 func (f *frame) buildFrameText(incoming incomingFrameText) {
 	f.setup(incoming.Meta)
 	if (!f.isIncomingFrameTextValid(incoming)) { return }
-	CurrentTab = tabs[incoming.Meta.TabID]
 	f.updateInputBoxes(incoming)
 	f.populateFrameText(incoming)
 }
@@ -94,7 +97,10 @@ func parseJSONFramePixels(jsonString string) {
 	if err := json.Unmarshal(jsonBytes, &incoming); err != nil {
 		Shutdown(err)
 	}
-	ensureTabExists(incoming.Meta.TabID)
+	if (!isTabPresent(incoming.Meta.TabID)) {
+		Log(fmt.Sprintf("Not building frame for non-existent tab ID: %d", incoming.Meta.TabID))
+		return
+	}
 	if (len(tabs[incoming.Meta.TabID].frame.text) == 0) { return }
 	tabs[incoming.Meta.TabID].frame.buildFramePixels(incoming)
 }
@@ -102,7 +108,6 @@ func parseJSONFramePixels(jsonString string) {
 func (f *frame) buildFramePixels(incoming incomingFramePixels) {
 	f.setup(incoming.Meta)
 	if (!f.isIncomingFramePixelsValid(incoming)) { return }
-	CurrentTab = tabs[incoming.Meta.TabID]
 	f.populateFramePixels(incoming)
 }
 

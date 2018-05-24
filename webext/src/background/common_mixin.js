@@ -1,25 +1,20 @@
-import _ from 'lodash';
 import stripAnsi from 'strip-ansi';
 
 // Here we keep the public functions used to mediate communications between
 // the background process, tabs and the terminal.
 export default (MixinBase) => class extends MixinBase {
   sendToCurrentTab(message) {
-    this.currentTab().channel.postMessage(message);
+    if (this.currentTab().channel === undefined) {
+      this.log(`Attempting to send "${message}" to tab without a channel`);
+    } else {
+      this.currentTab().channel.postMessage(message);
+    }
   }
 
   sendToTerminal(message) {
     if (this.terminal.readyState === 1) {
       this.terminal.send(message);
     }
-  }
-
-  sendState() {
-    let state = _.mapValues(this.state, (v) => { return v.toString() });
-    state.id = this.currentTab().id;
-    state.title = this.currentTab().title;
-    state.uri = this.currentTab().url;
-    this.sendToTerminal(`/tab_state,${JSON.stringify(state)}`);
   }
 
   log(...messages) {

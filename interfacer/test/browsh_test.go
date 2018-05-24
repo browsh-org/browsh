@@ -19,12 +19,10 @@ var _ = Describe("Showing a basic webpage", func() {
   })
 
 	Describe("Browser UI", func() {
-		It("should have the page title, buttons and the current URL", func() {
+		It("should have the page title and current URL", func() {
 			Expect("Smörgåsbord").To(BeInFrameAt(0, 0))
-			Expect(" ← |").To(BeInFrameAt(0, 1))
-			Expect(" x |").To(BeInFrameAt(4, 1))
 			URL := testSiteURL + "/smorgasbord/"
-			Expect(URL).To(BeInFrameAt(9, 1))
+			Expect(URL).To(BeInFrameAt(0, 1))
 		})
 
 		Describe("Interaction", func() {
@@ -74,6 +72,34 @@ var _ = Describe("Showing a basic webpage", func() {
 					Keyboard("Reverse Me!")
 					SpecialKey(tcell.KeyEnter)
 					Expect("!eM▄esreveR").To(BeInFrameAt(12, 21))
+				})
+			})
+
+			Describe("Tabs", func() {
+				BeforeEach(func() {
+					SpecialKey(tcell.KeyCtrlT)
+				})
+
+				AfterEach(func() {
+					SpecialKey(tcell.KeyCtrlW)
+				})
+
+				It("should create a new tab", func() {
+					Expect("New Tab").To(BeInFrameAt(21, 0))
+				})
+
+				It("should be able to goto a new URL", func() {
+					Keyboard(testSiteURL + "/smorgasbord/another.html")
+					SpecialKey(tcell.KeyEnter)
+					Expect("Another").To(BeInFrameAt(21, 0))
+				})
+
+				It("should cycle to the next tab", func() {
+					Expect("                   ").To(BeInFrameAt(0, 1))
+					SpecialKey(tcell.KeyCtrlL)
+					simScreen.InjectKey(9, 0, tcell.ModNone)
+					URL := testSiteURL + "/smorgasbord/"
+					Expect(URL).To(BeInFrameAt(0, 1))
 				})
 			})
 		})
