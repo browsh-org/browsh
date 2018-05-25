@@ -81,7 +81,7 @@ func parseJSONFrameText(jsonString string) {
 		Log(fmt.Sprintf("Not building frame for non-existent tab ID: %d", incoming.Meta.TabID))
 		return
 	}
-	tabs[incoming.Meta.TabID].frame.buildFrameText(incoming)
+	Tabs[incoming.Meta.TabID].frame.buildFrameText(incoming)
 }
 
 func (f *frame) buildFrameText(incoming incomingFrameText) {
@@ -101,8 +101,8 @@ func parseJSONFramePixels(jsonString string) {
 		Log(fmt.Sprintf("Not building frame for non-existent tab ID: %d", incoming.Meta.TabID))
 		return
 	}
-	if (len(tabs[incoming.Meta.TabID].frame.text) == 0) { return }
-	tabs[incoming.Meta.TabID].frame.buildFramePixels(incoming)
+	if (len(Tabs[incoming.Meta.TabID].frame.text) == 0) { return }
+	Tabs[incoming.Meta.TabID].frame.buildFramePixels(incoming)
 }
 
 func (f *frame) buildFramePixels(incoming incomingFramePixels) {

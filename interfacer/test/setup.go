@@ -14,7 +14,7 @@ import (
 )
 
 var simScreen tcell.SimulationScreen
-var startupWait = 10 * time.Second
+var startupWait = 30 * time.Second
 var perTestTimeout = 2000 * time.Millisecond
 var rootDir = browsh.Shell("git rev-parse --show-toplevel")
 var testSiteURL = "http://localhost:" + browsh.TestServerPort
@@ -169,6 +169,12 @@ func GetBgColour(x, y int) [3]int32 {
 	_, bg, _ := cells[index].Style.Decompose()
 	r1, g1, b1 := bg.RGB()
 	return [3]int32{r1, g1, b1}
+}
+
+func ensureOnlyOneTab() {
+	if (len(browsh.Tabs) > 1) {
+		SpecialKey(tcell.KeyCtrlW)
+	}
 }
 
 func startHTTPServer() {

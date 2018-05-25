@@ -48,7 +48,7 @@ func renderTabs() {
 	xPosition := 0
 	tabTitleLength := 20
 	for _, tabID := range tabsOrder {
-		tab = tabs[tabID]
+		tab = Tabs[tabID]
 		tabTitle := []rune(tab.Title)
 		tabTitleContent := string(tabTitle[0:tabTitleLength])
 		style = tcell.StyleDefault

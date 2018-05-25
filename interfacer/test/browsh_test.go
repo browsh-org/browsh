@@ -81,7 +81,7 @@ var _ = Describe("Showing a basic webpage", func() {
 				})
 
 				AfterEach(func() {
-					SpecialKey(tcell.KeyCtrlW)
+					ensureOnlyOneTab()
 				})
 
 				It("should create a new tab", func() {
@@ -97,8 +97,9 @@ var _ = Describe("Showing a basic webpage", func() {
 				It("should cycle to the next tab", func() {
 					Expect("                   ").To(BeInFrameAt(0, 1))
 					SpecialKey(tcell.KeyCtrlL)
+					GotoURL(testSiteURL + "/smorgasbord/another.html")
 					simScreen.InjectKey(9, 0, tcell.ModNone)
-					URL := testSiteURL + "/smorgasbord/"
+					URL := testSiteURL + "/smorgasbord/             "
 					Expect(URL).To(BeInFrameAt(0, 1))
 				})
 			})

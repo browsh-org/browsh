@@ -16,19 +16,19 @@ func TestFrameBuilder(t *testing.T) {
 var testFrame *frame
 
 func testGetCell(index int) cell {
-	result, _ := tabs[1].frame.cells.load(index)
+	result, _ := Tabs[1].frame.cells.load(index)
 	return result
 }
 
 func testGetCellChar(index int) string {
-	result, _ := tabs[1].frame.cells.load(index)
+	result, _ := Tabs[1].frame.cells.load(index)
 	return string(result.character[0])
 }
 
 func debugCells() {
 	fmt.Printf("\n")
 	for i := 0; i < 20; i++ {
-		if result, ok := tabs[1].frame.cells.load(i); ok {
+		if result, ok := Tabs[1].frame.cells.load(i); ok {
 			fmt.Printf("%d:%s ", i, string(result.character[0]))
 		}
 	}
@@ -36,9 +36,7 @@ func debugCells() {
 
 var _ = Describe("Frame struct", func() {
 	BeforeEach(func() {
-		if (len(tabs) == 1) {
-			tabs[1].frame = frame{}
-		}
+		newTab(1)
 	})
 
 	Describe("No Offset", func() {

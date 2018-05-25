@@ -6,14 +6,14 @@ import (
 )
 
 // Map of all tab data
-var tabs = make(map[int]*tab)
+var Tabs = make(map[int]*tab)
+// CurrentTab is the currently active tab in the TTY browser
+var CurrentTab *tab
 // Slice of the order in which tabs appear in the tab bar
 var tabsOrder []int
 // There can be a race condition between the webext sending a tab state update and the
 // the tab being deleted, so we need to keep track of all deleted IDs
 var tabsDeleted []int
-// CurrentTab is the currently active tab in the TTY browser
-var CurrentTab *tab
 
 // A single tab synced from the browser
 type tab struct {
@@ -27,7 +27,7 @@ type tab struct {
 }
 
 func ensureTabExists(id int) {
-	if _, ok := tabs[id]; !ok {
+	if _, ok := Tabs[id]; !ok {
 		newTab(id)
 		if isNewEmptyTabActive() {
 			removeTab(-1)
@@ -36,13 +36,13 @@ func ensureTabExists(id int) {
 }
 
 func isTabPresent(id int) bool {
-	_, ok := tabs[id]
+	_, ok := Tabs[id]
 	return ok
 }
 
 func newTab(id int) {
 	tabsOrder = append(tabsOrder, id)
-	tabs[id] = &tab{
+	Tabs[id] = &tab{
 		ID: id,
 		frame: frame{
 			xScroll: 0,
@@ -52,12 +52,12 @@ func newTab(id int) {
 }
 
 func removeTab(id int) {
-	if (len(tabs) == 1) { quitBrowsh() }
+	if (len(Tabs) == 1) { quitBrowsh() }
 	tabsDeleted = append(tabsDeleted, id)
 	sendMessageToWebExtension(fmt.Sprintf("/remove_tab,%d", id))
 	nextTab()
 	removeTabIDfromTabsOrder(id)
-	delete(tabs, id)
+	delete(Tabs, id)
 	renderUI()
 	renderCurrentTabWindow()
 }
@@ -79,7 +79,7 @@ func removeTabIDfromTabsOrder(id int) {
 func createNewEmptyTab() {
 	if isNewEmptyTabActive() { return }
 	newTab(-1)
-	tab := tabs[-1]
+	tab := Tabs[-1]
 	tab.Title = "New Tab"
 	tab.URI = ""
 	tab.Active = true
@@ -103,7 +103,7 @@ func nextTab() {
 				i++
 			}
 			sendMessageToWebExtension(fmt.Sprintf("/switch_to_tab,%d", tabsOrder[i]))
-			CurrentTab = tabs[tabsOrder[i]]
+			CurrentTab = Tabs[tabsOrder[i]]
 			renderUI()
 			renderCurrentTabWindow()
 			break
@@ -131,9 +131,9 @@ func parseJSONTabState(jsonString string) {
 	}
 	ensureTabExists(incoming.ID)
 	if (incoming.Active && !isNewEmptyTabActive()) {
-		CurrentTab = tabs[incoming.ID]
+		CurrentTab = Tabs[incoming.ID]
 	}
-	tabs[incoming.ID].handleStateChange(&incoming)
+	Tabs[incoming.ID].handleStateChange(&incoming)
 }
 
 
