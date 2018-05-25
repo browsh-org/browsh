@@ -208,7 +208,7 @@ export default class extends utils.mixins(CommonMixin) {
         url = utils.rebuildArgsToSingleArg(parts);
         document.location.href = url;
         break;
-      case '/location_back':
+      case '/history_back':
         history.go(-1);
         break;
       case '/window_stop':
@@ -247,14 +247,23 @@ export default class extends utils.mixins(CommonMixin) {
     }
   }
 
+  // TODO: Dragndrop doesn't seem to work :/
   _handleMouse(input) {
     switch (input.button) {
-      case 1: // mousedown
-        this._mouseAction('click', input.mouse_x, input.mouse_y);
-        this._mouseAction('mousedown', input.mouse_x, input.mouse_y);
+      case 1:
+        this._mouseAction('mousemove', input.mouse_x, input.mouse_y);
+        if (!this._mousedown) {
+          this._mouseAction('mousedown', input.mouse_x, input.mouse_y);
+        }
+        this._mousedown = true;
         break;
-      case 0: //mouseup
-        this._mouseAction('mouseup', input.mouse_x, input.mouse_y);
+      case 0:
+        this._mouseAction('mousemove', input.mouse_x, input.mouse_y);
+        if (this._mousedown) {
+          this._mouseAction('click', input.mouse_x, input.mouse_y);
+          this._mouseAction('mouseup', input.mouse_x, input.mouse_y);
+        }
+        this._mousedown = false;
         break;
     }
   }

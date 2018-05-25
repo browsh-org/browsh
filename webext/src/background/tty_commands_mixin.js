@@ -59,7 +59,7 @@ export default (MixinBase) => class extends MixinBase {
 
   _handleURLBarInput(input) {
     const final_url = this._getURLfromUserInput(input);
-    this.sendToCurrentTab(`/url,${final_url}`);
+    this.gotoURL(final_url);
   }
 
   // TODO: move to CLI client
@@ -93,6 +93,20 @@ export default (MixinBase) => class extends MixinBase {
       },
       error => {
         this.log(`Error creating new tab: ${error}`);
+      }
+    );
+  }
+
+  gotoURL(url) {
+    let updating = browser.tabs.update(parseInt(this.currentTab().id), {
+      url: url
+    });
+    updating.then(
+      tab => {
+        this.log(`Tab ${tab.id} loaded: ${url}`);
+      },
+      error => {
+        this.log(`Error loading: ${url} \nError: ${error}`);
       }
     );
   }

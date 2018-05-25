@@ -57,6 +57,10 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 		createNewEmptyTab()
 	case tcell.KeyCtrlW:
 		removeTab(CurrentTab.ID)
+	case tcell.KeyBackspace, tcell.KeyBackspace2:
+		if activeInputBox == nil {
+			sendMessageToWebExtension("/tab_command,/history_back")
+		}
 	}
 	if (ev.Rune() == 'm' && ev.Modifiers() == 4) {
 		toggleMonochromeMode()
