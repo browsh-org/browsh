@@ -4,13 +4,12 @@ import (
 	"strings"
 	"fmt"
 	"net/http"
+	"encoding/json"
 
 	"github.com/gorilla/websocket"
 )
 
 var (
-	// TestServerPort is the port for the test web socket server
-	TestServerPort = "4444"
 	upgrader             = websocket.Upgrader{
 		CheckOrigin:     func(r *http.Request) bool { return true },
 		ReadBufferSize:  1024,
@@ -19,6 +18,19 @@ var (
 	stdinChannel   = make(chan string)
 	isConnectedToWebExtension = false
 )
+
+type incomingRawText struct {
+	RequestID string `json:"request_id"`
+	RawText string `json:"body"`
+}
+
+func startWebSocketServer() {
+	serverMux := http.NewServeMux()
+	serverMux.HandleFunc("/", webSocketServer)
+	if err := http.ListenAndServe(":" + *webSocketPort, serverMux); err != nil {
+		Shutdown(err)
+	}
+}
 
 func sendMessageToWebExtension(message string) {
 	if (!isConnectedToWebExtension) {
@@ -29,6 +41,7 @@ func sendMessageToWebExtension(message string) {
 }
 
 // Listen to all messages coming from the webextension
+// TODO: It seems this *also* receives sent to the webextention!?
 func webSocketReader(ws *websocket.Conn) {
 	defer ws.Close()
 	for {
@@ -48,6 +61,10 @@ func webSocketReader(ws *websocket.Conn) {
 func handleWebextensionCommand(message []byte) {
 	parts := strings.Split(string(message), ",")
 	command := parts[0]
+	if *IsHTTPServer {
+		handleRawFrameTextCommands(parts)
+		return
+	}
 	switch command {
 	case "/frame_text":
 		parseJSONFrameText(strings.Join(parts[1:], ","))
@@ -64,6 +81,25 @@ func handleWebextensionCommand(message []byte) {
 		saveScreenshot(parts[1])
 	default:
 		Log("WEBEXT: " + string(message))
+	}
+}
+
+func handleRawFrameTextCommands(parts []string) {
+	var incoming incomingRawText
+	command := parts[0]
+	if command == "/raw_text" {
+		jsonBytes := []byte(strings.Join(parts[1:], ","))
+		if err := json.Unmarshal(jsonBytes, &incoming); err != nil {
+			Shutdown(err)
+		}
+		if incoming.RequestID != "" {
+			Log("Raw text for " + incoming.RequestID)
+			rawTextRequests[incoming.RequestID] = incoming.RawText
+		} else {
+			Log("Raw text but no associated request ID")
+		}
+	} else {
+		Log("WEBEXT: " + strings.Join(parts[0:], ","))
 	}
 }
 
@@ -103,5 +139,9 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	isConnectedToWebExtension = true
 	go webSocketWriter(ws)
 	go webSocketReader(ws)
-	sendTtySize()
+	if *IsHTTPServer {
+		sendMessageToWebExtension("/raw_text_mode")
+	} else {
+		sendTtySize()
+	}
 }

@@ -8,6 +8,16 @@ export default class extends utils.mixins(CommonMixin) {
     super();
     this.tty = {};
     this.char = {};
+    // The Browsh HTTP Server service doesn't load a TTY, so we need to supply the size.
+    // Strictly it shouldn't even be needed if the code was completely refactored. Although
+    // it should be worth taking into consideration how the size of the TTY and therefore the
+    // resized browser window affects the rendering of a web page, for instance images outside
+    // of the viewport can sometimes not be loaded. So is it practical to set the TTY size to
+    // the size of the entire DOM?
+    this.raw_text_tty_size = {
+      width: 100,
+      height: 30
+    }
   }
 
   setCharValues(incoming) {

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strconv"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -22,8 +21,7 @@ import (
 )
 
 var (
-	logfile              string
-	webSocketAddresss    = flag.String("port", ":3334", "Web socket service address")
+	webSocketPort        = flag.String("websocket-port", "3334", "Web socket service address")
 	firefoxBinary        = flag.String("firefox", "firefox", "Path to Firefox executable")
 	isFFGui              = flag.Bool("with-gui", false, "Don't use headless Firefox")
 	isUseExistingFirefox = flag.Bool("use-existing-ff", false, "Whether Browsh should launch Firefox or not")
@@ -31,6 +29,13 @@ var (
 	isDebug              = flag.Bool("debug", false, "Log to ./debug.log")
 	startupURL           = flag.String("startup-url", "https://google.com", "URL to launch at startup")
 	timeLimit            = flag.Int("time-limit", 0, "Kill Browsh after the specified number of seconds")
+	// IsHTTPServer needs to be exported for use in tests
+	IsHTTPServer         = flag.Bool("http-server", false, "Run as an HTTP service")
+	// HTTPServerPort also needs to be exported for use in tests
+	HTTPServerPort       = flag.String("http-server-port", "4333", "HTTP server address")
+	// IsTesting is used in tests, so it needs to be exported
+	IsTesting            = false
+	logfile              string
 )
 
 func setupLogging() {
@@ -65,12 +70,10 @@ func Log(msg string) {
 	}
 }
 
-func initialise(isTesting bool) {
-	flag.Parse()
-	if isTesting {
+func initialise() {
+	if IsTesting {
 		*isDebug = true
 	}
-	setupTcell()
 	setupLogging()
 }
 
@@ -142,29 +145,16 @@ func Shell(command string) string {
 	return stripWhitespace(string(out))
 }
 
-// Start starts Browsh
-func Start(injectedScreen tcell.Screen) {
-	var isTesting = fmt.Sprintf("%T", injectedScreen) == "*tcell.simscreen"
+// TTYStart starts Browsh
+func TTYStart(injectedScreen tcell.Screen) {
 	screen = injectedScreen
-	initialise(isTesting)
-	if !*isUseExistingFirefox {
-		if isTesting {
-			writeString(0, 0, "Starting Browsh in test mode...", tcell.StyleDefault)
-			go startWERFirefox()
-		} else {
-			writeString(0, 0, "Starting Browsh, the modern terminal web browser...", tcell.StyleDefault)
-			setupFirefox()
-		}
-	} else {
-		writeString(0, 0, "Waiting for a Firefox instance to connect...", tcell.StyleDefault)
-	}
+	initialise()
+	setupTcell()
+	writeString(0, 0, "Starting Browsh, the modern terminal web browser.", tcell.StyleDefault)
+	startFirefox()
 	Log("Starting Browsh CLI client")
 	go readStdin()
-	http.HandleFunc("/", webSocketServer)
-	if err := http.ListenAndServe(*webSocketAddresss, nil); err != nil {
-		Shutdown(err)
-	}
-	Log("Exiting at end of main()")
+	startWebSocketServer()
 }
 
 func toInt(char string) int {
@@ -183,16 +173,24 @@ func toInt32(char string) int32 {
 	return int32(i)
 }
 
-// TtyStart ... Main entrypoint.
-func TtyStart() {
+func ttyEntry() {
 	// Hack to force true colours
 	// Follow: https://github.com/gdamore/tcell/pull/183
 	os.Setenv("TERM", "xterm-truecolor")
-
 	realScreen, err := tcell.NewScreen()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
-	Start(realScreen)
+	TTYStart(realScreen)
+}
+
+// MainEntry decides between running Browsh as a CLI app or as an HTTP web server
+func MainEntry() {
+	flag.Parse()
+	if (*IsHTTPServer) {
+		HTTPServerStart()
+	} else {
+		ttyEntry()
+	}
 }

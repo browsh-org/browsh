@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gdamore/tcell"
 	"github.com/go-errors/errors"
 )
 
@@ -225,6 +226,20 @@ func setupFirefox() {
 	setDefaultPreferences()
 	installWebextension()
 	go loadHomePage()
+}
+
+func startFirefox() {
+	if !*isUseExistingFirefox {
+		writeString(0, 1, "Waiting for Firefox to connect...", tcell.StyleDefault)
+		if IsTesting {
+			writeString(0, 2, "TEST MODE", tcell.StyleDefault)
+			go startWERFirefox()
+		} else {
+			setupFirefox()
+		}
+	} else {
+		writeString(0, 1, "Waiting for a user-initiated Firefox instance to connect...", tcell.StyleDefault)
+	}
 }
 
 func quitFirefox() {

@@ -30,6 +30,10 @@ export default (MixinBase) => class extends MixinBase {
       case '/log':
         this.log(message.slice(5));
         break;
+      case '/raw_text':
+        incoming = JSON.parse(utils.rebuildArgsToSingleArg(parts));
+        this._rawTextRequest(incoming);
+        break;
       default:
         this.log('Unknown command from tab to background', message);
     }
@@ -39,5 +43,11 @@ export default (MixinBase) => class extends MixinBase {
     this.title = incoming.title;
     this.url = incoming.url;
     this.sendStateToTerminal();
+  }
+
+  _rawTextRequest(incoming) {
+    incoming.request_id = this.request_id;
+    this.sendToTerminal(`/raw_text,${JSON.stringify(incoming)}`);
+    if (this.id !== 1) { this.remove() }
   }
 };

@@ -1,4 +1,4 @@
-if: tag IS blank # Don't trigger builds if
+if: tag IS blank
 language: go
 go:
   - 1.9.x
@@ -35,9 +35,11 @@ install:
 script:
   - cd $REPO_ROOT/webext && npm test
   - cd $REPO_ROOT/interfacer && go test src/browsh/*.go -v
-  - cd $REPO_ROOT/interfacer && go test test/*.go -v
+  - cd $REPO_ROOT/interfacer && go test test/tty/*.go -v
+  - cd $REPO_ROOT/interfacer && go test test/http-server/*.go -v
 after_failure:
-  - cat $REPO_ROOT/interfacer/test/debug.log
+  - cat $REPO_ROOT/interfacer/test/tty/debug.log
+  - cat $REPO_ROOT/interfacer/test/http-server/debug.log
 after_success:
   - $REPO_ROOT/contrib/release_if_new_version.sh
 

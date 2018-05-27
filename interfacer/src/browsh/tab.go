@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-// Map of all tab data
+// Tabs is a map of all tab data
 var Tabs = make(map[int]*tab)
 // CurrentTab is the currently active tab in the TTY browser
 var CurrentTab *tab

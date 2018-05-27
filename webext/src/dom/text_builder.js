@@ -26,6 +26,11 @@ export default class extends utils.mixins(CommonMixin) {
     this._sendFrame();
   }
 
+  sendRawText() {
+    this.buildFormattedText();
+    this._sendRawText();
+  }
+
   buildFormattedText() {
     this._updateState();
     this.graphics_builder.getScreenshotWithText();
@@ -380,6 +385,13 @@ export default class extends utils.mixins(CommonMixin) {
     }
   }
 
+  _sendRawText() {
+    let payload = {
+      body: this._serialiseRawText()
+    }
+    this.sendMessage(`/raw_text,${JSON.stringify(payload)}`);
+  }
+
   _sendFrame() {
     this._serialiseFrame();
     if (this.frame.text.length > 0) {
@@ -412,6 +424,28 @@ export default class extends utils.mixins(CommonMixin) {
         }
       }
     }
+  }
+
+  _serialiseRawText() {
+    let cell, index;
+    let raw_text = "";
+    const top = this.dimensions.frame.sub.top / 2;
+    const left = this.dimensions.frame.sub.left;
+    const bottom = top + (this.dimensions.frame.sub.height / 2);
+    const right = left + this.dimensions.frame.sub.width;
+    for (let y = top; y < bottom; y++) {
+      for (let x = left; x < right; x++) {
+        index = (y * this.dimensions.frame.width) + x;
+        cell = this.tty_grid.cells[index];
+        if (cell) {
+          raw_text += cell.rune;
+        } else {
+          raw_text += " ";
+        }
+      }
+      raw_text += "\n";
+    }
+    return raw_text;
   }
 
   _setupFrameMeta() {

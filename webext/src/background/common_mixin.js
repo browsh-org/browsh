@@ -18,6 +18,9 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   log(...messages) {
+    if (messages === undefined) {
+      messages = "undefined";
+    }
     if (messages.length === 1) {
       messages = messages[0].toString();
       messages = stripAnsi(messages);

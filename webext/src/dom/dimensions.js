@@ -48,6 +48,9 @@ export default class extends utils.mixins(CommonMixin) {
     if (size === 'big' || size === 'all') {
       this._calculateBigSubFrame();
     }
+    if (size === 'raw_text') {
+      this._calculateEntireDOMFrames();
+    }
     // Only the height needs to be even because of the UTF8 half-block trick. A single
     // TTY cell always contains exactly 2 pseudo pixels.
     this.frame.sub.height = utils.ensureEven(this.frame.sub.height);
@@ -89,6 +92,23 @@ export default class extends utils.mixins(CommonMixin) {
     }
     this._limitSubFrameDimensions();
     this._scaleSubFrameToSubDOM();
+  }
+
+  // The raw text frames requested through the Browsh HTTP server need to be built from the
+  // entire DOM, not just a small window onto the DOM.
+  _calculateEntireDOMFrames() {
+    this.dom.sub = {
+      left: 0,
+      top: 0,
+      width: this.dom.width,
+      height: this.dom.height,
+    }
+    this.frame.sub = {
+      left: 0,
+      top: 0,
+      width: this.dom.sub.width * this.scale_factor.width,
+      height: this.dom.sub.height * this.scale_factor.height
+    }
   }
 
   _limitSubFrameDimensions() {

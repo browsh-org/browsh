@@ -36,7 +36,7 @@ var _ = Describe("Showing a basic webpage", func() {
 
 			It("should navigate to a new page by clicking a link", func() {
 				Expect("Another▄page").To(BeInFrameAt(12, 19))
-				simScreen.InjectMouse(12, 19, tcell.Button1, tcell.ModNone)
+				mouseClick(12, 19)
 				Expect("Another").To(BeInFrameAt(0, 0))
 			})
 

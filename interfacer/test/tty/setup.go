@@ -13,11 +13,12 @@ import (
 	"browsh/interfacer/src/browsh"
 )
 
+var staticFileServerPort = "4444"
 var simScreen tcell.SimulationScreen
 var startupWait = 30 * time.Second
 var perTestTimeout = 2000 * time.Millisecond
 var rootDir = browsh.Shell("git rev-parse --show-toplevel")
-var testSiteURL = "http://localhost:" + browsh.TestServerPort
+var testSiteURL = "http://localhost:" + staticFileServerPort
 var ti *terminfo.Terminfo
 
 func initTerm() {
@@ -28,7 +29,7 @@ func initTerm() {
 	ti, _ = terminfo.LookupTerminfo("xterm-truecolor")
 }
 
-// GetFrame ... Returns the current Browsh frame's text
+// GetFrame returns the current Browsh frame's text
 func GetFrame() string {
 	var frame, log string
 	var line = 0
@@ -125,6 +126,11 @@ func BackspaceRemoveURL() {
 	}
 }
 
+func mouseClick(x, y int) {
+	simScreen.InjectMouse(x, y, 1, tcell.ModNone)
+	simScreen.InjectMouse(x, y, 0, tcell.ModNone)
+}
+
 func elementColourForTTY(element tcell.SimCell) string {
 	var fg, bg tcell.Color
 	fg, bg, _ = element.Style.Decompose()
@@ -177,16 +183,16 @@ func ensureOnlyOneTab() {
 	}
 }
 
-func startHTTPServer() {
-	// Using `NewServeMux()` so as not to conflict with browsh's websocket server
+func startStaticFileServer() {
 	serverMux := http.NewServeMux()
 	serverMux.Handle("/", http.FileServer(http.Dir(rootDir + "/interfacer/test/sites")))
-	http.ListenAndServe(":" + browsh.TestServerPort, serverMux)
+	http.ListenAndServe(":" + staticFileServerPort, serverMux)
 }
 
 func startBrowsh() {
+	browsh.IsTesting = true
 	simScreen = tcell.NewSimulationScreen("UTF-8")
-	browsh.Start(simScreen)
+	browsh.TTYStart(simScreen)
 }
 
 func runeCount(text string) int {
@@ -202,7 +208,7 @@ var _ =	ginkgo.BeforeEach(func() {
 
 var _ = ginkgo.BeforeSuite(func() {
 	initTerm()
-	go startHTTPServer()
+	go startStaticFileServer()
 	go startBrowsh()
 	sleepUntilPageLoad(startupWait)
 })

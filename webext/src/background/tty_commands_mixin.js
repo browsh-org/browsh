@@ -10,14 +10,7 @@ export default (MixinBase) => class extends MixinBase {
         this.sendToCurrentTab(message.slice(13));
         break;
       case '/tty_size':
-        this.dimensions.tty.width = parseInt(parts[1]);
-        this.dimensions.tty.height = parseInt(parts[2]);
-        if (this.currentTab()) {
-          this.sendToCurrentTab(
-            `/tty_size,${this.dimensions.tty.width},${this.dimensions.tty.height}`
-          )
-        }
-        this.dimensions.resizeBrowserWindow();
+        this._updateTTYSize(parts[1], parts[2]);
         break;
       case '/stdin':
         this._handleUICommand(parts);
@@ -35,7 +28,28 @@ export default (MixinBase) => class extends MixinBase {
       case '/remove_tab':
         this.removeTab(parts.slice(1).join(','));
         break;
+      case '/raw_text_mode':
+        this._is_raw_text_mode = true;
+        this._updateTTYSize(
+          this.dimensions.raw_text_tty_size.width,
+          this.dimensions.raw_text_tty_size.height
+        );
+        break;
+      case '/raw_text_request':
+        this._rawTextRequest(parts[1], parts.slice(2).join(','));
+        break;
     }
+  }
+
+  _updateTTYSize(width, height) {
+    this.dimensions.tty.width = parseInt(width);
+    this.dimensions.tty.height = parseInt(height);
+    if (this.currentTab()) {
+      this.sendToCurrentTab(
+        `/tty_size,${this.dimensions.tty.width},${this.dimensions.tty.height}`
+      )
+    }
+    this.dimensions.resizeBrowserWindow();
   }
 
   _handleUICommand(parts) {
@@ -82,13 +96,14 @@ export default (MixinBase) => class extends MixinBase {
     return url;
   }
 
-  createNewTab(url) {
+  createNewTab(url, callback) {
     const final_url = this._getURLfromUserInput(url);
     let creating = browser.tabs.create({
       url: final_url
     });
     creating.then(
       tab => {
+        if (callback) { callback(tab) }
         this.log(`New tab created: ${tab}`);
       },
       error => {
@@ -126,16 +141,8 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   removeTab(id) {
+    this.tabs[id].remove();
     this.tabs[id] = null;
-    let removing = browser.tabs.remove(parseInt(id));
-    removing.then(
-      () => {
-        this.log(`Removed tab: ${id}`);
-      },
-      error => {
-        this.log(`Error removing tab: ${error}`);
-      }
-    );
   }
 
   // We use the `browser` object here rather than going into the actual content script
@@ -148,6 +155,15 @@ export default (MixinBase) => class extends MixinBase {
   _saveScreenshot(imageUri) {
     const data = imageUri.replace(/^data:image\/\w+;base64,/, "");
     this.sendToTerminal('/screenshot,' + data);
+  }
+
+  _rawTextRequest(request_id, url) {
+    this.createNewTab(url, tab => {
+      this._acknowledgeNewTab({
+        id: tab.id,
+        request_id: request_id
+      })
+    });
   }
 }
 

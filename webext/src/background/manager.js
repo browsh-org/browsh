@@ -23,6 +23,9 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     this._is_connected_to_browser_dom = false;
     // The time in milliseconds between requesting a new TTY-size pixel frame
     this._small_pixel_frame_rate = 250;
+    // Raw text mode is for when Browsh is running as an HTTP server that serves single
+    // pages as entire DOMs, in plain text.
+    this._is_raw_text_mode = false;
     // The manager is the hub between tabs and the terminal. First we connect to the
     // terminal, as that is the process that would have initially booted the browser and
     // this very code that now runs.
@@ -83,7 +86,9 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   _reconnectToDOM() {
     this.log("Attempting to resend browser state to terminal...");
     this.currentTab().sendStateToTerminal();
-    this.sendToCurrentTab('/rebuild_text');
+    if (!this._is_raw_text_mode) {
+      this.sendToCurrentTab('/rebuild_text');
+    }
   }
 
   // For when a tab's content script, triggered by `onDOMContentLoaded`,
@@ -100,6 +105,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   // There's what seems to be a bug: tabs can exist and be processed without
   // triggering any `browser.tabs.onUpdated` events. Therefore we need to
   // manually poll :/
+  // TODO: Detect deleted tabs to remove the key from `this.tabs[]`
   _listenForTabUpdates() {
     setInterval(() => {
       this._pollAllTabs((native_tab_object) => {
@@ -142,7 +148,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
 
   _applyUpdates(tabish_object) {
     let tab = this._maybeNewTab({id: tabish_object.id});
-    ['id', 'title', 'url', 'active'].map(key => {
+    ['id', 'title', 'url', 'active', 'request_id'].map(key => {
       if (tabish_object.hasOwnProperty(key)){
         tab[key] = tabish_object[key]
       }
@@ -162,6 +168,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     this.log(`Tab ${channel.name} connected for communication with background process`);
     let tab = this.tabs[parseInt(channel.name)];
     tab.postConnectionInit(channel);
+    tab.setMode(this._is_raw_text_mode);
     this._is_connected_to_browser_dom = true;
   }
 
@@ -225,6 +232,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   }
 
   _isAbleToRequestFrame() {
+    if (this._is_raw_text_mode) { return false }
     if (!this.dimensions.tty.width || !this.dimensions.tty.height) {
       this.log("Not sending frame to TTY without TTY size")
       return false;

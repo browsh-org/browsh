@@ -30,12 +30,18 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
 
   reload() {
     const reloading = browser.tabs.reload(this.id);
-    reloading.then(() => {}, error => this.log(error));
+    reloading.then(
+      tab => this.log(`Tab ${tab.id} reloaded.`),
+      error => this.log(error)
+    );
   }
 
   remove() {
     const removing = browser.tabs.remove(this.id);
-    removing.then(() => {}, (error) => this.log(error));
+    removing.then(
+      () => this.log(`Tab ${this.id} removed.`),
+      error => this.log(error)
+    );
   }
 
   updateStatus(status, message = '') {
@@ -95,6 +101,28 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
       );
       this.reload();
       this._reload_count++;
+    }
+  }
+
+  setMode(is_raw_text_mode) {
+    if (is_raw_text_mode) {
+      this.channel.postMessage('/mode,raw_text');
+      this._requestRawText();
+    } else {
+      this.channel.postMessage('/mode,interactive');
+    }
+  }
+
+  // If Browsh is setup in HTTP-server mode then this is the moment that we ask the tab to
+  // render the entire DOM as plain text. We must only do this for tabs subsequent to the
+  // initial tab that loads at boot time (there must always remain a single tab to keep the
+  // browser running).
+  _requestRawText() {
+    // The assumption is that Tab ID 1 is always the first tab. However, I have a vague
+    // memory of seeing the "Firefox Privacy Notice" tab load before the CLI argument requested
+    // URL. So, maybe ID 1 isn't 100% reliable.
+    if (this.id !== 1) {
+      this.channel.postMessage('/request_raw_text');
     }
   }
 
