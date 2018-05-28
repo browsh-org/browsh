@@ -67,6 +67,23 @@ var _ = Describe("Showing a basic webpage", func() {
 					Expect("|1|2|").To(BeInFrameAt(12, 17))
 				})
 
+				It("should scroll single line boxes on overflow", func() {
+					Keyboard("12345678901234567890")
+					Expect("45678901234567890").To(BeInFrameAt(12, 17))
+				})
+
+				It("should scroll overflowed boxes to the left and right", func() {
+					Keyboard("12345678901234567890")
+					for i := 0; i < 19; i++ {
+						SpecialKey(tcell.KeyLeft)
+					}
+					Expect("23456789012345678").To(BeInFrameAt(12, 17))
+					for i := 0; i < 19; i++ {
+						SpecialKey(tcell.KeyRight)
+					}
+					Expect("45678901234567890").To(BeInFrameAt(12, 17))
+				})
+
 				It("should submit text into an input box", func() {
 					Expect("Unsubmitted").To(BeInFrameAt(12, 21))
 					Keyboard("Reverse Me!")

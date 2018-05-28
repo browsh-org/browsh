@@ -27,8 +27,9 @@ func setupTcell() {
 }
 
 func sendTtySize() {
-	x, y := screen.Size()
-	sendMessageToWebExtension(fmt.Sprintf("/tty_size,%d,%d", x, y))
+	width, height := screen.Size()
+	urlInputBox.Width = width
+	sendMessageToWebExtension(fmt.Sprintf("/tty_size,%d,%d", width, height))
 }
 
 // This is basically a proxy that listens to STDIN and forwards all relevant input
@@ -144,7 +145,6 @@ func handleMouseEvent(ev *tcell.EventMouse) {
 
 func handleTTYResize() {
 	width, _ := screen.Size()
-	// TODO: How does this work with wide UTF8 chars?
 	urlInputBox.Width = width
 	screen.Sync()
 	sendTtySize()

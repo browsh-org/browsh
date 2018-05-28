@@ -94,6 +94,7 @@ func urlBarFocus(on bool) {
 	} else {
 		activeInputBox = &urlInputBox
 		urlInputBox.isActive = true
+		urlInputBox.xScroll = 0
 		urlInputBox.text = CurrentTab.URI
 		urlInputBox.putCursorAtEnd()
 	}

@@ -373,6 +373,8 @@ export default class extends utils.mixins(CommonMixin) {
         y: utils.snap(dom_rect.top * this.dimensions.scale_factor.height),
         width: utils.snap(dom_rect.width * this.dimensions.scale_factor.width),
         height: utils.snap(dom_rect.height * this.dimensions.scale_factor.height),
+        tag_name: i.name,
+        type: i.getAttribute('type'),
         colour: [font_rgb[0], font_rgb[1], font_rgb[2]]
       };
     });

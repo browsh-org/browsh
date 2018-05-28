@@ -160,6 +160,8 @@ func (f *frame) updateInputBoxes(incoming incomingFrameText) {
 		inputBox.Width = incomingInputBox.Width
 		inputBox.Height = incomingInputBox.Height / 2
 		inputBox.FgColour = incomingInputBox.FgColour
+		inputBox.TagName = incomingInputBox.TagName
+		inputBox.Type = incomingInputBox.Type
 	}
 }
 
@@ -296,12 +298,14 @@ func (f *frame) limitScroll(height int) {
 func (f *frame) maybeFocusInputBox(x, y int) {
 	activeInputBox = nil
 	for _, inputBox := range f.inputBoxes {
+		inputBox.isActive = false
 		top := inputBox.Y
 		bottom := inputBox.Y + inputBox.Height
 		left := inputBox.X
 		right := inputBox.X + inputBox.Width
 		if x >= left && x < right && y >= top && y < bottom {
 			urlBarFocus(false)
+			inputBox.isActive = true
 			activeInputBox = inputBox
 		}
 	}
