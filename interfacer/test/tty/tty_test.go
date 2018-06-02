@@ -51,44 +51,72 @@ var _ = Describe("Showing a basic webpage", func() {
 			})
 
 			Describe("Text Input", func() {
-				BeforeEach(func() {
-					SpecialKey(tcell.KeyDown)
-					SpecialKey(tcell.KeyDown)
-					simScreen.InjectMouse(12, 17, tcell.Button1, tcell.ModNone)
-				})
+				Describe("Single line", func() {
+					BeforeEach(func() {
+						SpecialKey(tcell.KeyDown)
+						SpecialKey(tcell.KeyDown)
+						simScreen.InjectMouse(12, 17, tcell.Button1, tcell.ModNone)
+					})
 
-				It("should have basic cursor movement", func() {
-					Keyboard("|||")
-					SpecialKey(tcell.KeyLeft)
-					Keyboard("2")
-					SpecialKey(tcell.KeyLeft)
-					SpecialKey(tcell.KeyLeft)
-					Keyboard("1")
-					Expect("|1|2|").To(BeInFrameAt(12, 17))
-				})
-
-				It("should scroll single line boxes on overflow", func() {
-					Keyboard("12345678901234567890")
-					Expect("45678901234567890").To(BeInFrameAt(12, 17))
-				})
-
-				It("should scroll overflowed boxes to the left and right", func() {
-					Keyboard("12345678901234567890")
-					for i := 0; i < 19; i++ {
+					It("should have basic cursor movement", func() {
+						Keyboard("|||")
 						SpecialKey(tcell.KeyLeft)
-					}
-					Expect("23456789012345678").To(BeInFrameAt(12, 17))
-					for i := 0; i < 19; i++ {
-						SpecialKey(tcell.KeyRight)
-					}
-					Expect("45678901234567890").To(BeInFrameAt(12, 17))
+						Keyboard("2")
+						SpecialKey(tcell.KeyLeft)
+						SpecialKey(tcell.KeyLeft)
+						Keyboard("1")
+						Expect("|1|2|").To(BeInFrameAt(12, 17))
+					})
+
+					It("should scroll single line boxes on overflow", func() {
+						Keyboard("12345678901234567890")
+						Expect("45678901234567890").To(BeInFrameAt(12, 17))
+					})
+
+					It("should scroll overflowed boxes to the left and right", func() {
+						Keyboard("12345678901234567890")
+						for i := 0; i < 19; i++ {
+							SpecialKey(tcell.KeyLeft)
+						}
+						Expect("23456789012345678").To(BeInFrameAt(12, 17))
+						for i := 0; i < 19; i++ {
+							SpecialKey(tcell.KeyRight)
+						}
+						Expect("45678901234567890").To(BeInFrameAt(12, 17))
+					})
+
+					It("should submit text into an input box", func() {
+						Expect("Unsubmitted").To(BeInFrameAt(12, 21))
+						Keyboard("Reverse Me!")
+						SpecialKey(tcell.KeyEnter)
+						Expect("!eM▄esreveR").To(BeInFrameAt(12, 21))
+					})
 				})
 
-				It("should submit text into an input box", func() {
-					Expect("Unsubmitted").To(BeInFrameAt(12, 21))
-					Keyboard("Reverse Me!")
-					SpecialKey(tcell.KeyEnter)
-					Expect("!eM▄esreveR").To(BeInFrameAt(12, 21))
+				Describe("Multi line", func() {
+					BeforeEach(func() {
+						GotoURL(testSiteURL + "/smorgasbord/textarea.html")
+						mouseClick(2, 3)
+					})
+
+					It("should enter multiple lines of text", func() {
+						Keyboard(`So here is a lot of text that will hopefully split across lines`)
+						Expect("So here is a lot of").To(BeInFrameAt(1, 3))
+						Expect("text that will").To(BeInFrameAt(1, 4))
+						Expect("hopefully split across").To(BeInFrameAt(1, 5))
+						Expect("lines").To(BeInFrameAt(1, 6))
+					})
+
+					It("should scroll multiple lines of text", func() {
+						Keyboard(`So here is a lot of text that will hopefully split across lines`)
+						SpecialKey(tcell.KeyEnter)
+						Keyboard(`And here is even more filler, it's endless!`)
+						Expect("filler, it's endless!").To(BeInFrameAt(1, 7))
+						for i := 1; i <= 6; i++ {
+							SpecialKey(tcell.KeyUp)
+						}
+						Expect("lines").To(BeInFrameAt(1, 6))
+					})
 				})
 			})
 

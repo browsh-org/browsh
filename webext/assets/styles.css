@@ -22,3 +22,9 @@ b, em, strong {
 sup, sub {
   vertical-align: baseline !important;
 }
+
+/* Prevents duplicated text caused by the rendering of the DOM's input box content
+ * and the CLI app's input box content */
+input, textarea {
+  color: transparent !important;
+}

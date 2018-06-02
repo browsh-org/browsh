@@ -182,7 +182,7 @@ func renderCurrentTabWindow() {
 			screen.SetCell(x, y + uiHeight, styling, runeChars[0])
 		}
 	}
-	if activeInputBox != nil { activeInputBox.setCursor() }
+	if activeInputBox != nil { activeInputBox.renderCursor() }
 	screen.Show()
 }
 

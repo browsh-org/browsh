@@ -149,9 +149,7 @@ func (f *frame) updateInputBoxes(incoming incomingFrameText) {
 	}
 	for _, incomingInputBox := range incoming.InputBoxes {
 		if _, ok := f.inputBoxes[incomingInputBox.ID]; !ok {
-			f.inputBoxes[incomingInputBox.ID] = &inputBox{
-				ID: incomingInputBox.ID,
-			}
+			f.inputBoxes[incomingInputBox.ID] = newInputBox(incomingInputBox.ID)
 		}
 		inputBox := f.inputBoxes[incomingInputBox.ID]
 		inputBox.X = incomingInputBox.X

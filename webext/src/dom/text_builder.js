@@ -365,15 +365,18 @@ export default class extends utils.mixins(CommonMixin) {
     raw_input_boxes.forEach((i) => {
       this._ensureBrowshID(i);
       dom_rect = this._convertDOMRectToAbsoluteCoords(i.getBoundingClientRect());
+      const width = utils.snap(dom_rect.width * this.dimensions.scale_factor.width);
+      const height = utils.snap(dom_rect.height * this.dimensions.scale_factor.height);
+      if (width == 0 || height == 0) { return }
       styles = window.getComputedStyle(i);
       font_rgb = styles['color'].replace(/[^\d,]/g, '').split(',').map((i) => parseInt(i));
       parsed_input_boxes[i.getAttribute('data-browsh-id')] = {
         id: i.getAttribute('data-browsh-id'),
         x: utils.snap(dom_rect.left * this.dimensions.scale_factor.width),
         y: utils.snap(dom_rect.top * this.dimensions.scale_factor.height),
-        width: utils.snap(dom_rect.width * this.dimensions.scale_factor.width),
-        height: utils.snap(dom_rect.height * this.dimensions.scale_factor.height),
-        tag_name: i.name,
+        width: width,
+        height: height,
+        tag_name: i.nodeName,
         type: i.getAttribute('type'),
         colour: [font_rgb[0], font_rgb[1], font_rgb[2]]
       };
