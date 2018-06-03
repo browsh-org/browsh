@@ -24,7 +24,8 @@
   ],
 
   "web_accessible_resources": [
-    "assets/BlockCharMono.ttf"
+    "assets/BlockCharMono.ttf",
+    "assets/BlankMono.ttf"
   ],
 
   "permissions": [

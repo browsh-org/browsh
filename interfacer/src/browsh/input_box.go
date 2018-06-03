@@ -70,10 +70,13 @@ func (i *inputBox) setCells() {
 	x := i.X
 	y := i.Y
 	lineCount := 0
-	for _, c := range i.textToDisplay() {
+	for index, c := range i.textToDisplay() {
 		if i.isMultiLine() && lineCount < i.yScroll {
 			if isLineBreak(string(c)) { lineCount++ }
 			continue
+		}
+		if i.Type == "password" && index != utf8.RuneCountInString(i.text) {
+			c = '●'
 		}
 		i.addCharacterToFrame(x, y, c)
 		x++

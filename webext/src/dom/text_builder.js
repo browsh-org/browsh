@@ -360,6 +360,7 @@ export default class extends utils.mixins(CommonMixin) {
       'input[type="text"], ' +
       'input[type="email"], ' +
       'input[type="password"], ' +
+      'input[type="tel"], ' +
       'textarea'
     );
     raw_input_boxes.forEach((i) => {

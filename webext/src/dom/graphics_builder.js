@@ -116,25 +116,13 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   _hideText() {
-    this._styles = document.createElement("style");
-    document.head.appendChild(this._styles);
-    this._styles.sheet.insertRule(
-      'html * {' +
-      '  color: transparent !important;' +
-      // Note the disabling of transition effects here. Some websites have a fancy fade
-      // animation when changing colours, which we don't have time for in taking a screenshot.
-      // However, a drawback here is that, when we remove this style the transition actually
-      // kicks in - not that the terminal sees it because, by the nature of this style change
-      // here, we only ever capture the screen when text is invisible. However, I wonder if
-      // triggering color transitions for every frame might add some unnecessary load? What
-      // about permanently disabling color transitions in the global stylesheet?
-      '  transition: color 0s !important;' +
-      '}'
-    );
+    document.body.classList.remove('browsh-show-text');
+    document.body.classList.add('browsh-hide-text');
   }
 
   _showText() {
-    this._styles.parentNode.removeChild(this._styles);
+    document.body.classList.remove('browsh-hide-text');
+    document.body.classList.add('browsh-show-text');
   }
 
   _getScreenshot() {
