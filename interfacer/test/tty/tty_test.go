@@ -28,7 +28,6 @@ var _ = Describe("Showing a basic webpage", func() {
 		Describe("Interaction", func() {
 			It("should navigate to a new page by using the URL bar", func() {
 				SpecialKey(tcell.KeyCtrlL)
-				BackspaceRemoveURL()
 				Keyboard(testSiteURL + "/smorgasbord/another.html")
 				SpecialKey(tcell.KeyEnter)
 				Expect("Another").To(BeInFrameAt(0, 0))

@@ -91,12 +91,14 @@ func urlBarFocus(on bool) {
 	if !on {
 		activeInputBox = nil
 		urlInputBox.isActive = false
+		urlInputBox.selectionOff()
 	} else {
 		activeInputBox = &urlInputBox
 		urlInputBox.isActive = true
 		urlInputBox.xScroll = 0
 		urlInputBox.text = CurrentTab.URI
 		urlInputBox.putCursorAtEnd()
+		urlInputBox.selectAll()
 	}
 }
 
@@ -105,3 +107,8 @@ func overlayPageStatusMessage() {
 	writeString(0, height - 1, CurrentTab.StatusMessage, tcell.StyleDefault)
 }
 
+func reverseCellColour(x, y int) {
+	mainRune, combiningRunes, style, _ := screen.GetContent(x, y)
+	style = style.Reverse(true)
+	screen.SetContent(x, y, mainRune, combiningRunes, style)
+}

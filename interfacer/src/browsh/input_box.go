@@ -35,6 +35,8 @@ type inputBox struct {
 	textCursor int
 	xScroll int
 	yScroll int
+	selectionStart int
+	selectionEnd int
 }
 
 func newInputBox(id string) *inputBox {
@@ -173,21 +175,48 @@ func (i *inputBox) handleEnterKey() {
 	}
 }
 
+func (i *inputBox) selectionOff() {
+	i.selectionStart = 0
+	i.selectionEnd = 0
+}
+
+func (i *inputBox) selectAll() {
+	urlInputBox.selectionStart = 0
+	urlInputBox.selectionEnd = utf8.RuneCountInString(urlInputBox.text)
+}
+
+func (i *inputBox) removeSelectedText() {
+	if (i.selectionEnd - i.selectionStart <= 0) { return }
+	start := i.text[:i.selectionStart]
+	end := i.text[i.selectionEnd:]
+	i.text = start + end
+	i.textCursor = i.selectionStart
+	i.updateXYCursors()
+	activeInputBox.selectionOff()
+}
+
 func handleInputBoxInput(ev *tcell.EventKey) {
 	switch ev.Key() {
 	case tcell.KeyLeft:
+		activeInputBox.selectionOff()
 		activeInputBox.cursorLeft()
 	case tcell.KeyRight:
+		activeInputBox.selectionOff()
 		activeInputBox.cursorRight()
 	case tcell.KeyDown:
+		activeInputBox.selectionOff()
 		activeInputBox.cursorDown()
 	case tcell.KeyUp:
+		activeInputBox.selectionOff()
 		activeInputBox.cursorUp()
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
+		activeInputBox.removeSelectedText()
 		activeInputBox.cursorBackspace()
 	case tcell.KeyEnter:
+		activeInputBox.removeSelectedText()
 		activeInputBox.handleEnterKey()
 	case tcell.KeyRune:
+		activeInputBox.removeSelectedText()
 		activeInputBox.cursorInsertRune(ev.Rune())
 	}
 	if urlInputBox.isActive {

@@ -3,23 +3,53 @@ package browsh
 import "unicode/utf8"
 
 func (i *inputBox) renderCursor() {
-	var xCursor int
+	if i.isSelection() {
+		i.renderSelectionCursor()
+	} else {
+		i.renderSingleCursor()
+	}
+}
+
+func (i *inputBox) isSelection() bool {
+	return i.selectionStart > 0 || i.selectionEnd > 0
+}
+
+func (i *inputBox) renderSingleCursor() {
+	x, y := i.getCoordsOfCursor()
+	reverseCellColour(x, y)
+}
+
+func (i *inputBox) renderSelectionCursor() {
+	var x, y int
+	textLength := utf8.RuneCountInString(i.text)
+	for index := 0; index < textLength; index++ {
+		x, y = i.getCoordsOfIndex(index)
+		if x >= i.selectionStart && x < i.selectionEnd {
+			reverseCellColour(x, y)
+		}
+	}
+}
+
+func (i *inputBox) getCoordsOfCursor() (int, int) {
+	var index int
+	if i.isMultiLine() {
+		index = i.xCursor
+	} else {
+		index = i.textCursor
+	}
+	return i.getCoordsOfIndex(index)
+}
+
+func (i *inputBox) getCoordsOfIndex(index int) (int, int) {
 	xFrameOffset := CurrentTab.frame.xScroll
 	yFrameOffset := CurrentTab.frame.yScroll - uiHeight
 	if urlInputBox.isActive {
 		xFrameOffset = 0
 		yFrameOffset = 0
 	}
-	if i.isMultiLine() {
-		xCursor = i.xCursor
-	} else {
-		xCursor = i.textCursor
-	}
-	x := (i.X + xCursor) - i.xScroll - xFrameOffset
+	x := (i.X + index) - i.xScroll - xFrameOffset
 	y := (i.Y + i.yCursor) - i.yScroll - yFrameOffset
-	mainRune, combiningRunes, style, _ := screen.GetContent(x, y)
-	style = style.Reverse(true)
-	screen.SetContent(x, y, mainRune, combiningRunes, style)
+	return x, y
 }
 
 func (i *inputBox) cursorLeft() {

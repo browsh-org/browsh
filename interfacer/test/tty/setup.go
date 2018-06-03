@@ -107,23 +107,12 @@ func sleepUntilPageLoad(maxTime time.Duration) {
 // GotoURL sends the browsh browser to the specified URL
 func GotoURL(url string) {
 	SpecialKey(tcell.KeyCtrlL)
-	BackspaceRemoveURL()
 	Keyboard(url)
 	SpecialKey(tcell.KeyEnter)
 	WaitForPageLoad()
 	// TODO: Looking for the URL isn't optimal because it could be the same URL
 	// as the previous test.
 	gomega.Expect(url).To(BeInFrameAt(0, 1))
-}
-
-// BackspaceRemoveURL holds down the backspace key to delete the existing URL
-// TODO: Remove when text input supports selecting all and pressing any key to overwrite
-// the selection.
-func BackspaceRemoveURL() {
-	for i := 1; i <= 50; i++ {
-		simScreen.InjectKey(tcell.KeyBackspace2, 0, tcell.ModNone)
-		time.Sleep(10 * time.Millisecond)
-	}
 }
 
 func mouseClick(x, y int) {
