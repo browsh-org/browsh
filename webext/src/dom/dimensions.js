@@ -11,16 +11,16 @@ export default class extends utils.mixins(CommonMixin) {
     // character.
     this._measuring_box_id = 'browsh_em_measuring_box';
 
-    // TODO: WTF is this magic number?
     if (TEST) {
       this._char_height_magic_number = 0;
     } else {
+      // TODO: WTF is this magic number?
       this._char_height_magic_number = 4;
     }
 
     // This is the region outside the visible area of the TTY that is pre-parsed and
     // sent to the TTY to be buffered to support faster scrolling.
-    this._big_sub_frame_factor = 3;
+    this._big_sub_frame_factor = 6;
 
     this.dom = {};
     this.tty = {};
