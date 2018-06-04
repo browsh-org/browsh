@@ -43,10 +43,8 @@ export default class extends utils.mixins(CommonMixin) {
     const window_width = parseInt(Math.round(this.tty.width * this.char.width));
     // Leave room for tabs and URL bar
     const tty_dom_height = this.tty.height - 2;
-    // I don't know why we have to add 4 more lines to the window height?? But without
-    // it text doesn't fill the bottom of the TTY.
     const window_height = parseInt(Math.round(
-      (tty_dom_height + 4) * this.char.height
+      tty_dom_height * this.char.height
     ));
     const current_window = browser.windows.getCurrent();
     current_window.then(

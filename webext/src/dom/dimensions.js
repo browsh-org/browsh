@@ -14,8 +14,8 @@ export default class extends utils.mixins(CommonMixin) {
     if (TEST) {
       this._char_height_magic_number = 0;
     } else {
-      // TODO: WTF is this magic number?
-      this._char_height_magic_number = 4;
+      // TODO: WTF is this magic number? The gap between lines?
+      this._char_height_magic_number = 5;
     }
 
     // This is the region outside the visible area of the TTY that is pre-parsed and

@@ -95,7 +95,7 @@ func sleepUntilPageLoad(maxTime time.Duration) {
 	for time.Since(start) < maxTime {
 		if browsh.CurrentTab != nil {
 			if browsh.CurrentTab.PageState == "parsing_complete" {
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(200 * time.Millisecond)
 				return
 			}
 		}

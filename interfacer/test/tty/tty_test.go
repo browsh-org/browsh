@@ -34,8 +34,8 @@ var _ = Describe("Showing a basic webpage", func() {
 			})
 
 			It("should navigate to a new page by clicking a link", func() {
-				Expect("Another▄page").To(BeInFrameAt(12, 19))
-				mouseClick(12, 19)
+				Expect("Another▄page").To(BeInFrameAt(12, 18))
+				mouseClick(12, 18)
 				Expect("Another").To(BeInFrameAt(0, 0))
 			})
 
@@ -46,7 +46,7 @@ var _ = Describe("Showing a basic webpage", func() {
 
 			It("should scroll the page by one page", func() {
 				SpecialKey(tcell.KeyPgDn)
-				Expect("continuing▄with▄a▄variety▄of▄fish").To(BeInFrameAt(12, 12))
+				Expect("continuing▄with▄a▄variety▄of▄fish").To(BeInFrameAt(12, 13))
 			})
 
 			Describe("Text Input", func() {
@@ -54,7 +54,7 @@ var _ = Describe("Showing a basic webpage", func() {
 					BeforeEach(func() {
 						SpecialKey(tcell.KeyDown)
 						SpecialKey(tcell.KeyDown)
-						simScreen.InjectMouse(12, 17, tcell.Button1, tcell.ModNone)
+						simScreen.InjectMouse(12, 16, tcell.Button1, tcell.ModNone)
 					})
 
 					It("should have basic cursor movement", func() {
@@ -64,12 +64,12 @@ var _ = Describe("Showing a basic webpage", func() {
 						SpecialKey(tcell.KeyLeft)
 						SpecialKey(tcell.KeyLeft)
 						Keyboard("1")
-						Expect("|1|2|").To(BeInFrameAt(12, 17))
+						Expect("|1|2|").To(BeInFrameAt(12, 16))
 					})
 
 					It("should scroll single line boxes on overflow", func() {
 						Keyboard("12345678901234567890")
-						Expect("45678901234567890").To(BeInFrameAt(12, 17))
+						Expect("45678901234567890").To(BeInFrameAt(12, 16))
 					})
 
 					It("should scroll overflowed boxes to the left and right", func() {
@@ -77,18 +77,18 @@ var _ = Describe("Showing a basic webpage", func() {
 						for i := 0; i < 19; i++ {
 							SpecialKey(tcell.KeyLeft)
 						}
-						Expect("23456789012345678").To(BeInFrameAt(12, 17))
+						Expect("23456789012345678").To(BeInFrameAt(12, 16))
 						for i := 0; i < 19; i++ {
 							SpecialKey(tcell.KeyRight)
 						}
-						Expect("45678901234567890").To(BeInFrameAt(12, 17))
+						Expect("45678901234567890").To(BeInFrameAt(12, 16))
 					})
 
 					It("should submit text into an input box", func() {
-						Expect("Unsubmitted").To(BeInFrameAt(12, 21))
+						Expect("Unsubmitted").To(BeInFrameAt(12, 20))
 						Keyboard("Reverse Me!")
 						SpecialKey(tcell.KeyEnter)
-						Expect("!eM▄esreveR").To(BeInFrameAt(12, 21))
+						Expect("!eM▄esreveR").To(BeInFrameAt(12, 20))
 					})
 				})
 
@@ -110,7 +110,7 @@ var _ = Describe("Showing a basic webpage", func() {
 						Keyboard(`So here is a lot of text that will hopefully split across lines`)
 						SpecialKey(tcell.KeyEnter)
 						Keyboard(`And here is even more filler, it's endless!`)
-						Expect("filler, it's endless!").To(BeInFrameAt(1, 7))
+						Expect("filler, it's endless!").To(BeInFrameAt(1, 6))
 						for i := 1; i <= 6; i++ {
 							SpecialKey(tcell.KeyUp)
 						}
@@ -153,7 +153,7 @@ var _ = Describe("Showing a basic webpage", func() {
 	Describe("Rendering", func() {
 		It("should reset page scroll to zero on page load", func() {
 			SpecialKey(tcell.KeyPgDn)
-			Expect("continuing▄with▄a▄variety▄of▄fish").To(BeInFrameAt(12, 12))
+			Expect("continuing▄with▄a▄variety▄of▄fish").To(BeInFrameAt(12, 13))
 			GotoURL(testSiteURL + "/smorgasbord/another.html")
 			Expect("Another▄webpage").To(BeInFrameAt(1, 3))
 		})

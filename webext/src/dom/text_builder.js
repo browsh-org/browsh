@@ -49,6 +49,7 @@ export default class extends utils.mixins(CommonMixin) {
   _updateState() {
     this.tty_grid.cells = [];
     this._parse_started_elements = [];
+    this._previous_dom_box = {};
     this._convertSubFrameToViewportCoords();
   }
 
@@ -231,7 +232,6 @@ export default class extends utils.mixins(CommonMixin) {
   // real browser.
   _positionSingleTextNode() {
     this._dom_box = {};
-    this._previous_dom_box = {};
     for (const dom_box of this._getNodeDOMBoxes()) {
       if (!this._isDOMRectInSubFrame(dom_box)) { continue }
       this._dom_box.top = dom_box.top;
@@ -271,8 +271,8 @@ export default class extends utils.mixins(CommonMixin) {
     this._dom_box = this._convertDOMRectToAbsoluteCoords(this._dom_box);
     this._createSyncedTTYBox();
     this._createTrackers()
-    this._ignoreUnrenderedWhitespace();
     this._setCurrentCharacter();
+    this._ignoreUnrenderedWhitespace();
   }
 
   // Note that it's possible for this._text to straddle many DOM boxes
@@ -286,8 +286,8 @@ export default class extends utils.mixins(CommonMixin) {
   // each step is a new single cell within the TTY.
   _createTrackers() {
     this._dom_tracker = {
-      x: utils.snap(this._dom_box.left),
-      y: utils.snap(this._dom_box.top)
+      x: this._dom_box.left,
+      y: this._dom_box.top
     }
     this._tty_tracker = {
       x: this._tty_box.col_start,
@@ -327,7 +327,7 @@ export default class extends utils.mixins(CommonMixin) {
 
   // Is the current DOM rectangle further down the page than the previous?
   _isNewLine() {
-    if (this._previous_dom_box === {}) return false;
+    if (Object.keys(this._previous_dom_box).length === 0) return false;
     return this._dom_box.top > this._previous_dom_box.top
   }
 
