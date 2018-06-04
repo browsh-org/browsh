@@ -92,6 +92,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     this.sendMessage('/status,page_init');
     this._listenForBackgroundMessages();
     this._startWindowEventListeners();
+    this._fixStickyElements();
   }
 
   _setupInteractiveMode() {
@@ -180,5 +181,25 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
         this.log(error.stack);
       }
     });
+  }
+
+  // Sticky elements are, for example, those headers that follow you down the page as you
+  // scroll. They are annoying even in desktop browsers, however because of the lower frame
+  // rate of Browsh, sticky elements stutter down the page, so it's even more annoying. Not
+  // to mention the screen real estate that sticky elements take up, which is even more
+  // noticeable on a small TTY screen like Browsh's.
+  //
+  // Note that this uses `getComputedStyle()`, which can be expensive, there should only
+  // be 1 that parses that entire tree during page load. So if there's reason to use more
+  // CSS tricks like this, then the call should be refactored.
+  _fixStickyElements() {
+    let position;
+    let i, elements = document.querySelectorAll('body *');
+    for (i = 0; i < elements.length; i++) {
+      position = getComputedStyle(elements[i]).position;
+      if (position === 'fixed' || position === 'sticky') {
+        elements[i].style.position = 'absolute';
+      }
+    }
   }
 }
