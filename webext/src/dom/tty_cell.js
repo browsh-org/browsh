@@ -5,26 +5,12 @@ export default class {
   // to use standard CSS inspection instead. Hopefully this doesn't happen often because
   // it's expensive.
   // TODO: Make comprehensive
-  isHighestLayer(challenger_cell) {
-    const tenant_styles = this.getStyles();
-    const challenger_styles = challenger_cell.getStyles();
-    if (
-      challenger_styles.visibility === 'hidden' ||
-      challenger_styles.display === 'none'
-    ) {
-      return false;
-    }
-    return tenant_styles.zIndex > challenger_styles.zIndex;
-  }
-
-  // Get or cache the total cascaded calculated styles for an element
-  getStyles() {
-    let element = this.parent_element;
-    if (!element.browsh_calculated_styles) {
-      let styles = window.getComputedStyle(element);
-      element.browsh_calculated_styles = styles;
-    }
-    return element.browsh_calculated_styles;
+  isHighestLayer() {
+    const found_element = document.elementFromPoint(
+      this.dom_coords.x,
+      this.dom_coords.y,
+    );
+    return this.parent_element == found_element;
   }
 }
 

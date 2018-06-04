@@ -96,6 +96,9 @@ export default (MixinBase) => class extends MixinBase {
           this._mouseAction('mousedown', input.mouse_x, input.mouse_y);
         }
         this._mousedown = true;
+        setTimeout(() => {
+          this.sendAllBigFrames();
+        }, 500);
         break;
       case 0:
         this._mouseAction('mousemove', input.mouse_x, input.mouse_y);

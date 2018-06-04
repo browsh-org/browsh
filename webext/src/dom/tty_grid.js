@@ -18,12 +18,16 @@ export default class {
 
   addCell(new_cell) {
     new_cell.index = this._calculateIndex(new_cell);
-    if (!this._handleExistingCell(new_cell)) return false;
-    if (!this._handleCellVisibility(new_cell)) return false;
-    this.cells[new_cell.index] = new_cell;
+    const is_cell_possibly_obscured = !this._handleCellVisibility(new_cell);
+    const is_cell_at_highest_layer = this._isNewCellAtHighestLayer(new_cell);
+    if (is_cell_at_highest_layer) {
+      if (!is_cell_possibly_obscured) {
+        this.cells[new_cell.index] = new_cell;
+      }
+    }
   }
 
-  _handleExistingCell(new_cell) {
+  _isNewCellAtHighestLayer(new_cell) {
     let existing_cell = this.cells[new_cell.index];
     if (existing_cell !== undefined) {
       if (!new_cell.isHighestLayer(existing_cell)) return false;
