@@ -30,9 +30,6 @@ export default class extends utils.mixins(CommonMixin) {
       x_last_big_frame: 0,
       y_last_big_frame: 0
     }
-    if (document.body) {
-      this.update();
-    }
   }
 
   update() {

@@ -20,7 +20,8 @@ html * {
 }
 
 .browsh-hide-text,
-.browsh-hide-text * {
+.browsh-hide-text *,
+html * {
   font-family: 'BlankMono' !important;
 }
 

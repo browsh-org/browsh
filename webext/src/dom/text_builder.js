@@ -27,8 +27,15 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   sendRawText() {
-    this.buildFormattedText();
-    this._sendRawText();
+    // TODO:
+    //   The presence of the `getScreenshotWithText()` and `setTimeout()` calls are a hack
+    //   that I am unable to understand the reasoning for - unfortunately they came about
+    //   by trial and error :( Without them the the returned raw text is largely empty.
+    this.graphics_builder.getScreenshotWithText();
+    setTimeout(() => {
+      this.buildFormattedText();
+      this._sendRawText();
+    }, 200);
   }
 
   buildFormattedText() {

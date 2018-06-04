@@ -49,6 +49,10 @@ export default (MixinBase) => class extends MixinBase {
         `/tty_size,${this.dimensions.tty.width},${this.dimensions.tty.height}`
       )
     }
+    this.log(
+      `Requesting browser resize for new TTY dimensions: ` +
+      `${width}x${height}`
+    );
     this.dimensions.resizeBrowserWindow();
   }
 

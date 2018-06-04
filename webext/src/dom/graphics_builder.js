@@ -126,7 +126,6 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   _getScreenshot() {
-    this.dimensions.update()
     return this._getPixelData();
   }
 

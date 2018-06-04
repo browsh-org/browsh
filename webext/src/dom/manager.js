@@ -22,7 +22,6 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
 
   _postCommsConstructor() {
     this.dimensions.channel = this.channel;
-    this.dimensions.update();
     this.graphics_builder = new GraphicsBuilder(this.channel, this.dimensions);
     this.text_builder = new TextBuilder(
       this.channel,

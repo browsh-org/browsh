@@ -24,6 +24,10 @@ export default class extends utils.mixins(CommonMixin) {
     if (this.char.width != incoming.width ||
         this.char.height != incoming.height) {
       this.char = _.clone(incoming);
+      this.log(
+        `Requesting browser resize for new char dimensions: ` +
+        `${this.char.width}x${this.char.height}`
+      );
       this.resizeBrowserWindow();
     }
   }
@@ -57,7 +61,6 @@ export default class extends utils.mixins(CommonMixin) {
 
   _sendWindowResizeRequest(active_window, width, height) {
     const tag = 'Resizing browser window';
-    this.log(tag, active_window, width, height);
     const updating = browser.windows.update(
       active_window.id,
       {
@@ -67,8 +70,8 @@ export default class extends utils.mixins(CommonMixin) {
       }
     );
     updating.then(
-      info => this.log(tag, info),
-      error => this.log(tag, error)
+      info => this.log(`${tag} successful (${info.width}x${info.height})`),
+      error => this.log(tag + " error: ", error)
     );
   }
 }
