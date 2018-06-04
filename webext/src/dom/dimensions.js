@@ -148,6 +148,17 @@ export default class extends utils.mixins(CommonMixin) {
       width: dom_rect.width,
       height: dom_rect.height + this._char_height_magic_number
     }
+    this._largeEmFix();
+  }
+
+  // Stackoverflow.com (and maybe other sites), for some reason generates an extremely
+  // large value for em measurement. Maybe it's because of the time at which the
+  // measurement is made?
+  _largeEmFix() {
+    if (this.char.width > 100) {
+      this.char.width = 9;
+      this.char.height = 15 + this._char_height_magic_number;
+    }
   }
 
   // Back when printing was done by physical stamps, it was convention to measure the

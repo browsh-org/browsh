@@ -44,3 +44,13 @@ sup, sub {
 input, textarea {
   color: transparent !important;
 }
+
+/**
+ * Site-specific fixes
+ *
+ * TODO: This is going to need to be much more formally organised
+ */
+/* Stackoverflow cookie banner */
+#js-gdpr-consent-banner {
+  display: none;
+}

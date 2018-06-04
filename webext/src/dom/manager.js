@@ -198,7 +198,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     for (i = 0; i < elements.length; i++) {
       position = getComputedStyle(elements[i]).position;
       if (position === 'fixed' || position === 'sticky') {
-        elements[i].style.position = 'absolute';
+        elements[i].style.setProperty('position', 'absolute', 'important');
       }
     }
   }
