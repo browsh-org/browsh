@@ -368,14 +368,21 @@ export default class extends utils.mixins(CommonMixin) {
       'input[type="email"], ' +
       'input[type="password"], ' +
       'input[type="tel"], ' +
-      'textarea'
+      'textarea, ' +
+      '[role="textbox"]'
     );
     raw_input_boxes.forEach((i) => {
+      let type;
       this._ensureBrowshID(i);
       dom_rect = this._convertDOMRectToAbsoluteCoords(i.getBoundingClientRect());
       const width = utils.snap(dom_rect.width * this.dimensions.scale_factor.width);
       const height = utils.snap(dom_rect.height * this.dimensions.scale_factor.height);
       if (width == 0 || height == 0) { return }
+      if (i.getAttribute('role') == 'textbox') {
+        type = 'textbox';
+      } else {
+        type = i.getAttribute('type');
+      }
       styles = window.getComputedStyle(i);
       font_rgb = styles['color'].replace(/[^\d,]/g, '').split(',').map((i) => parseInt(i));
       parsed_input_boxes[i.getAttribute('data-browsh-id')] = {
@@ -385,7 +392,7 @@ export default class extends utils.mixins(CommonMixin) {
         width: width,
         height: height,
         tag_name: i.nodeName,
-        type: i.getAttribute('type'),
+        type: type,
         colour: [font_rgb[0], font_rgb[1], font_rgb[2]]
       };
     });

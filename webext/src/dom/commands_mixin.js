@@ -83,7 +83,12 @@ export default (MixinBase) => class extends MixinBase {
   _handleInputBoxContent(input) {
     let input_box = document.querySelectorAll(`[data-browsh-id="${input.id}"]`)[0];
     if (input_box) {
-      input_box.value = input.text;
+      if (input_box.getAttribute('role') == 'textbox') {
+        input_box.innerHTML = input.text;
+      } else {
+        input_box.value = input.text;
+      }
+
     }
   }
 

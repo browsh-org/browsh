@@ -124,7 +124,7 @@ func (i *inputBox) addCharacterToFrame(x int, y int, c rune) {
 // size of the input box.
 func (i *inputBox) isMultiLine() bool {
 	if urlInputBox.isActive { return false }
-	return i.TagName == "TEXTAREA"
+	return i.TagName == "TEXTAREA" || i.Type == "textbox"
 }
 
 func (i *inputBox) textToDisplay() []rune {
