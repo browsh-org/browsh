@@ -163,6 +163,7 @@ export default class extends utils.mixins(CommonMixin) {
       width = this.dimensions.dom.sub.width;
       height = this.dimensions.dom.sub.height;
     }
+    if (width <= 0 || height <= 0) { return [] }
     this._updateCanvasSize();
     this._ctx.drawWindow(
       window,

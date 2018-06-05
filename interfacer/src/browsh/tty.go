@@ -183,6 +183,7 @@ func renderCurrentTabWindow() {
 		}
 	}
 	if activeInputBox != nil { activeInputBox.renderCursor() }
+	overlayPageStatusMessage()
 	screen.Show()
 }
 

@@ -30,6 +30,8 @@
 
   "permissions": [
     "<all_urls>",
+    "webRequest",
+    "webRequestBlocking",
     "tabs"
   ]
 }

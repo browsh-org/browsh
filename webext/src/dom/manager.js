@@ -154,8 +154,8 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     window.addEventListener("unload", () => {
       this.sendMessage('/status,window_unload')
     });
-    window.addEventListener('error', (event) => {
-      this.log("TAB JS: " + event)
+    window.addEventListener('error', (error) => {
+      this.logError(error)
     });
   }
 
@@ -176,9 +176,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
         this._handleBackgroundMessage(message);
       }
       catch(error) {
-        this.log(`'${error.name}' ${error.message}`);
-        this.log(`@${error.fileName}:${error.lineNumber}`);
-        this.log(error.stack);
+        this.logError(error);
       }
     });
   }

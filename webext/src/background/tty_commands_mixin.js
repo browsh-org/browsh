@@ -70,6 +70,9 @@ export default (MixinBase) => class extends MixinBase {
         case 'p':
           this.screenshotActiveTab();
           break;
+        case 'u':
+          this.toggleUserAgent();
+          break;
       }
     }
     return false;
@@ -168,6 +171,34 @@ export default (MixinBase) => class extends MixinBase {
         request_id: request_id
       })
     });
+  }
+
+  toggleUserAgent() {
+    let message;
+    this._is_using_mobile_user_agent = !this._is_using_mobile_user_agent
+    if (this._is_using_mobile_user_agent) {
+      message = 'Mobile user agent active';
+    } else {
+      message = 'Desktop user agent active';
+    }
+    this.currentTab().updateStatus('info', message);
+  }
+
+  _addUserAgentListener() {
+    browser.webRequest.onBeforeSendHeaders.addListener(
+      (e) => {
+        if (this._is_using_mobile_user_agent) {
+          e.requestHeaders.forEach((header) => {
+            if (header.name.toLowerCase() == "user-agent") {
+              header.value = this._mobile_user_agent;
+            }
+          })
+          return {requestHeaders: e.requestHeaders};
+        }
+      },
+      {urls: ['*://*/*']},
+      ["blocking", "requestHeaders"]
+    );
   }
 }
 

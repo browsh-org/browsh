@@ -23,6 +23,12 @@ export default (MixinBase) => class extends MixinBase {
     }
   }
 
+  logError(error) {
+    this.log(`'${error.name}' ${error.message}`);
+    this.log(`@${error.fileName}:${error.lineNumber}`);
+    this.log(error.stack);
+  }
+
   // If you're logging large objects and using a high-ish FPS (<1000ms) then you might
   // crash the browser. So use this function instead.
   firstFrameLog(...logs) {

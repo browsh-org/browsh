@@ -26,6 +26,11 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     // Raw text mode is for when Browsh is running as an HTTP server that serves single
     // pages as entire DOMs, in plain text.
     this._is_raw_text_mode = false;
+    // A mobile user agent for forcing web pages to use its mobile layout
+    this._mobile_user_agent =
+      "Mozilla/5.0 (Android 7.0; Mobile; rv:54.0) Gecko/58.0 Firefox/58.0";
+    this._is_using_mobile_user_agent = false;
+    this._addUserAgentListener();
     // The manager is the hub between tabs and the terminal. First we connect to the
     // terminal, as that is the process that would have initially booted the browser and
     // this very code that now runs.

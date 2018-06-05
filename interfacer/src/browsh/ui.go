@@ -20,7 +20,6 @@ var (
 func renderUI() {
 	renderTabs()
 	renderURLBar()
-	overlayPageStatusMessage()
 }
 
 // Write a simple text string to the screen.
