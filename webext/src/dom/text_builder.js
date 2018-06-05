@@ -364,10 +364,7 @@ export default class extends utils.mixins(CommonMixin) {
     let dom_rect, styles, font_rgb;
     let parsed_input_boxes = {};
     let raw_input_boxes = document.querySelectorAll(
-      'input[type="text"], ' +
-      'input[type="email"], ' +
-      'input[type="password"], ' +
-      'input[type="tel"], ' +
+      'input, ' +
       'textarea, ' +
       '[role="textbox"]'
     );
@@ -385,6 +382,7 @@ export default class extends utils.mixins(CommonMixin) {
       }
       styles = window.getComputedStyle(i);
       font_rgb = styles['color'].replace(/[^\d,]/g, '').split(',').map((i) => parseInt(i));
+      if (this._isUnwantedInboxBox(i, styles)) { return }
       parsed_input_boxes[i.getAttribute('data-browsh-id')] = {
         id: i.getAttribute('data-browsh-id'),
         x: utils.snap(dom_rect.left * this.dimensions.scale_factor.width),
@@ -403,6 +401,12 @@ export default class extends utils.mixins(CommonMixin) {
     if (element.getAttribute('data-browsh-id') === null) {
       element.setAttribute('data-browsh-id', utils.uuidv4());
     }
+  }
+
+  _isUnwantedInboxBox(input_box, styles) {
+    if (styles.display === 'none' || styles.visibility === 'hidden') { return true }
+    if (input_box.getAttribute('aria-hidden') == 'true') { return true }
+    return false;
   }
 
   _sendRawText() {
