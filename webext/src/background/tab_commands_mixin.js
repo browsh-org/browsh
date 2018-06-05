@@ -48,6 +48,25 @@ export default (MixinBase) => class extends MixinBase {
   _rawTextRequest(incoming) {
     incoming.request_id = this.request_id;
     this.sendToTerminal(`/raw_text,${JSON.stringify(incoming)}`);
-    if (this.id !== 1) { this.remove() }
+    this._tabCount((count) => {
+      if (count > 1) { this.remove(); }
+    });
+  }
+
+  _tabCount(callback) {
+    this._getAllTabs((windowInfoArray) => {
+      callback(windowInfoArray.length);
+    });
+  }
+
+  _getAllTabs(callback) {
+    var getting = browser.windows.getAll({
+      populate: true,
+      windowTypes: ["normal"]
+    });
+    getting.then(
+      (windowInfoArray) => callback(windowInfoArray),
+      () => this.log('Error getting all tabs in Tab class')
+    );
   }
 };

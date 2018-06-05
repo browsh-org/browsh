@@ -264,7 +264,9 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
         let message;
         if (e.type == 'main_frame') {
           message = `Loading ${e.url}`;
-          this.currentTab().updateStatus('info', message);
+          if (this.currentTab() !== undefined) {
+            this.currentTab().updateStatus('info', message);
+          }
         }
       },
       {urls: ['*://*/*']},
