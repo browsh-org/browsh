@@ -49,6 +49,10 @@ func readStdin() {
 }
 
 func handleUserKeyPress(ev *tcell.EventKey) {
+	if CurrentTab == nil {
+		if ev.Key() == tcell.KeyCtrlQ { quitBrowsh() }
+		return
+	}
 	switch ev.Key() {
 	case tcell.KeyCtrlQ:
 		quitBrowsh()
