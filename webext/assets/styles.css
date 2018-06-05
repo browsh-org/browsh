@@ -17,6 +17,11 @@ html * {
   letter-spacing: 0px !important;
   font-style: normal !important;
   font-weight: normal !important;
+
+}
+
+a {
+  text-decoration: none !important;
 }
 
 .browsh-hide-text,
