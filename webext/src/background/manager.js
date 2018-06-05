@@ -31,6 +31,9 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
       "Mozilla/5.0 (Android 7.0; Mobile; rv:54.0) Gecko/58.0 Firefox/58.0";
     this._is_using_mobile_user_agent = false;
     this._addUserAgentListener();
+    // Listen to HTTP requests. This allows us to display some helpful status messages at the
+    // bottom of the page, eg; "Loading https://coolwebsite.com..."
+    this._addWebRequestListener();
     // The manager is the hub between tabs and the terminal. First we connect to the
     // terminal, as that is the process that would have initially booted the browser and
     // this very code that now runs.
@@ -253,5 +256,19 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
       return false;
     }
     return true;
+  }
+
+  _addWebRequestListener() {
+    browser.webRequest.onBeforeRequest.addListener(
+      (e) => {
+        let message;
+        if (e.type == 'main_frame') {
+          message = `Loading ${e.url}`;
+          this.currentTab().updateStatus('info', message);
+        }
+      },
+      {urls: ['*://*/*']},
+      ["blocking"]
+    );
   }
 }
