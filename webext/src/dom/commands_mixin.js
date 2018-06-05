@@ -204,7 +204,8 @@ export default (MixinBase) => class extends MixinBase {
   _mightSendBigFrames() {
     if (this._is_raw_text_mode) { return }
     const y_diff = this.dimensions.frame.y_last_big_frame - this.dimensions.frame.y_scroll;
-    const max_y_scroll_without_new_big_frame = 2 * this.dimensions.tty.height;
+    const max_y_scroll_without_new_big_frame =
+      (this.dimensions._big_sub_frame_factor - 1) * this.dimensions.tty.height;
     if (Math.abs(y_diff) > max_y_scroll_without_new_big_frame) {
       this.log(
         `Parsing big frames: ` +

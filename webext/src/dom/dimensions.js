@@ -83,9 +83,9 @@ export default class extends utils.mixins(CommonMixin) {
   _calculateBigSubFrame() {
     this.frame.sub = {
       left: this.frame.x_scroll - (this._big_sub_frame_factor * this.tty.width),
-      top: this.frame.y_scroll - (this._big_sub_frame_factor * this.tty.height),
+      top: this.frame.y_scroll - (this._big_sub_frame_factor * this.tty.height * 2),
       width: this.tty.width + (this._big_sub_frame_factor * 2 * this.tty.width),
-      height: this.tty.height + (this._big_sub_frame_factor * 2 * this.tty.height),
+      height: this.tty.height + (this._big_sub_frame_factor * 2 * this.tty.height * 2),
     }
     this._limitSubFrameDimensions();
     this._scaleSubFrameToSubDOM();
