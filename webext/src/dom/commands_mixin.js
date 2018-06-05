@@ -99,11 +99,11 @@ export default (MixinBase) => class extends MixinBase {
         this._mouseAction('mousemove', input.mouse_x, input.mouse_y);
         if (!this._mousedown) {
           this._mouseAction('mousedown', input.mouse_x, input.mouse_y);
+          setTimeout(() => {
+            this.sendSmallTextFrame();
+          }, 500);
         }
         this._mousedown = true;
-        setTimeout(() => {
-          this.sendAllBigFrames();
-        }, 500);
         break;
       case 0:
         this._mouseAction('mousemove', input.mouse_x, input.mouse_y);
@@ -150,14 +150,15 @@ export default (MixinBase) => class extends MixinBase {
       dom_x - window.scrollX,
       dom_y - window.scrollY
     );
-    const event = new MouseEvent(type, {
-      bubbles: true,
-      cancelable: true,
-      pageX: dom_x,
-      pageY: dom_y
-    });
     element.focus();
-    element.dispatchEvent(event);
+    var clickEvent = document.createEvent("MouseEvents");
+    clickEvent.initMouseEvent(
+      type,
+      true, true, window, 0, 0, 0,
+      dom_x, dom_y,
+      false, false, false, false, 0, null
+    );
+    element.dispatchEvent(clickEvent);
   }
 
   // The user clicks on a TTY grid which has a significantly lower resolution than the
