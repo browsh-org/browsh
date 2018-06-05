@@ -73,7 +73,9 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 	if (ev.Key() == 9 && ev.Modifiers() == 0) {
 		nextTab()
 	}
-	forwardKeyPress(ev)
+	if !urlInputBox.isActive {
+		forwardKeyPress(ev)
+	}
 	if activeInputBox != nil {
 		handleInputBoxInput(ev)
 	} else {
