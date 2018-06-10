@@ -144,4 +144,9 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	} else {
 		sendTtySize()
 	}
+	if IsTesting {
+		// For some reason, using Firefox's CLI arg `--url https://google.com` doesn't consistently
+		// work on Travis. So we do it here inse
+		sendMessageToWebExtension("/new_tab," + *StartupURL)
+	}
 }

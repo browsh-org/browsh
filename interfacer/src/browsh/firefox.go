@@ -108,7 +108,6 @@ func startWERFirefox() {
 		"--firefox=" + rootDir + "/webext/contrib/firefoxheadless.sh",
 		"--verbose",
 		"--no-reload",
-		"--url=" + *StartupURL,
 	}
 	firefoxProcess := exec.Command(rootDir + "/webext/node_modules/.bin/web-ext", args...)
 	firefoxProcess.Dir = rootDir + "/webext/dist/"

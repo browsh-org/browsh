@@ -11,7 +11,7 @@ builds:
       - amd64
     ldflags: -s -w
     hooks:
-      post: ./contrib/upx_compress_binary.sh
+      post: ../contrib/upx_compress_binary.sh
 
 archive:
   format: binary
@@ -25,7 +25,6 @@ nfpm:
   formats:
     - deb
     - rpm
-    - pacman
 
   dependencies:
     - firefox
