@@ -15,7 +15,7 @@ import (
 
 var staticFileServerPort = "4444"
 var simScreen tcell.SimulationScreen
-var startupWait = 30 * time.Second
+var startupWait = 60 * time.Second
 var perTestTimeout = 2000 * time.Millisecond
 var rootDir = browsh.Shell("git rev-parse --show-toplevel")
 var testSiteURL = "http://localhost:" + staticFileServerPort

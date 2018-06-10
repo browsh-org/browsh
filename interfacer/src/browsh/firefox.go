@@ -108,7 +108,7 @@ func startWERFirefox() {
 		"--firefox=" + rootDir + "/webext/contrib/firefoxheadless.sh",
 		"--verbose",
 		"--no-reload",
-		"--url=https://www.google.com",
+		"--url=" + *StartupURL,
 	}
 	firefoxProcess := exec.Command(rootDir + "/webext/node_modules/.bin/web-ext", args...)
 	firefoxProcess.Dir = rootDir + "/webext/dist/"
@@ -204,7 +204,7 @@ func loadHomePage() {
 	// Wait for the CLI websocket server to start listening
 	time.Sleep(200 * time.Millisecond)
 	args := map[string]interface{}{
-		"url": *startupURL,
+		"url": *StartupURL,
 	}
 	sendFirefoxCommand("get", args)
 }
