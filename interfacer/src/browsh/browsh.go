@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"runtime"
 	"path/filepath"
 	"strings"
 	"unicode"
@@ -87,8 +88,10 @@ func Shutdown(err error) {
 		exitCode = 1
 		println(err.Error())
 	}
-	out := err.(*errors.Error).ErrorStack()
-	Log(fmt.Sprintf(out))
+	if *isDebug {
+		out := err.(*errors.Error).ErrorStack()
+		Log(fmt.Sprintf(out))
+	}
 	os.Exit(exitCode)
 }
 
@@ -133,14 +136,16 @@ func stripWhitespace(str string) string {
 	}, str)
 }
 
-// Shell ... Nice and easy shell commands
+// Shell provides nice and easy shell commands
 func Shell(command string) string {
 	parts := strings.Fields(command)
 	head := parts[0]
 	parts = parts[1:len(parts)]
-	out, err := exec.Command(head, parts...).Output()
+	out, err := exec.Command(head, parts...).CombinedOutput()
 	if err != nil {
-		return "firefox not found"
+		fmt.Printf(
+			"Browsh tried to run `%s` but failed with: %s", command, string(out))
+		Shutdown(err)
 	}
 	return stripWhitespace(string(out))
 }
@@ -176,7 +181,11 @@ func toInt32(char string) int32 {
 func ttyEntry() {
 	// Hack to force true colours
 	// Follow: https://github.com/gdamore/tcell/pull/183
-	os.Setenv("TERM", "xterm-truecolor")
+	if runtime.GOOS != "windows" {
+		// On windows this generates a "character set not supported" error. The error comes
+		// from tcell.
+		os.Setenv("TERM", "xterm-truecolor")
+	}
 	realScreen, err := tcell.NewScreen()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)

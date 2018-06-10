@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 
@@ -52,10 +53,7 @@ var (
 
 func startHeadlessFirefox() {
 	Log("Starting Firefox in headless mode")
-	firefoxPath := Shell("which " + *firefoxBinary)
-	if _, err := os.Stat(firefoxPath); os.IsNotExist(err) {
-		Shutdown(errors.New("Firefox command not found: " + *firefoxBinary))
-	}
+	ensureFirefoxBinary()
 	args := []string{"--marionette"}
 	if !*isFFGui {
 		args = append(args, "--headless")
@@ -83,6 +81,22 @@ func startHeadlessFirefox() {
 	}
 }
 
+func ensureFirefoxBinary() {
+	if *firefoxBinary == "firefox" {
+		switch runtime.GOOS {
+		case "windows":
+			*firefoxBinary = `c:\Program Files (x86)\Mozilla Firefox\firefox.exe`
+		case "darwin":
+			*firefoxBinary = "/Applications/Firefox.app/Contents/MacOS/firefox"
+		default:
+			*firefoxBinary = Shell("which firefox")
+		}
+	}
+	if _, err := os.Stat(*firefoxBinary); os.IsNotExist(err) {
+		Shutdown(errors.New("Firefox binary not found: " + *firefoxBinary))
+	}
+}
+
 // Start Firefox via the `web-ext` CLI tool. This is for development and testing,
 // because I haven't been able to recreate the way `web-ext` injects an unsigned
 // extension.
@@ -96,7 +110,7 @@ func startWERFirefox() {
 		"--no-reload",
 		"--url=https://www.google.com",
 	}
-	firefoxProcess := exec.Command(rootDir+"/webext/node_modules/.bin/web-ext", args...)
+	firefoxProcess := exec.Command(rootDir + "/webext/node_modules/.bin/web-ext", args...)
 	firefoxProcess.Dir = rootDir + "/webext/dist/"
 	defer firefoxProcess.Process.Kill()
 	stdout, err := firefoxProcess.StdoutPipe()
