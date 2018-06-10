@@ -16,7 +16,7 @@ builds:
 archive:
   format: binary
 
-fpm:
+nfpm:
   vendor: Browsh
   homepage: https://brow.sh
   maintainer: Thomas Buckley-Houston <tom@tombh.co.uk>

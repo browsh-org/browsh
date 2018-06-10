@@ -23,14 +23,11 @@ git tag v$manifest_version
 cd $PROJECT_ROOT/webext
 BROWSH_ENV=RELEASE npm run build
 
-cd $PROJECT_ROOT/interfacer
-rvm install 2.5.0
-gem install --no-ri --no-rdoc fpm
+cd $PROJECT_ROOT/interfacer/src
 curl -sL http://git.io/goreleaser | bash
 goreleaser
 git config --global user.email "builds@travis-ci.com"
 git config --global user.name "Travis CI"
 # `/dev/null` needed to prevent Github token appearing in logs
 git push --tags --quiet https://$GITHUB_TOKEN@github.com/tombh/texttop > /dev/null 2>&1
-
 
