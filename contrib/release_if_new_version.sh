@@ -25,7 +25,6 @@ BROWSH_ENV=RELEASE npm run build
 
 cd $PROJECT_ROOT/interfacer/src
 curl -sL http://git.io/goreleaser | bash
-goreleaser
 git config --global user.email "builds@travis-ci.com"
 git config --global user.name "Travis CI"
 # `/dev/null` needed to prevent Github token appearing in logs
