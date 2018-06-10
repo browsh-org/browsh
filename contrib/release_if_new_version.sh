@@ -26,7 +26,7 @@ BROWSH_ENV=RELEASE npm run build
 cd $PROJECT_ROOT/interfacer
 rvm install 2.5.0
 gem install --no-ri --no-rdoc fpm
-go get -u github.com/goreleaser/goreleaser
+curl -sL http://git.io/goreleaser | bash
 goreleaser
 git config --global user.email "builds@travis-ci.com"
 git config --global user.name "Travis CI"
