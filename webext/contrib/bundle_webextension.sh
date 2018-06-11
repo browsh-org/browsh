@@ -45,11 +45,15 @@ fi
 
 cp -f $source_file $bundle_file
 
-echo "Bundling $source_file to $destination..."
+echo "Bundling $source_file to $destination using internal path $bundle_file"
 
+go-bindata -version
 go-bindata \
   -nocompress \
   -prefix $PROJECT_ROOT \
   -pkg browsh \
   -o $destination \
   $bundle_file
+
+ls -alh $PROJECT_ROOT/interfacer/src/browsh/webextension.go
+echo "go-bindata exited with $(echo $?)"
