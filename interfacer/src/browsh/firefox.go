@@ -158,7 +158,7 @@ func installWebextension() {
 	if err != nil {
 		Shutdown(err)
 	}
-	file, err := ioutil.TempFile(os.TempDir(), "prefix")
+	file, err := ioutil.TempFile(os.TempDir(), "browsh-webext-addon")
 	defer os.Remove(file.Name())
 	ioutil.WriteFile(file.Name(), []byte(data), 0644)
 	args := map[string]interface{}{"path": file.Name()}
