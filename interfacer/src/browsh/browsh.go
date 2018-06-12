@@ -28,8 +28,9 @@ var (
 	isUseExistingFirefox = flag.Bool("use-existing-ff", false, "Whether Browsh should launch Firefox or not")
 	useFFProfile         = flag.String("ff-profile", "default", "Firefox profile to use")
 	isDebug              = flag.Bool("debug", false, "Log to ./debug.log")
-	StartupURL           = flag.String("startup-url", "https://google.com", "URL to launch at startup")
 	timeLimit            = flag.Int("time-limit", 0, "Kill Browsh after the specified number of seconds")
+	// StartupURL is the URL of the first tab at boot
+	StartupURL           = flag.String("startup-url", "https://google.com", "URL to launch at startup")
 	// IsHTTPServer needs to be exported for use in tests
 	IsHTTPServer         = flag.Bool("http-server", false, "Run as an HTTP service")
 	// HTTPServerPort also needs to be exported for use in tests

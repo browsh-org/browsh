@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"regexp"
 	"time"
 
 	"github.com/gdamore/tcell"
@@ -18,6 +19,7 @@ import (
 
 var (
 	marionette     net.Conn
+	isMarionetteListening = false
 	ffCommandCount = 0
 	defaultFFPrefs = map[string]string{
 		"browser.startup.homepage":                "'https://www.google.com'",
@@ -52,6 +54,8 @@ var (
 )
 
 func startHeadlessFirefox() {
+	var isMarionette, isListening bool
+	checkIfFirefoxIsAlreadyRunning()
 	Log("Starting Firefox in headless mode")
 	ensureFirefoxBinary()
 	args := []string{"--marionette"}
@@ -77,7 +81,19 @@ func startHeadlessFirefox() {
 	}
 	in := bufio.NewScanner(stdout)
 	for in.Scan() {
+		isMarionette = strings.Contains(in.Text(), "Marionette")
+		isListening = strings.Contains(in.Text(), "Listening on port")
+		if isMarionette && isListening { isMarionetteListening = true }
 		Log("FF-CONSOLE: " + in.Text())
+	}
+}
+
+func checkIfFirefoxIsAlreadyRunning() {
+	if runtime.GOOS == "windows" { return }
+	processes := Shell("ps aux")
+	r, _ := regexp.Compile("firefox.*--headless")
+	if r.MatchString(processes) {
+		Shutdown(errors.New("A headless Firefox is already running"))
 	}
 }
 
@@ -199,15 +215,6 @@ func sendFirefoxCommand(command string, args map[string]interface{}) {
 	readMarionette()
 }
 
-func loadHomePage() {
-	// Wait for the CLI websocket server to start listening
-	time.Sleep(200 * time.Millisecond)
-	args := map[string]interface{}{
-		"url": *StartupURL,
-	}
-	sendFirefoxCommand("get", args)
-}
-
 func setDefaultPreferences() {
 	for key, value := range defaultFFPrefs {
 		setFFPreference(key, value)
@@ -233,12 +240,19 @@ func setupFirefox() {
 	if (*timeLimit > 0) {
 		go beginTimeLimit()
 	}
-	// TODO: Do something better than just waiting
-	time.Sleep(3 * time.Second)
+	waitForMarionette()
 	firefoxMarionette()
 	setDefaultPreferences()
 	installWebextension()
-	go loadHomePage()
+}
+
+func waitForMarionette() {
+	start := time.Now()
+	for time.Since(start) < 60 * time.Second {
+		if isMarionetteListening { return }
+		time.Sleep(10 * time.Millisecond)
+	}
+	Shutdown(errors.New("Marionette didn't start within 60 seconds."))
 }
 
 func startFirefox() {
