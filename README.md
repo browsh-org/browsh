@@ -38,7 +38,7 @@ a text-based web in your terminal.
 
 ## Installation
 
-Download a [https://github.com/tombh/browsh/releases](release) (~2MB).
+Download a binary from [https://github.com/tombh/texttop/releases](release) (~2MB).
 You will need to have Firefox >=57 aleady installed.
 
 Or download and run the Docker image (~800MB) with:
@@ -53,7 +53,7 @@ fix is to either just to run Browsh again, or launch Firefox manually yourself (
 Most keys and mouse gestures should work as you'd expect on a desktop
 browser.
 
-For full documentation see [the documentation](https://www.brow.sh/docs/introduction/)
+For full documentation see [the documentation](https://www.brow.sh/docs/introduction/).
 
 ## Contributing
 To setup a dev env you will need NodeJS and Golang installed. If you get stuck
