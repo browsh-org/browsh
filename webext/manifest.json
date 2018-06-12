@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Browsh",
-  "version": "1.0.10",
+  "version": "1.0.11",
 
   "description": "Renders the browser as realtime, interactive, TTY-compatible text",
 
