@@ -38,7 +38,7 @@ a text-based web in your terminal.
 
 ## Installation
 
-Download a binary from [https://github.com/tombh/texttop/releases](release) (~2MB).
+Download a binary from the [https://github.com/tombh/texttop/releases](releases) (~2MB).
 You will need to have Firefox >=57 aleady installed.
 
 Or download and run the Docker image (~800MB) with:
