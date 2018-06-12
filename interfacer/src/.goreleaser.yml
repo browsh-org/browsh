@@ -30,7 +30,3 @@ nfpm:
   dependencies:
     - firefox
 
-release:
-  # Obviously need to remove this when we release properly. Hopefully very soon!
-  prerelease: true
-  draft: true
