@@ -3,5 +3,5 @@ set -ex
 shopt -s extglob
 
 pushd dist
-upx !(freebsd)/*
+upx !(freebsd*)/*
 popd
