@@ -19,7 +19,6 @@ import (
 
 var (
 	marionette     net.Conn
-	isMarionetteListening = false
 	ffCommandCount = 0
 	defaultFFPrefs = map[string]string{
 		"browser.startup.homepage":                "'https://www.google.com'",
@@ -54,7 +53,6 @@ var (
 )
 
 func startHeadlessFirefox() {
-	var isMarionette, isListening bool
 	checkIfFirefoxIsAlreadyRunning()
 	Log("Starting Firefox in headless mode")
 	ensureFirefoxBinary()
@@ -81,9 +79,6 @@ func startHeadlessFirefox() {
 	}
 	in := bufio.NewScanner(stdout)
 	for in.Scan() {
-		isMarionette = strings.Contains(in.Text(), "Marionette")
-		isListening = strings.Contains(in.Text(), "Listening on port")
-		if isMarionette && isListening { isMarionetteListening = true }
 		Log("FF-CONSOLE: " + in.Text())
 	}
 }
@@ -157,10 +152,29 @@ func startWERFirefox() {
 // I've used Marionette here, simply because it was easier to reverse engineer
 // from the Python Marionette package.
 func firefoxMarionette() {
+	var (
+		err error
+		conn net.Conn
+	)
+	connected := false
 	Log("Attempting to connect to Firefox Marionette")
-	conn, err := net.Dial("tcp", "127.0.0.1:2828")
-	if err != nil {
-		Shutdown(err)
+	start := time.Now()
+	for time.Since(start) < 30 * time.Second {
+		conn, err = net.Dial("tcp", "127.0.0.1:2828")
+		if err != nil {
+			if !strings.Contains(err.Error(), "connection refused") {
+				Shutdown(err)
+			} else {
+				time.Sleep(10 * time.Millisecond)
+				continue
+			}
+		} else {
+			connected = true
+			break
+		}
+	}
+	if !connected {
+		Shutdown(errors.New("Failed to connect to Firefox's Marionette within 30 seconds"))
 	}
 	marionette = conn
 	readMarionette()
@@ -240,19 +254,9 @@ func setupFirefox() {
 	if (*timeLimit > 0) {
 		go beginTimeLimit()
 	}
-	waitForMarionette()
 	firefoxMarionette()
 	setDefaultPreferences()
 	installWebextension()
-}
-
-func waitForMarionette() {
-	start := time.Now()
-	for time.Since(start) < 60 * time.Second {
-		if isMarionetteListening { return }
-		time.Sleep(10 * time.Millisecond)
-	}
-	Shutdown(errors.New("Marionette didn't start within 60 seconds."))
 }
 
 func startFirefox() {
