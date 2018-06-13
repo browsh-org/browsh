@@ -18,6 +18,7 @@ if [[ "$manifest_version" == "$latest_tagged_version" ]]; then
 fi
 
 git reset --hard
+git checkout webext-rewrite # Only before rename from Texttop to Browsh
 git tag v$manifest_version
 
 cd $PROJECT_ROOT/webext
