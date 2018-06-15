@@ -99,7 +99,7 @@ export default class extends utils.mixins(CommonMixin) {
     }
 
     // Ignore nodes with only whitespace
-    if (/^\s+$/.test(node.textContent) || node.textContent === '') {
+    if (node.textContent.trim().length === 0) {
       return false;
     }
 
@@ -190,10 +190,10 @@ export default class extends utils.mixins(CommonMixin) {
       if (this._text.charAt(0) === " ") {
         this._text = this._text.substring(1, this._text.length);
       }
-    }
-    // Remove whitespace at the end
-    if (this._text.charAt(this._text.length - 1) === " ") {
-      this._text = this._text.substring(0, this._text.length - 1);
+      // Remove whitespace at the end
+      if (this._text.charAt(this._text.length - 1) === " ") {
+        this._text = this._text.substring(0, this._text.length - 1);
+      }
     }
   }
 
@@ -321,7 +321,7 @@ export default class extends utils.mixins(CommonMixin) {
   // of a DOM rectangle's box (`this._dom_box`).
   _ignoreUnrenderedWhitespace() {
     if (this._isNewLine()) {
-      if (/[\t\n\r ]+/.test(this._current_character)) this._stepToNextCharacter(false);
+      if (this._current_character.trim().length == 0) this._stepToNextCharacter(false);
     }
   }
 
