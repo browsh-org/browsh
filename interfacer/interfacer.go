@@ -157,7 +157,7 @@ func log(msg string) {
 	}
 
 	if debugMode {
-		printXY(0, hipHeight - 1, msg, true)
+		printXY(0, hipHeight-1, msg, true)
 	}
 }
 

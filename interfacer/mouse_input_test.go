@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/tombh/termbox-go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/tombh/termbox-go"
 	"testing"
 
 	"os"
