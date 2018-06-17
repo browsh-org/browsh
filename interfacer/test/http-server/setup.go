@@ -26,11 +26,16 @@ func startBrowsh() {
 	browsh.HTTPServerStart()
 }
 
-func getPath(path string) string {
+func getPath(path string, mode string) string {
 	browshServiceBase := "http://localhost:" + *browsh.HTTPServerPort
 	staticFileServerBase := "http://localhost:" + staticFileServerPort
 	fullBase := browshServiceBase + "/" + staticFileServerBase
-	response, err := http.Get(fullBase + path)
+	client := &http.Client{}
+	request, err := http.NewRequest("GET", fullBase + path, nil)
+	if mode == "plain" {
+		request.Header.Add("X-Browsh-Raw-Mode", "PLAIN")
+	}
+	response, err := client.Do(request)
 	if err != nil {
 		panic(fmt.Sprintf("%s", err))
 	} else {
@@ -57,7 +62,7 @@ var _ = ginkgo.BeforeSuite(func() {
 	time.Sleep(10 * time.Second)
 	// Allow the browser to sort its sizing out, because sometimes the first test catches the
 	// browser before it's completed its resizing.
-	getPath("/smorgasbord")
+	getPath("/smorgasbord", "plain")
 })
 
 var _	= ginkgo.AfterSuite(func() {

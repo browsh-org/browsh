@@ -176,7 +176,6 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     this.log(`Tab ${channel.name} connected for communication with background process`);
     let tab = this.tabs[parseInt(channel.name)];
     tab.postConnectionInit(channel);
-    tab.setMode(this._is_raw_text_mode);
     this._is_connected_to_browser_dom = true;
   }
 

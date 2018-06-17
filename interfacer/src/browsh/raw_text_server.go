@@ -60,8 +60,21 @@ func (h *slashFix) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 	urlForBrowsh, _ := url.PathUnescape(strings.TrimPrefix(r.URL.Path, "/"))
 	rawTextRequestID := pseudoUUID()
-	sendMessageToWebExtension("/raw_text_request," + rawTextRequestID + "," + urlForBrowsh)
+	mode := getRawTextMode(r)
+	sendMessageToWebExtension(
+		"/raw_text_request," + rawTextRequestID + "," +
+		mode + "," +
+		urlForBrowsh)
 	waitForResponse(rawTextRequestID, w)
+}
+
+// 'PLAIN' mode returns raw text without any HTML whatsoever.
+// 'HTML' mode returns some basic HTML tags for things like anchor links.
+func getRawTextMode(r *http.Request) string {
+	var mode = "HTML"
+	if (strings.Contains(r.Host, "text.")) { mode = "PLAIN" }
+	if (r.Header.Get("X-Browsh-Raw-Mode") == "PLAIN") { mode = "PLAIN" }
+	return mode
 }
 
 func waitForResponse(rawTextRequestID string, w http.ResponseWriter) {

@@ -36,7 +36,7 @@ export default (MixinBase) => class extends MixinBase {
         );
         break;
       case '/raw_text_request':
-        this._rawTextRequest(parts[1], parts.slice(2).join(','));
+        this._rawTextRequest(parts[1], parts[2], parts.slice(3).join(','));
         break;
     }
   }
@@ -164,12 +164,13 @@ export default (MixinBase) => class extends MixinBase {
     this.sendToTerminal('/screenshot,' + data);
   }
 
-  _rawTextRequest(request_id, url) {
-    this.createNewTab(url, tab => {
+  _rawTextRequest(request_id, mode, url) {
+    this.createNewTab(url, native_tab => {
       this._acknowledgeNewTab({
-        id: tab.id,
+        id: native_tab.id,
         request_id: request_id
-      })
+      });
+      this.tabs[native_tab.id].setMode(`raw_text_${mode.toLowerCase()}`);
     });
   }
 

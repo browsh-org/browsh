@@ -10,6 +10,8 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     this._tab_reloads = 0;
     // The maximum amount of times to try to recover a tab that won't connect
     this._max_number_of_tab_recovery_reloads = 3;
+    // Type of raw text mode; HTML or plain
+    this.raw_text_mode = '';
   }
 
   postDOMLoadInit(terminal, dimensions) {
@@ -22,6 +24,9 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     this.channel = channel;
     this._sendTTYDimensions();
     this._listenForMessages();
+    let mode = 'interactive';
+    if (this.raw_text_mode !== '') { mode = this.raw_text_mode }
+    this.channel.postMessage(`/mode,${mode}`);
   }
 
   isConnected() {
@@ -104,26 +109,8 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     }
   }
 
-  setMode(is_raw_text_mode) {
-    if (is_raw_text_mode) {
-      this.channel.postMessage('/mode,raw_text');
-      this._requestRawText();
-    } else {
-      this.channel.postMessage('/mode,interactive');
-    }
-  }
-
-  // If Browsh is setup in HTTP-server mode then this is the moment that we ask the tab to
-  // render the entire DOM as plain text. We must only do this for tabs subsequent to the
-  // initial tab that loads at boot time (there must always remain a single tab to keep the
-  // browser running).
-  _requestRawText() {
-    // The assumption is that Tab ID 1 is always the first tab. However, I have a vague
-    // memory of seeing the "Firefox Privacy Notice" tab load before the CLI argument requested
-    // URL. So, maybe ID 1 isn't 100% reliable.
-    if (this.id !== 1) {
-      this.channel.postMessage('/request_raw_text');
-    }
+  setMode(mode) {
+    this.raw_text_mode = mode;
   }
 
   _listenForMessages() {
@@ -146,6 +133,7 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
   // first. So let's just close that tab.
   // TODO: Only do this for a testing ENV?
   _closeUnwantedStartupTabs() {
+    if (this.title === undefined) { return false }
     if (
       this.title.includes('Firefox by default shares data to:') ||
       this.title.includes('Firefox Privacy Notice')

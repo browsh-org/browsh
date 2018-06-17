@@ -16,7 +16,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     // For Browsh used via the interactive CLI ap
     this._is_interactive_mode = false;
     // For Browsh used via the HTTP server
-    this._is_raw_text_mode = false;
+    this._is_raw_mode = false;
     this._setupInit();
   }
 
@@ -44,7 +44,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   }
 
   sendAllBigFrames() {
-    if (this._is_raw_text_mode) { return }
+    if (this._is_raw_mode) { return }
     if (!this.dimensions.tty.width) {
       this.log("Not sending big frames without TTY data")
       return
@@ -62,7 +62,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   sendRawText() {
     this.dimensions.update();
     this.dimensions.setSubFrameDimensions('raw_text');
-    this.text_builder.sendRawText();
+    this.text_builder.sendRawText(this._raw_mode_type);
   }
 
   sendSmallPixelFrame() {

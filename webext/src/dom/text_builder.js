@@ -2,12 +2,13 @@ import _ from 'lodash';
 
 import utils from 'utils';
 import CommonMixin from 'dom/common_mixin';
+import SerialiseMixin from 'dom/serialise_mixin';
 import TTYCell from 'dom/tty_cell';
 import TTYGrid from 'dom/tty_grid';
 
 // Convert the text on the page into a snapped 2-dimensional grid to be displayed directly
 // in the terminal.
-export default class extends utils.mixins(CommonMixin) {
+export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   constructor(channel, dimensions, graphics_builder) {
     super();
     this.channel = channel;
@@ -26,7 +27,8 @@ export default class extends utils.mixins(CommonMixin) {
     this._sendFrame();
   }
 
-  sendRawText() {
+  sendRawText(type) {
+    this._raw_mode_type = type;
     // TODO:
     //   The presence of the `getScreenshotWithText()` and `setTimeout()` calls are a hack
     //   that I am unable to understand the reasoning for - unfortunately they came about
@@ -352,137 +354,6 @@ export default class extends utils.mixins(CommonMixin) {
       row: utils.snap(this._dom_box.top * this.dimensions.scale_factor.height / 2),
       width: utils.snap(this._dom_box.width * this.dimensions.scale_factor.width),
     }
-  }
-
-  // TODO: Ultimately we're going to need to know exactly which parts of the input
-  //       box are obscured. This is partly possible using the element's computed
-  //       styles, however this isn't comprehensive - think partially obscuring.
-  //       So the best solution is to use the same trick as we do for normal text,
-  //       except that we can't fill the input box with text, however we can
-  //       temporarily change the background to a contrasting colour.
-  _getAllInputBoxes() {
-    let dom_rect, styles, font_rgb;
-    let parsed_input_boxes = {};
-    let raw_input_boxes = document.querySelectorAll(
-      'input, ' +
-      'textarea, ' +
-      '[role="textbox"]'
-    );
-    raw_input_boxes.forEach((i) => {
-      let type;
-      this._ensureBrowshID(i);
-      dom_rect = this._convertDOMRectToAbsoluteCoords(i.getBoundingClientRect());
-      const width = utils.snap(dom_rect.width * this.dimensions.scale_factor.width);
-      const height = utils.snap(dom_rect.height * this.dimensions.scale_factor.height);
-      if (width == 0 || height == 0) { return }
-      if (i.getAttribute('role') == 'textbox') {
-        type = 'textbox';
-      } else {
-        type = i.getAttribute('type');
-      }
-      styles = window.getComputedStyle(i);
-      font_rgb = styles['color'].replace(/[^\d,]/g, '').split(',').map((i) => parseInt(i));
-      if (this._isUnwantedInboxBox(i, styles)) { return }
-      parsed_input_boxes[i.getAttribute('data-browsh-id')] = {
-        id: i.getAttribute('data-browsh-id'),
-        x: utils.snap(dom_rect.left * this.dimensions.scale_factor.width),
-        y: utils.snap(dom_rect.top * this.dimensions.scale_factor.height),
-        width: width,
-        height: height,
-        tag_name: i.nodeName,
-        type: type,
-        colour: [font_rgb[0], font_rgb[1], font_rgb[2]]
-      };
-    });
-    return parsed_input_boxes;
-  }
-
-  _ensureBrowshID(element) {
-    if (element.getAttribute('data-browsh-id') === null) {
-      element.setAttribute('data-browsh-id', utils.uuidv4());
-    }
-  }
-
-  _isUnwantedInboxBox(input_box, styles) {
-    if (styles.display === 'none' || styles.visibility === 'hidden') { return true }
-    if (input_box.getAttribute('aria-hidden') == 'true') { return true }
-    return false;
-  }
-
-  _sendRawText() {
-    let payload = {
-      body: this._serialiseRawText()
-    }
-    this.sendMessage(`/raw_text,${JSON.stringify(payload)}`);
-  }
-
-  _sendFrame() {
-    this._serialiseFrame();
-    if (this.frame.text.length > 0) {
-      this.sendMessage(`/frame_text,${JSON.stringify(this.frame)}`);
-    } else {
-      this.log("Not sending empty text frame");
-    }
-  }
-
-  __serialiseFrame() {
-    let cell, index;
-    const top = this.dimensions.frame.sub.top / 2;
-    const left = this.dimensions.frame.sub.left;
-    const bottom = top + (this.dimensions.frame.sub.height / 2);
-    const right = left + this.dimensions.frame.sub.width;
-    this._setupFrameMeta();
-    this._serialiseInputBoxes();
-    for (let y = top; y < bottom; y++) {
-      for (let x = left; x < right; x++) {
-        index = (y * this.dimensions.frame.width) + x;
-        cell = this.tty_grid.cells[index];
-        if (cell === undefined) {
-          this.frame.colours.push(0)
-          this.frame.colours.push(0)
-          this.frame.colours.push(0)
-          this.frame.text.push("")
-        } else {
-          cell.fg_colour.map((c) => this.frame.colours.push(c));
-          this.frame.text.push(cell.rune);
-        }
-      }
-    }
-  }
-
-  _serialiseRawText() {
-    let cell, index;
-    let raw_text = "";
-    const top = this.dimensions.frame.sub.top / 2;
-    const left = this.dimensions.frame.sub.left;
-    const bottom = top + (this.dimensions.frame.sub.height / 2);
-    const right = left + this.dimensions.frame.sub.width;
-    for (let y = top; y < bottom; y++) {
-      for (let x = left; x < right; x++) {
-        index = (y * this.dimensions.frame.width) + x;
-        cell = this.tty_grid.cells[index];
-        if (cell) {
-          raw_text += cell.rune;
-        } else {
-          raw_text += " ";
-        }
-      }
-      raw_text += "\n";
-    }
-    return raw_text;
-  }
-
-  _setupFrameMeta() {
-    this.frame = {
-      meta: this.dimensions.getFrameMeta(),
-      text: [],
-      colours: []
-    };
-    this.frame.meta.id = parseInt(this.channel.name)
-  }
-
-  _serialiseInputBoxes() {
-    this.frame.input_boxes = this._getAllInputBoxes();
   }
 
   // Purely for debugging.

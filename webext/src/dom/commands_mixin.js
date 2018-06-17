@@ -17,9 +17,6 @@ export default (MixinBase) => class extends MixinBase {
           this.sendAllBigFrames();
         }
         break;
-      case '/request_raw_text':
-        this.sendRawText();
-        break;
       case '/scroll_status':
         this._handleScroll(parts[1], parts[2]);
         break;
@@ -50,10 +47,14 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   _setupMode(mode) {
-    if (mode === 'raw_text') {
+    if (mode === 'raw_text_plain' || mode === 'raw_text_html') {
       this._is_raw_text_mode = true;
+      this._is_interactive_mode = false;
+      this._raw_mode_type = mode;
+      this.sendRawText();
     }
     if (mode === 'interactive') {
+      this._is_raw_text_mode = false;
       this._is_interactive_mode = true;
       this._setupInteractiveMode();
     }
