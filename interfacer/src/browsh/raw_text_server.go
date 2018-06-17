@@ -53,7 +53,7 @@ type slashFix struct {
 // So here is a little hack that simply escapes the entire path portion to make sure it gets
 // through the router unchanged.
 func (h *slashFix) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	r.URL.Path = "/" + url.PathEscape(strings.TrimPrefix(r.URL.Path, "/"))
+	r.URL.Path = "/" + url.PathEscape(strings.TrimPrefix(r.URL.RequestURI(), "/"))
 	h.mux.ServeHTTP(w, r)
 }
 
