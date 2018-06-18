@@ -55,7 +55,7 @@ export default (MixinBase) => class extends MixinBase {
 
   _tabCount(callback) {
     this._getAllTabs((windowInfoArray) => {
-      callback(windowInfoArray.length);
+      callback(windowInfoArray[0].tabs.length);
     });
   }
 
