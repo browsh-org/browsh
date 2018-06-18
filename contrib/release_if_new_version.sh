@@ -18,7 +18,6 @@ if [[ "$manifest_version" == "$latest_tagged_version" ]]; then
 fi
 
 git reset --hard
-git checkout webext-rewrite # Only before rename from Texttop to Browsh
 git tag v$manifest_version
 
 cd $PROJECT_ROOT/webext
@@ -28,6 +27,7 @@ cd $PROJECT_ROOT/interfacer/src
 curl -sL http://git.io/goreleaser | bash
 git config --global user.email "builds@travis-ci.com"
 git config --global user.name "Travis CI"
+git checkout webext-rewrite # Only before rename from Texttop to Browsh
 # `/dev/null` needed to prevent Github token appearing in logs
 git push --tags --quiet https://$GITHUB_TOKEN@github.com/tombh/texttop > /dev/null 2>&1
 
