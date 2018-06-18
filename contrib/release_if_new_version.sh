@@ -17,8 +17,9 @@ if [[ "$manifest_version" == "$latest_tagged_version" ]]; then
   exit 0
 fi
 
-git reset --hard
 git tag v$manifest_version
+git show v$manifest_version --quiet
+git reset --hard
 
 cd $PROJECT_ROOT/webext
 BROWSH_ENV=RELEASE npm run build
@@ -27,7 +28,6 @@ cd $PROJECT_ROOT/interfacer/src
 curl -sL http://git.io/goreleaser | bash
 git config --global user.email "builds@travis-ci.com"
 git config --global user.name "Travis CI"
-git checkout webext-rewrite # Only before rename from Texttop to Browsh
 # `/dev/null` needed to prevent Github token appearing in logs
 git push --tags --quiet https://$GITHUB_TOKEN@github.com/tombh/texttop > /dev/null 2>&1
 
