@@ -60,15 +60,19 @@ func Log(msg string) {
 	if !*isDebug {
 		return
 	}
-	f, oErr := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if oErr != nil {
-		Shutdown(oErr)
-	}
-	defer f.Close()
+	if *IsHTTPServer {
+		fmt.Println(msg)
+	} else {
+		f, oErr := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+		if oErr != nil {
+			Shutdown(oErr)
+		}
+		defer f.Close()
 
-	msg = msg + "\n"
-	if _, wErr := f.WriteString(msg); wErr != nil {
-		Shutdown(wErr)
+		msg = msg + "\n"
+		if _, wErr := f.WriteString(msg); wErr != nil {
+			Shutdown(wErr)
+		}
 	}
 }
 
