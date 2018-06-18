@@ -60,7 +60,7 @@ func Log(msg string) {
 	if !*isDebug {
 		return
 	}
-	if *IsHTTPServer {
+	if *IsHTTPServer && !IsTesting {
 		fmt.Println(msg)
 	} else {
 		f, oErr := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
