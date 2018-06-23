@@ -42,12 +42,28 @@ export default (MixinBase) => class extends MixinBase {
       raw_text += "\n";
     }
     const head = `<html><title>${document.title}</title><body><pre>`
-    info += "\n\n" + 'Built by <a href="https://www.brow.sh">Browsh</a>'
+    const date_time = this._getCurrentDataTime();
+    info += "\n\n" + `Built by <a href="https://www.brow.sh">Browsh</a> on ${date_time}`
     if (this.dimensions.is_page_truncated) {
       info += '\nBrowsh parser: the page was too large, some text may have been truncated.';
     }
     const foot = `${info}</pre></body></html>`
     return head + raw_text + foot;
+  }
+
+  _getCurrentDataTime() {
+    let current_date = new Date();
+    const offset = -(new Date().getTimezoneOffset() / 60);
+    const sign = offset > 0 ? "+" : "-";
+    let date_time = current_date.getDate() + "/"
+      + (current_date.getMonth()+1)  + "/"
+      + current_date.getFullYear() + "@"
+      + current_date.getHours() + ":"
+      + current_date.getMinutes() + ":"
+      + current_date.getSeconds() + " "
+      + "UTC" + sign + offset + " ("
+      + Intl.DateTimeFormat().resolvedOptions().timeZone +")";
+    return date_time;
   }
 
   // TODO: Ultimately we're going to need to know exactly which parts of the input
