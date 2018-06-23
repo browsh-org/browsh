@@ -75,6 +75,11 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, message)
 		return
 	}
+	if urlForBrowsh == "robots.txt" {
+		message = "User-agent: *\nAllow: /$\nDisallow: /\n"
+		io.WriteString(w, message)
+		return
+	}
 	rawTextRequestID := pseudoUUID()
 	mode := getRawTextMode(r)
 	sendMessageToWebExtension(
