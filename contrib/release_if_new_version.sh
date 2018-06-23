@@ -19,15 +19,15 @@ fi
 
 git tag v$manifest_version
 git show v$manifest_version --quiet
-git reset --hard
+git config --global user.email "builds@travis-ci.com"
+git config --global user.name "Travis CI"
+# `/dev/null` needed to prevent Github token appearing in logs
+git push --tags --quiet https://$GITHUB_TOKEN@github.com/tombh/texttop > /dev/null 2>&1
+
+git reset --hard v$manifest_version
 
 cd $PROJECT_ROOT/webext
 BROWSH_ENV=RELEASE npm run build
 
 cd $PROJECT_ROOT/interfacer/src
 curl -sL http://git.io/goreleaser | bash
-git config --global user.email "builds@travis-ci.com"
-git config --global user.name "Travis CI"
-# `/dev/null` needed to prevent Github token appearing in logs
-git push --tags --quiet https://$GITHUB_TOKEN@github.com/tombh/texttop > /dev/null 2>&1
-
