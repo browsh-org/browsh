@@ -27,7 +27,8 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   _serialiseRawText() {
-    let raw_text = "";
+    let info = '';
+    let raw_text = '';
     this._previous_cell_href = '';
     this._is_inside_anchor = false;
     const top = this.dimensions.frame.sub.top / 2;
@@ -41,7 +42,11 @@ export default (MixinBase) => class extends MixinBase {
       raw_text += "\n";
     }
     const head = `<html><title>${document.title}</title><body><pre>`
-    const foot = `</body></pre></html>`
+    info += "\n\n" + 'Built by <a href="https://www.brow.sh">Browsh</a>'
+    if (this.dimensions.is_page_truncated) {
+      info += '\nBrowsh parser: the page was too large, some text may have been truncated.';
+    }
+    const foot = `${info}</pre></body></html>`
     return head + raw_text + foot;
   }
 

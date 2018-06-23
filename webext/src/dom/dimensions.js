@@ -22,6 +22,11 @@ export default class extends utils.mixins(CommonMixin) {
     // sent to the TTY to be buffered to support faster scrolling.
     this._big_sub_frame_factor = 6;
 
+    // The max size in pixels for either the width or height to be for Browsh to parse in
+    // raw text mode.
+    // TODO: Use incremental parses to overcome this limit.
+    this._entire_dom_limit = 30000;
+
     this.dom = {};
     this.tty = {};
     this.frame = {
@@ -99,6 +104,14 @@ export default class extends utils.mixins(CommonMixin) {
       top: 0,
       width: this.dom.width,
       height: this.dom.height,
+    }
+    if (this.dom.sub.width > this._entire_dom_limit) {
+      this.dom.sub.width = this._entire_dom_limit;
+      this.is_page_truncated = true;
+    }
+    if (this.dom.sub.height > this._entire_dom_limit) {
+      this.dom.sub.height = this._entire_dom_limit;
+      this.is_page_truncated = true;
     }
     this.frame.sub = {
       left: 0,
