@@ -27,7 +27,6 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   _serialiseRawText() {
-    let info = '';
     let raw_text = '';
     this._previous_cell_href = '';
     this._is_inside_anchor = false;
@@ -41,13 +40,21 @@ export default (MixinBase) => class extends MixinBase {
       }
       raw_text += "\n";
     }
+    if (this._raw_mode_type === 'raw_text_html') {
+      raw_text = this._wrapHTML(raw_text);
+    }
+    return raw_text;
+  }
+
+  _wrapHTML(raw_text) {
+    let info = '';
     const head = this._getHTMLHead();
     const date_time = this._getCurrentDataTime();
     info += "\n\n" + `Built by <a href="https://www.brow.sh">Browsh</a> on ${date_time}`;
     if (this.dimensions.is_page_truncated) {
       info += '\nBrowsh parser: the page was too large, some text may have been truncated.';
     }
-    const foot = `${info}</pre></body></html>`
+    const foot = `${info}</pre></body></html>`;
     return head + raw_text + foot;
   }
 
