@@ -151,6 +151,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
 
   _acknowledgeNewTab(native_tab_object) {
     let tab = this._applyUpdates(native_tab_object);
+    tab._is_raw_text_mode = this._is_raw_text_mode;
     tab.postDOMLoadInit(this.terminal, this.dimensions);
   }
 

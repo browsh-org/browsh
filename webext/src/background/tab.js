@@ -11,7 +11,7 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     // The maximum amount of times to try to recover a tab that won't connect
     this._max_number_of_tab_recovery_reloads = 3;
     // Type of raw text mode; HTML or plain
-    this.raw_text_mode = '';
+    this.raw_text_mode_type = '';
   }
 
   postDOMLoadInit(terminal, dimensions) {
@@ -24,8 +24,16 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     this.channel = channel;
     this._sendTTYDimensions();
     this._listenForMessages();
-    let mode = 'interactive';
-    if (this.raw_text_mode !== '') { mode = this.raw_text_mode }
+    this._calculateMode();
+  }
+
+  _calculateMode() {
+    let mode;
+    if (!this._is_raw_text_mode) {
+      mode = 'interactive';
+    } else {
+      mode = this.raw_text_mode_type;
+    }
     this.channel.postMessage(`/mode,${mode}`);
   }
 
@@ -110,7 +118,12 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
   }
 
   setMode(mode) {
-    this.raw_text_mode = mode;
+    this.raw_text_mode_type = mode;
+    // Send it here, in case there is a race condition with the postCommsInit() not knowing
+    // the mode.
+    if (this._is_raw_text_mode) {
+      this.channel.postMessage(`/mode,${mode}`);
+    }
   }
 
   _listenForMessages() {

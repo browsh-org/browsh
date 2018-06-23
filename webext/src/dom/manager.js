@@ -44,7 +44,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   }
 
   sendAllBigFrames() {
-    if (this._is_raw_mode) { return }
+    if (!this._is_interactive_mode) { return }
     if (!this.dimensions.tty.width) {
       this.log("Not sending big frames without TTY data")
       return
@@ -66,6 +66,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   }
 
   sendSmallPixelFrame() {
+    if (!this._is_interactive_mode) { return }
     if (!this.dimensions.tty.width) {
       this.log("Not sending small frames without TTY data")
       return;
@@ -76,6 +77,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   }
 
   sendSmallTextFrame() {
+    if (!this._is_interactive_mode) { return }
     if (!this.dimensions.tty.width) {
       this.log("Not sending small frames without TTY data")
       return;
