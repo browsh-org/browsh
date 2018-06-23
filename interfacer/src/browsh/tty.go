@@ -70,6 +70,9 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 	if (ev.Rune() == 'm' && ev.Modifiers() == 4) {
 		toggleMonochromeMode()
 	}
+	if (ev.Key() == 279 && ev.Modifiers() == 0) {
+		openHelpTab()
+	}
 	if (ev.Key() == 9 && ev.Modifiers() == 0) {
 		nextTab()
 	}
@@ -92,6 +95,10 @@ func quitBrowsh() {
 
 func toggleMonochromeMode() {
 	IsMonochromeMode = !IsMonochromeMode
+}
+
+func openHelpTab() {
+	sendMessageToWebExtension("/new_tab,https://www.brow.sh/docs/introduction/")
 }
 
 func forwardKeyPress(ev *tcell.EventKey) {
