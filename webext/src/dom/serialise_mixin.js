@@ -133,17 +133,17 @@ export default (MixinBase) => class extends MixinBase {
     this._HTML = '';
     if (!this._cell_for_raw_text) {
       this._addHTMLForNonExistentCell();
-      return this._HTML;
+    } else {
+      this._current_cell_href = this._cell_for_raw_text.parent_element.href;
+      this._is_HREF_changed = this._current_cell_href !== this._previous_cell_href
+      this._handleCellOutsideAnchor();
+      this._handleCellInsideAnchor();
+      this._HTML += this._cell_for_raw_text.rune;
+      this._previous_cell_href = this._current_cell_href;
     }
-    this._current_cell_href = this._cell_for_raw_text.parent_element.href;
-    this._is_HREF_changed = this._current_cell_href !== this._previous_cell_href
-    this._handleCellOutsideAnchor();
-    this._handleCellInsideAnchor();
-    this._HTML += this._cell_for_raw_text.rune;
     if (this._will_be_inside_anchor !== undefined) {
       this._is_inside_anchor = this._will_be_inside_anchor;
     }
-    this._previous_cell_href = this._current_cell_href;
     return this._HTML;
   }
 
