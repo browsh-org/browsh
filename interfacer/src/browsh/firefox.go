@@ -242,8 +242,7 @@ func beginTimeLimit() {
 	message := fmt.Sprintf("Browsh will close in %d seconds...", warningLength)
 	sendMessageToWebExtension("/status," + message)
 	time.Sleep(time.Duration(warningLength) * time.Second)
-	quitFirefox()
-	Shutdown(errors.New("normal"))
+	quitBrowsh()
 }
 
 // Note that everything executed in and from this function is not covered by the integration

@@ -46,6 +46,7 @@ func setupLogging() {
 		Shutdown(err)
 	}
 	logfile = fmt.Sprintf(filepath.Join(dir, "debug.log"))
+	fmt.Println("Logging to: " + logfile)
 	if _, err := os.Stat(logfile); err == nil {
 		os.Truncate(logfile, 0)
 	}
@@ -148,8 +149,8 @@ func Shell(command string) string {
 	parts = parts[1:len(parts)]
 	out, err := exec.Command(head, parts...).CombinedOutput()
 	if err != nil {
-		fmt.Printf(
-			"Browsh tried to run `%s` but failed with: %s", command, string(out))
+		Log(fmt.Sprintf(
+			"Browsh tried to run `%s` but failed with: %s", command, string(out)))
 		Shutdown(err)
 	}
 	return stripWhitespace(string(out))
