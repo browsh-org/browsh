@@ -41,14 +41,28 @@ export default (MixinBase) => class extends MixinBase {
       }
       raw_text += "\n";
     }
-    const head = `<html><title>${document.title}</title><body><pre>`
+    const head = this._getHTMLHead();
     const date_time = this._getCurrentDataTime();
-    info += "\n\n" + `Built by <a href="https://www.brow.sh">Browsh</a> on ${date_time}`
+    info += "\n\n" + `Built by <a href="https://www.brow.sh">Browsh</a> on ${date_time}`;
     if (this.dimensions.is_page_truncated) {
       info += '\nBrowsh parser: the page was too large, some text may have been truncated.';
     }
     const foot = `${info}</pre></body></html>`
     return head + raw_text + foot;
+  }
+
+  _getHTMLHead() {
+    return `<html>
+     <head>
+       <title>${document.title}</title>
+       <style>
+        html * {
+         font-family: monospace;
+        }
+       </style>
+     </head>
+     <body>
+     <pre>`;
   }
 
   _getCurrentDataTime() {
