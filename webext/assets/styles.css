@@ -35,11 +35,6 @@ html * {
   font-family: 'BlockCharMono' !important;
 }
 
-/* Simulate emphasis because terminals don't usually support bold, italic, etc */
-b, em, strong {
-  filter: brightness(10%);
-}
-
 sup, sub {
   vertical-align: baseline !important;
 }
