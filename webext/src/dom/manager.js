@@ -98,7 +98,13 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   _setupInteractiveMode() {
     this._setupDebouncedFunctions();
     this._startMutationObserver();
-    this.sendAllBigFrames();
+    this.sendAllBigFrames()
+    // Send again for pages that have page load transition effects :/
+    // TODO:
+    //   Disabling CSS transitions is not easy, many pages won't even render
+    //   if they're disabled. Eg; Google's login process.
+    //   What if we could get a post-transition hook?
+    setTimeout(()=> {this.sendAllBigFrames()}, 500);
   }
 
   _setupDebouncedFunctions() {
