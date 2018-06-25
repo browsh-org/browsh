@@ -60,6 +60,7 @@ func (h *slashFix) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 	var message string
 	urlForBrowsh, _ := url.PathUnescape(strings.TrimPrefix(r.URL.Path, "/"))
+	w.Header().Set("Cache-Control", "public, max-age=600")
 	if strings.TrimSpace(urlForBrowsh) == "" {
 		if (strings.Contains(r.Host, "text.")) {
 			message = "Welcome to the Browsh plain text client.\n" +
