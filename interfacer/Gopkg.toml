@@ -13,3 +13,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/shibukawa/configdir"
+
+[[constraint]]
+  name = "github.com/NYTimes/gziphandler"
+  version = "v1.0.1"

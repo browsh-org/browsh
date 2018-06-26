@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/NYTimes/gziphandler"
+  packages = ["."]
+  revision = "2600fb119af974220d3916a5916d6e31176aac1b"
+  version = "v1.0.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/gdamore/encoding"
   packages = ["."]
@@ -82,6 +88,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d45276f27c8406a168f3f82f609de071ef087fef39e2135d2e2a87b00f15b0bd"
+  inputs-digest = "9cfbfff2e0d37769847cce1dc7f703a02f24f4aae03b495cf9179d67841ac455"
   solver-name = "gps-cdcl"
   solver-version = 1

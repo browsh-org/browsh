@@ -8,6 +8,8 @@ import (
 	"crypto/rand"
 	"io"
 	"time"
+
+	"github.com/NYTimes/gziphandler"
 )
 
 // In order to communicate between the incoming HTTP request and the websocket request to the
@@ -26,7 +28,8 @@ func HTTPServerStart() {
 	go startWebSocketServer()
 	Log("Starting Browsh HTTP server")
 	serverMux := http.NewServeMux()
-	serverMux.HandleFunc("/", handleHTTPServerRequest)
+	uncompressed := http.HandlerFunc(handleHTTPServerRequest)
+	serverMux.Handle("/", gziphandler.GzipHandler(uncompressed))
 	if err := http.ListenAndServe(":" + *HTTPServerPort, &slashFix{serverMux}); err != nil {
 		Shutdown(err)
 	}
