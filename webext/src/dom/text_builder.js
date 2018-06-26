@@ -28,7 +28,6 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   }
 
   sendRawText(type) {
-    this._raw_text_start = performance.now();
     this._raw_mode_type = type;
     // TODO:
     //   The presence of the `getScreenshotWithText()` and `setTimeout()` calls are a hack

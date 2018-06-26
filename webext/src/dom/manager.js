@@ -28,6 +28,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
       this.dimensions,
       this.graphics_builder
     );
+    this.text_builder._raw_text_start = performance.now();
   }
 
   sendFrame() {
