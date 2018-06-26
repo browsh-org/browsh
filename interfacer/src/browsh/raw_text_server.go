@@ -9,6 +9,9 @@ import (
 	"io"
 	"time"
 
+	"github.com/ulule/limiter"
+	"github.com/ulule/limiter/drivers/store/memory"
+	"github.com/ulule/limiter/drivers/middleware/stdlib"
 	"github.com/NYTimes/gziphandler"
 )
 
@@ -29,10 +32,22 @@ func HTTPServerStart() {
 	Log("Starting Browsh HTTP server")
 	serverMux := http.NewServeMux()
 	uncompressed := http.HandlerFunc(handleHTTPServerRequest)
-	serverMux.Handle("/", gziphandler.GzipHandler(uncompressed))
+	limiterMiddleware := setupRateLimiter()
+	serverMux.Handle("/", limiterMiddleware.Handler(gziphandler.GzipHandler(uncompressed)))
 	if err := http.ListenAndServe(":" + *HTTPServerPort, &slashFix{serverMux}); err != nil {
 		Shutdown(err)
 	}
+}
+
+func setupRateLimiter() *stdlib.Middleware {
+	rate := limiter.Rate{
+		Period: 1 * time.Minute,
+		Limit:  10,
+	}
+	// TODO: Centralise store amongst instances with Redis
+	store := memory.NewStore()
+	middleware := stdlib.NewMiddleware(limiter.New(store, rate), stdlib.WithForwardHeader(true))
+	return middleware
 }
 
 func pseudoUUID() (uuid string) {
