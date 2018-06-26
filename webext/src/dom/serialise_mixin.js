@@ -80,7 +80,11 @@ export default (MixinBase) => class extends MixinBase {
 
   _getFavicon() {
     let el = document.querySelector("link[rel*='icon']");
-    return `<link rel="shortcut icon" type = "image/x-icon" href="${el.href}">`
+    if (el) {
+      return `<link rel="shortcut icon" type = "image/x-icon" href="${el.href}">`;
+    } else {
+      return '';
+    }
   }
 
 
