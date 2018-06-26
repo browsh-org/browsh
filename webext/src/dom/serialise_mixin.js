@@ -50,27 +50,39 @@ export default (MixinBase) => class extends MixinBase {
     let info = '';
     const head = this._getHTMLHead();
     const date_time = this._getCurrentDataTime();
-    info += "\n\n" + `Built by <a href="https://www.brow.sh">Browsh</a> on ${date_time}`;
+    const elapsed = `${performance.now() - this._raw_text_start}ms`;
+    info += "\n\n" + `Built by <a href="https://www.brow.sh">Browsh</a> ` +
+            `on ${date_time} in ${elapsed}`;
     if (this.dimensions.is_page_truncated) {
       info += '\nBrowsh parser: the page was too large, some text may have been truncated.';
     }
-    const foot = `${info}</pre></body></html>`;
+    const foot = `<span class="browsh-footer">${info}</span></pre></body></html>`;
     return head + raw_text + foot;
   }
 
   _getHTMLHead() {
     return `<html>
      <head>
+       ${this._getFavicon()}
        <title>${document.title}</title>
        <style>
         html * {
          font-family: monospace;
+        }
+        .browsh-footer {
+          opacity: 0.7;
         }
        </style>
      </head>
      <body>
      <pre>`;
   }
+
+  _getFavicon() {
+    let el = document.querySelector("link[rel*='icon']");
+    return `<link rel="shortcut icon" type = "image/x-icon" href="${el.href}">`
+  }
+
 
   _getCurrentDataTime() {
     let current_date = new Date();
