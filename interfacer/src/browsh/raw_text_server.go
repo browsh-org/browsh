@@ -78,17 +78,23 @@ func (h *slashFix) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 	var message string
 	urlForBrowsh, _ := url.PathUnescape(strings.TrimPrefix(r.URL.Path, "/"))
+	if isProductionHTTP(r) {
+		http.Redirect(w, r, "https://" + r.Host + "/" + urlForBrowsh, 301)
+		return
+	}
 	w.Header().Set("Cache-Control", "public, max-age=600")
 	if strings.TrimSpace(urlForBrowsh) == "" {
 		if (strings.Contains(r.Host, "text.")) {
 			message = "Welcome to the Browsh plain text client.\n" +
 				"You can use it by appending URLs like this;\n" +
-				"http://html.brow.sh/https://www.brow.sh"
+				"https://html.brow.sh/https://www.brow.sh"
 		} else {
 			message = "<html>" +
 				"Welcome to the Browsh HTML web client.<br />" +
 				"Type a URL after 'html.brow.sh' in your URL bar, eg;<br />" +
-				"<a href=\"http://html.brow.sh/https://www.brow.sh\">http://html.brow.sh/https://www.brow.sh</a><br />" +
+				"<a href=\"https://html.brow.sh/https://www.brow.sh\">" +
+				"https://html.brow.sh/https://www.brow.sh" +
+				"</a><br />" +
 				"</html>"
 		}
 		io.WriteString(w, message)
@@ -106,6 +112,13 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		mode + "," +
 		urlForBrowsh)
 	waitForResponse(rawTextRequestID, w)
+}
+
+func isProductionHTTP(r *http.Request) bool {
+	if (strings.Contains(r.Host, "brow.sh")) {
+		return r.Header.Get("X-Forwarded-Proto") == "http"
+	}
+	return false
 }
 
 // 'PLAIN' mode returns raw text without any HTML whatsoever.
