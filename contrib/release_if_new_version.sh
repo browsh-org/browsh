@@ -31,3 +31,12 @@ BROWSH_ENV=RELEASE npm run build
 
 cd $PROJECT_ROOT/interfacer/src
 curl -sL http://git.io/goreleaser | bash
+
+cd $HOME
+git clone https://github.com/browsh-org/www.brow.sh.git
+cd www.brow.sh
+echo "latest_version: $manifest_version" > _data/browsh.yml
+git add _data/browsh.yml
+git commit -m "(Travis CI) Updated Browsh version to $manifest_version"
+# `/dev/null` needed to prevent Github token appearing in logs
+git push --quiet https://$GITHUB_TOKEN@github.com/browsh-org/www.brow.sh > /dev/null 2>&1
