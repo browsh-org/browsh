@@ -52,11 +52,14 @@ export default (MixinBase) => class extends MixinBase {
     const date_time = this._getCurrentDataTime();
     const elapsed = `${performance.now() - this._raw_text_start}ms`;
     info += "\n\n" + `Built by <a href="https://www.brow.sh">Browsh</a> ` +
-            `on ${date_time} in ${elapsed}`;
+            `on ${date_time} in ${elapsed}.`;
     if (this.dimensions.is_page_truncated) {
       info += '\nBrowsh parser: the page was too large, some text may have been truncated.';
     }
-    const foot = `<span class="browsh-footer">${info}</span></pre></body></html>`;
+
+    const donate = '\nPlease consider <a href="https://www.brow.sh/donate/">donating</a> ' +
+      'to help all those with slow and/or expensive internet.';
+    const foot = `<span class="browsh-footer">${info}${donate}</span></pre></body></html>`;
     return head + raw_text + foot;
   }
 

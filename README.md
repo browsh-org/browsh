@@ -77,7 +77,7 @@ Then the ideal setup for development is:
 For the webextension: in `webext/` folder, `npm test`    
 For CLI unit tests: in `/interfacer` run `go test src/browsh/*.go`    
 For CLI E2E tests: in `/interfacer` run `go test test/tty/*.go`    
-FOr HTTP Service tests: in `/interfacer` run `go test test/http-server/*.go`    
+For HTTP Service tests: in `/interfacer` run `go test test/http-server/*.go`    
 
 ## Special Thanks
   * [@tobimensch](https://github.com/tobimensch) For essential early feedback and user testing.
