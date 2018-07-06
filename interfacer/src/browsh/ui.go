@@ -26,11 +26,17 @@ func renderUI() {
 // Not for use in the browser frames themselves. If you want anything to appear in
 // the browser that must be done through the webextension.
 func writeString(x, y int, str string, style tcell.Style) {
+	xOriginal := x
 	if *IsHTTPServer {
 		Log(str)
 		return
 	}
 	for _, c := range str {
+		if string(c) == "\n" {
+			y++
+			x = xOriginal
+			continue
+		}
 		screen.SetContent(x, y, c, nil, style)
 		x++
 	}

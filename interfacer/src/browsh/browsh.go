@@ -22,6 +22,20 @@ import (
 )
 
 var (
+	logo = `
+ ////  ////
+ / /   / /
+ //    //
+ //    //    ,,,,,,,,
+ ////////  ..,,,,,,,,,
+ //    //  .., ,,, .,.
+ ////////  .., ,,,,,..
+ ////////  ..,,,,,,,,,
+ ////////    ...........
+ //////////
+ ****///////////////////
+   ********///////////////
+     ***********************`
 	webSocketPort        = flag.String("websocket-port", "3334", "Web socket service address")
 	firefoxBinary        = flag.String("firefox", "firefox", "Path to Firefox executable")
 	isFFGui              = flag.Bool("with-gui", false, "Don't use headless Firefox")
@@ -81,7 +95,9 @@ func initialise() {
 	if IsTesting {
 		*isDebug = true
 	}
-	setupLogging()
+	if *isDebug {
+		setupLogging()
+	}
 }
 
 // Shutdown tries its best to cleanly shutdown browsh and the associated browser
@@ -161,7 +177,8 @@ func TTYStart(injectedScreen tcell.Screen) {
 	screen = injectedScreen
 	initialise()
 	setupTcell()
-	writeString(0, 0, "Starting Browsh, the modern terminal web browser.", tcell.StyleDefault)
+	writeString(1, 0, logo, tcell.StyleDefault)
+	writeString(0, 15, "Starting Browsh, the modern text-based web browser.", tcell.StyleDefault)
 	startFirefox()
 	Log("Starting Browsh CLI client")
 	go readStdin()
