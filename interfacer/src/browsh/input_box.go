@@ -164,7 +164,7 @@ func (i *inputBox) sendInputBoxToBrowser() {
 	sendMessageToWebExtension("/tab_command,/input_box," + string(marshalled))
 }
 
-func (i *inputBox) handleEnterKey() {
+func (i *inputBox) handleEnterKey(modifier tcell.ModMask) {
 	if urlInputBox.isActive {
 		if isNewEmptyTabActive() {
 			sendMessageToWebExtension("/new_tab," + i.text)
@@ -173,9 +173,16 @@ func (i *inputBox) handleEnterKey() {
 		}
 		urlBarFocus(false)
 	}
-	if i.isMultiLine() {
+	if i.isMultiLine() && modifier != tcell.ModAlt {
 		i.cursorInsertRune([]rune("\n")[0])
+	} else {
+		i.isActive = false
 	}
+	if i.isMultiLine() && modifier == tcell.ModAlt {
+		i.text = ""
+		i.isActive = true
+	}
+	i.updateAllCursors()
 }
 
 func (i *inputBox) selectionOff() {
@@ -217,7 +224,7 @@ func handleInputBoxInput(ev *tcell.EventKey) {
 		activeInputBox.cursorBackspace()
 	case tcell.KeyEnter:
 		activeInputBox.removeSelectedText()
-		activeInputBox.handleEnterKey()
+		activeInputBox.handleEnterKey(ev.Modifiers())
 	case tcell.KeyRune:
 		activeInputBox.removeSelectedText()
 		activeInputBox.cursorInsertRune(ev.Rune())

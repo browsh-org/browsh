@@ -102,6 +102,7 @@ func openHelpTab() {
 }
 
 func forwardKeyPress(ev *tcell.EventKey) {
+	if isMultiLineEnter(ev) { return }
 	eventMap := map[string]interface{}{
 		"key":  int(ev.Key()),
 		"char": string(ev.Rune()),
@@ -109,6 +110,13 @@ func forwardKeyPress(ev *tcell.EventKey) {
 	}
 	marshalled, _ := json.Marshal(eventMap)
 	sendMessageToWebExtension("/stdin," + string(marshalled))
+}
+
+// Allow user to use ENTER key without triggering submission on multiline input
+// boxes.
+func isMultiLineEnter(ev *tcell.EventKey) bool {
+	if activeInputBox == nil { return false }
+	return activeInputBox.isMultiLine() && ev.Key() == 13 && ev.Modifiers() != 4
 }
 
 func handleScrolling(ev *tcell.EventKey) {

@@ -84,6 +84,7 @@ export default (MixinBase) => class extends MixinBase {
   _handleInputBoxContent(input) {
     let input_box = document.querySelectorAll(`[data-browsh-id="${input.id}"]`)[0];
     if (input_box) {
+      input_box.focus();
       if (input_box.getAttribute('role') == 'textbox') {
         input_box.innerHTML = input.text;
       } else {
@@ -139,10 +140,23 @@ export default (MixinBase) => class extends MixinBase {
 
   _triggerKeyPress(key) {
     let el = document.activeElement;
-    el.dispatchEvent(new KeyboardEvent('keypress', {
+    const key_object = {
       'key': key.char,
       'keyCode': key.key
-    }));
+    };
+    let event_press = new KeyboardEvent('keypress', key_object);
+    let event_down = new KeyboardEvent('keydown', key_object);
+    let event_up = new KeyboardEvent('keyup', key_object);
+    // Generally sending down/up serves more use cases. But default input forms
+    // don't listen for down/up to make the form submit. So this makes the assumption
+    // that it's okay to send ENTER twice to an input box without any serious side
+    // effects.
+    if (key.key === 13 && el.tagName === 'INPUT') {
+      el.dispatchEvent(event_press);
+    } else {
+      el.dispatchEvent(event_down);
+      el.dispatchEvent(event_up);
+    }
   }
 
   _mouseAction(type, x, y) {

@@ -258,6 +258,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     return true;
   }
 
+  // Listen for HTTP activity so we can notify the user that something is loading in the background
   _addWebRequestListener() {
     browser.webRequest.onBeforeRequest.addListener(
       (e) => {

@@ -134,11 +134,13 @@ export default (MixinBase) => class extends MixinBase {
       }
       styles = window.getComputedStyle(i);
       font_rgb = styles['color'].replace(/[^\d,]/g, '').split(',').map((i) => parseInt(i));
+      const padding_top = parseInt(styles['padding-top'].replace('px', ''));
+      const padding_left = parseInt(styles['padding-left'].replace('px', ''));
       if (this._isUnwantedInboxBox(i, styles)) { return }
       parsed_input_boxes[i.getAttribute('data-browsh-id')] = {
         id: i.getAttribute('data-browsh-id'),
-        x: utils.snap(dom_rect.left * this.dimensions.scale_factor.width),
-        y: utils.snap(dom_rect.top * this.dimensions.scale_factor.height),
+        x: utils.snap((dom_rect.left + padding_left) * this.dimensions.scale_factor.width),
+        y: utils.snap((dom_rect.top + padding_top) * this.dimensions.scale_factor.height),
         width: width,
         height: height,
         tag_name: i.nodeName,

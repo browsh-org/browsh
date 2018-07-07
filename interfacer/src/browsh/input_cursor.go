@@ -3,6 +3,7 @@ package browsh
 import "unicode/utf8"
 
 func (i *inputBox) renderCursor() {
+	if !i.isActive { return }
 	if i.isSelection() {
 		i.renderSelectionCursor()
 	} else {
