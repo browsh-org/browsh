@@ -4,6 +4,8 @@
 
 **A fully interactive, realtime and modern text-based browser rendered to TTYs and browsers**
 
+![Browsh Gif](https://media.giphy.com/media/bbsmVkYjPdOKHhMXOO/giphy.gif)
+
 ## Why?
 
 Not all the world has good Internet.
