@@ -38,7 +38,7 @@ export default class CanvasPixels {
       pixels.push(0);
       pixels.push(0);
     }
-    return pixels;
+    return { data: pixels };
   }
 
   _getIndexValue(i) {
@@ -69,7 +69,7 @@ export default class CanvasPixels {
       pixels.push(this._getIndexValue(i));
       pixels.push(0);
     }
-    return pixels;
+    return { data: pixels };
   }
 
   scaled() {
