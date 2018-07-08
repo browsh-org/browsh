@@ -11,8 +11,13 @@ export default class extends utils.mixins(CommonMixin) {
     super();
     this.channel = channel;
     this.dimensions = dimensions;
-    this._off_screen_canvas = document.createElement('canvas');
-    this._ctx = this._off_screen_canvas.getContext('2d');
+    // The amount of lossy JPG compression to apply to the HTML services
+    // background image
+    this._html_image_compression = 0.9;
+    this._screenshot_canvas = document.createElement('canvas');
+    this._converter_canvas = document.createElement('canvas');
+    this._screenshot_ctx = this._screenshot_canvas.getContext('2d');
+    this._converter_ctx = this._converter_canvas.getContext('2d');
     this._hideText();
   }
 
@@ -62,20 +67,21 @@ export default class extends utils.mixins(CommonMixin) {
   }
 
   _getScreenshotWithoutText() {
-    this.pixels_without_text = this._getScreenshot();
+    this.pixels_without_text = this._getScreenshot().data;
     return this.pixels_without_text;
   }
 
   _getScreenshotWithText() {
     this._showText();
-    this.pixels_with_text = this._getScreenshot();
+    this.pixels_with_text = this._getScreenshot().data;
     this._hideText();
     return this.pixels_with_text;
   }
 
   _getScaledScreenshot() {
     this._scaleCanvas();
-    this.scaled_pixels = this._getScreenshot();
+    this.scaled_pixels_image_object = this._getScreenshot();
+    this.scaled_pixels = this.scaled_pixels_image_object.data;
     this._unScaleCanvas();
     return this.scaled_pixels;
   }
@@ -132,23 +138,22 @@ export default class extends utils.mixins(CommonMixin) {
   // Scale the screenshot so that 1 pixel approximates half a TTY cell.
   _scaleCanvas() {
     this._is_scaled = true;
-    // TODO: default to text hidden - show text only for big frames
-    this._ctx.save();
-    this._ctx.scale(
+    this._screenshot_ctx.save();
+    this._screenshot_ctx.scale(
       this.dimensions.scale_factor.width,
       this.dimensions.scale_factor.height
     );
   }
 
   _unScaleCanvas() {
-    this._ctx.restore();
+    this._screenshot_ctx.restore();
     this._is_scaled = false;
   }
 
   _updateCanvasSize() {
     if (this._is_scaled) return;
-    this._off_screen_canvas.width = this.dimensions.dom.sub.width;
-    this._off_screen_canvas.height = this.dimensions.dom.sub.height;
+    this._screenshot_canvas.width = this.dimensions.dom.sub.width;
+    this._screenshot_canvas.height = this.dimensions.dom.sub.height;
   }
 
   // Get an array of RGB values.
@@ -165,7 +170,7 @@ export default class extends utils.mixins(CommonMixin) {
     }
     if (width <= 0 || height <= 0) { return [] }
     this._updateCanvasSize();
-    this._ctx.drawWindow(
+    this._screenshot_ctx.drawWindow(
       window,
       this.dimensions.dom.sub.left,
       this.dimensions.dom.sub.top,
@@ -173,7 +178,16 @@ export default class extends utils.mixins(CommonMixin) {
       this.dimensions.dom.sub.height,
       background_colour
     );
-    return this._ctx.getImageData(0, 0, width, height).data;
+    return this._screenshot_ctx.getImageData(0, 0, width, height);
+  }
+
+  // Return the scaled screenshot as a data URI to display in HTML
+  _getScaledDataURI() {
+    this.__getScaledScreenshot();
+    this._converter_canvas.width = this.dimensions.frame.sub.width;
+    this._converter_canvas.height = this.dimensions.frame.sub.height;
+    this._converter_ctx.putImageData(this.scaled_pixels_image_object, 0, 0);
+    return this._converter_canvas.toDataURL('image/jpeg', this._html_image_compression);
   }
 
   _sendFrame() {

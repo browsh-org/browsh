@@ -64,6 +64,9 @@ export default (MixinBase) => class extends MixinBase {
   }
 
   _getHTMLHead() {
+    const img_src = this.graphics_builder._getScaledDataURI();
+    const width = this.dimensions.dom.sub.width;
+    const height = this.dimensions.dom.sub.height;
     return `<html>
      <head>
        ${this._getFavicon()}
@@ -71,6 +74,31 @@ export default (MixinBase) => class extends MixinBase {
        <style>
         html * {
          font-family: monospace;
+        }
+        body {
+          font-size: 15px;
+        }
+        pre {
+          background-image: url(${img_src});
+          background-size: contain;
+          background-repeat: no-repeat;
+          background-size: ${width}px ${height}px;
+          // Pixelate the background image
+          image-rendering: optimizeSpeed;             /* STOP SMOOTHING, GIVE ME SPEED  */
+          image-rendering: -moz-crisp-edges;          /* Firefox                        */
+          image-rendering: -o-crisp-edges;            /* Opera                          */
+          image-rendering: -webkit-optimize-contrast; /* Chrome (and eventually Safari) */
+          image-rendering: pixelated; /* Chrome */
+          image-rendering: optimize-contrast;         /* CSS3 Proposed                  */
+          -ms-interpolation-mode: nearest-neighbor;   /* IE8+                           */
+          width: ${width}px;
+          height: ${height}px;
+          // These styles need to exactly follow Browsh's rendering styles
+          font-size: 15px !important;
+          line-height: 20px !important;
+          letter-spacing: 0px !important;
+          font-style: normal !important;
+          font-weight: normal !important;
         }
         .browsh-footer {
           opacity: 0.7;
