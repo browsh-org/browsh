@@ -34,7 +34,7 @@ func HTTPServerStart() {
 	uncompressed := http.HandlerFunc(handleHTTPServerRequest)
 	limiterMiddleware := setupRateLimiter()
 	serverMux.Handle("/", limiterMiddleware.Handler(gziphandler.GzipHandler(uncompressed)))
-	if err := http.ListenAndServe(":" + *HTTPServerPort, &slashFix{serverMux}); err != nil {
+	if err := http.ListenAndServe(*httpServerBind + ":" + *HTTPServerPort, &slashFix{serverMux}); err != nil {
 		Shutdown(err)
 	}
 }

@@ -49,6 +49,7 @@ var (
 	IsHTTPServer         = flag.Bool("http-server", false, "Run as an HTTP service")
 	// HTTPServerPort also needs to be exported for use in tests
 	HTTPServerPort       = flag.String("http-server-port", "4333", "HTTP server address")
+	httpServerBind       = flag.String("http-server-bind", "0.0.0.0", "HTTP server binding address")
 	// IsTesting is used in tests, so it needs to be exported
 	IsTesting            = false
 	logfile              string
