@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/tombh/texttop.svg?branch=master)](https://travis-ci.org/tombh/texttop)
+[![Build Status](https://travis-ci.org/browsh-org/browsh.svg?branch=master)](https://travis-ci.org/browsh-org/browsh)
 
 ![Browsh Logo](https://www.brow.sh/assets/images/browsh-header.jpg)
 
@@ -12,7 +12,7 @@ Not all the world has good Internet.
 
 If all you have is a 3kbps connection tethered from a phone
 then it's good to SSH into a server and browse the web through, say,
-[elinks](https://github.com/tombh/texttop/issues/17). That way the
+[elinks](https://github.com/browsh-org/browsh/issues/17). That way the
 _server_ downloads the web pages and uses the limited bandwidth of an
 SSH connection to display the result. But traditional text-based browsers
 lack JS support and all that other modern HTML5 goodness. Browsh is different
@@ -35,7 +35,7 @@ is running somehwere else on mains electricity.
 
 ## Installation
 
-Download a binary from the [releases](https://github.com/tombh/texttop/releases) (~2-6MB).
+Download a binary from the [releases](https://github.com/browsh-org/browsh/releases) (~2-6MB).
 You will need to have Firefox >=57 aleady installed.
 
 Or download and run the Docker image (~230MB) with:

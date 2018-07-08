@@ -22,7 +22,7 @@ git show v$manifest_version --quiet
 git config --global user.email "builds@travis-ci.com"
 git config --global user.name "Travis CI"
 # `/dev/null` needed to prevent Github token appearing in logs
-git push --tags --quiet https://$GITHUB_TOKEN@github.com/tombh/texttop > /dev/null 2>&1
+git push --tags --quiet https://$GITHUB_TOKEN@github.com/browsh-org/browsh > /dev/null 2>&1
 
 git reset --hard v$manifest_version
 
