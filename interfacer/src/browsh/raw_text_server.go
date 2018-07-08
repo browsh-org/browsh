@@ -88,17 +88,10 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 			message = "Welcome to the Browsh plain text client.\n" +
 				"You can use it by appending URLs like this;\n" +
 				"https://html.brow.sh/https://www.brow.sh"
-		} else {
-			message = "<html>" +
-				"Welcome to the Browsh HTML web client.<br />" +
-				"Type a URL after 'html.brow.sh' in your URL bar, eg;<br />" +
-				"<a href=\"https://html.brow.sh/https://www.brow.sh\">" +
-				"https://html.brow.sh/https://www.brow.sh" +
-				"</a><br />" +
-				"</html>"
+			io.WriteString(w, message)
+			return
 		}
-		io.WriteString(w, message)
-		return
+		urlForBrowsh = "https://www.brow.sh/html-service-welcome"
 	}
 	if urlForBrowsh == "robots.txt" {
 		message = "User-agent: *\nAllow: /$\nDisallow: /\n"
