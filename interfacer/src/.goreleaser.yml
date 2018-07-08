@@ -1,0 +1,32 @@
+project_name: browsh
+builds:
+  - main: .
+    binary: browsh
+    goos:
+      - windows
+      - darwin
+      - linux
+      - freebsd
+    goarch:
+      - amd64
+      - arm
+    ldflags: -s -w
+    hooks:
+      post: ../contrib/upx_compress_binary.sh
+
+archive:
+  format: binary
+
+nfpm:
+  vendor: Browsh
+  homepage: https://brow.sh
+  maintainer: Thomas Buckley-Houston <tom@tombh.co.uk>
+  description: A fully interactive, realtime and modern browser rendered to TTY
+  license: GPL v3
+  formats:
+    - deb
+    - rpm
+
+  dependencies:
+    - firefox
+

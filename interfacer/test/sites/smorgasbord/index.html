@@ -1,0 +1,60 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Smörgåsbord</title>
+    <link href="css/main.css" rel="stylesheet" type="text/css" />
+    <link href="css/spinner.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript">
+      window.onload = function(e){
+        document.getElementById("test_form").addEventListener("submit", function(e){
+          e.preventDefault();
+          let text = document.getElementById("test_form_input").value;
+          text = text.split("").reverse().join("");
+          document.getElementById("form_result").textContent = text;
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div id="content">
+      <div id="spinner"></div>
+      <h1>Smörgåsbord</h1>
+      <div class="left_col">
+        Smörgåsbord (Swedish: [ˈsmœrɡɔsˌbuːɖ]) is a type of Scandinavian meal,
+        originating in Sweden, served buffet-style with multiple hot and cold
+        dishes of various foods on a table.
+        <p>
+          <a href="another.html">Another page</a>
+        </p>
+        <p>
+          <form id="test_form">
+            <input type="text" id="test_form_input" size="15">
+            <input type="submit">
+          </form>
+        </p>
+        <p id="form_result">Unsubmitted</p>
+      </div>
+      <div class="right_col">
+        The <a href="/">Swedish</a> word smörgåsbord consists of the words smörgås (sandwich,
+        usually open-faced) and bord (table). Smörgås in turn consists of the
+        words smör (butter, cognate with English smear) and gås. Gås literally
+        means goose, but later referred to the small pieces of butter that
+        formed and floated to the surface of cream while it was churned.
+      </div>
+
+      <div class="big_middle">
+        A special Swedish type of smörgåsbord is the julbord (literally "Christmas table").
+        The classic Swedish julbord is central to traditional Swedish cuisine, often including
+        bread dipped in ham broth and continuing with a variety of fish (salmon, herring,
+        whitefish and eel), baked ham, meatballs, pork ribs, head cheese, sausages, potato,
+        Janssons frestelse, boiled potatoes, cheeses, beetroot salad, various forms of boiled
+        cabbage, kale and rice pudding.
+
+        It is customary to eat particular foods together; herring is typically eaten
+        with boiled potatoes and hard-boiled eggs and is frequently accompanied by strong
+        spirits like snaps, brännvin or akvavit with or without spices. Other traditional
+        foods are smoked eel, rollmops, herring salad, baked herring and smoked salmon.
+      </div>
+    </div>
+  </body>
+</html>

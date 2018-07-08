@@ -1,0 +1,45 @@
+if: tag IS blank
+language: go
+go:
+  - 1.10.x
+
+addons:
+  # Use the full version number with ".0" if needed. This value is scraped by setup scripts.
+  firefox: "60.0"
+  apt:
+    packages:
+      - rpm
+      - bsdtar
+      - upx-ucl
+
+env:
+  global:
+    - REPO_ROOT=$GOPATH/src/browsh
+    - MDN_USER="user:13243312:78"
+    # MDN_TOKEN
+    - secure: "sKZ1/oBLKNWA0v16d4Yg8V500zIwZwEUpcnW7SMRpeqJMbzlR7GKLpJ/VX6ZAYexokBEEbU+JnI3/aHOmJaO9h2/+b1qwrQqje6totC6/rPhxkdxGxI9jETzPdL0V0XErK4rK2URATEANRnJUFLVuFGaXh6dUZDrbtn8NxDSfZEQGmHlqex5TcqPxmK2v0Lb3l2FcVF2kxGYpKMmjKFQbGBHdjFN5qOrS3jmkHjC6Ie8CaM9ezy55e3sOIrNr/u4kWJAOGE2cT3rjqcmPYaCRRzkiy7q3sYEI6jC9vfOZeyFI6E0e3VPDv+OGq+lnUBbgVjGhiG9LxIJ9Z3JEY9z5OspeczpLiQT2rhstqwDolyhx2liiI9cZe0d+uiLo2YyYKe1RELlClB6cQi9p/J8vJpyVEutIoq8Sdv13vbnJMAmPQi1OD9qtOgBR9cngy5yWIPyizgpcAr6kCYxztwIX4y1wrlHPUdTApDnfJNkNOSBwYBTigmlFZf8BkGXB4JOhcQ8KZM3H2OdOP2rANZIOd1ficgyHgKNt4iomIC/i5d7qnV6OZfzirQgx7yzWqjwoGrPg+OvL9MeY9dMltGsfFL80FLudIzN8sqj3BUYioXWX8GCyVML/XoMPbLpcSLBRMxskUhNSYbaTQ2qML7H5Kv/wce71BXMknzyT0s/mNs="
+    # GITHUB_TOKEN
+    - secure: "boYctu4EQI2og3YWpD54yo1LzibgBNrYN3exbfwxaNNbJuQscprAlOOG5Y1O7MBgzG9AP1DeON3X0al7g/IYMrsMsrSGhJLq9w2/ntwMiUIyKfTAP8rB5fASRSYxA5mqhpjXK4iIzqG2xiOr1SmCbpT9ew0AXP/HgxQprsppBbH+H4HyrP4cejIbfk8ajU/XvrDmhOY4s/IZIy+vfEfZH5xheJnG3iWFICwWUF5CIjjr6fQpq9ZbL2sDMvzruYPMAQ3iDfBrUr+ZhN4PPjrzvCRUNpoUoPsXCsFDPMcZpBjSHH5ZELPRBzHSdJignIjHaV0UtLtFApZl49lzq749r2Sno2ba4JCd0RIgMERjNluXynkJiHrL2tMR8HYhOmoeLMdX0zrguv+136+Jn04gQde3S+FI1/sN0/Xa14xD7SGMUT1MgFnwKgFXOFeUd3VpvbpFg6RWVgpCnaDd2/AKL+mQDEgL4yRg9q95a6Q5ub/c6nla8/E4asEvYGlJPj0OG/MKvJMi0gnKuP4+nil0jgGeKki3k1UxwvldlS+n7HUhQ7c4B9c61KS19i+z5SxBiXjilL+zGlAVVgRcalIoKQrTRDSRKnKZkR5Ant0CLjt44pncHLwlYXD/aPuLNihCa4AqUlpYPYru0pQawXNkVnk6E/cg2DAsp7oDcpcg540="
+
+before_install:
+  - ./interfacer/contrib/setup_go.sh
+  - ./webext/contrib/setup_node.sh
+  - mkdir -p $REPO_ROOT && cp -rfp $TRAVIS_BUILD_DIR -T $REPO_ROOT
+install:
+  - cd $REPO_ROOT/interfacer && dep ensure
+  - cd $REPO_ROOT/webext
+  - source ~/.nvm/nvm.sh
+  - npm run get-gobindata
+  - npm install
+  - npm run build
+script:
+  - cd $REPO_ROOT/webext && npm test
+  - cd $REPO_ROOT/interfacer && go test src/browsh/*.go -v
+  - cd $REPO_ROOT/interfacer && go test test/tty/*.go -v -ginkgo.flakeAttempts=3
+  - cd $REPO_ROOT/interfacer && go test test/http-server/*.go -v
+after_failure:
+  - cat $REPO_ROOT/interfacer/test/tty/debug.log
+  - cat $REPO_ROOT/interfacer/test/http-server/debug.log
+after_success:
+  - $REPO_ROOT/contrib/release_if_new_version.sh
+

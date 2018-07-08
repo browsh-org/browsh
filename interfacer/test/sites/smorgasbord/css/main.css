@@ -1,0 +1,22 @@
+#content {
+  width: 500px;
+  margin: auto;
+}
+
+h1 {
+  text-align: center;
+}
+
+.left_col {
+  width: 45%;
+  float: left;
+}
+
+.right_col {
+  width: 45%;
+  float: right;
+}
+
+.big_middle {
+  clear: both;
+}

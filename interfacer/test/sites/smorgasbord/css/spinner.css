@@ -1,0 +1,32 @@
+/* Animation */
+@-webkit-keyframes spinner {
+  to { -webkit-transform: rotate(360deg); }
+}
+@-moz-keyframes spinner {
+  to { -moz-transform: rotate(360deg); }
+}
+@-ms-keyframes spinner {
+  to { -ms-transform: rotate(360deg); }
+}
+@keyframes spinner {
+  to { transform: rotate(360deg); }
+}
+
+/* Loader (*/
+#spinner {
+  margin: auto;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+
+  background-image: linear-gradient(bottom, #FF00FF 50%, #00FFFF 50%);
+  background-image: -o-linear-gradient(bottom, #FF00FF 50%, #00FFFF 50%);
+  background-image: -moz-linear-gradient(bottom, #FF00FF 50%, #00FFFF 50%);
+  background-image: -webkit-linear-gradient(bottom, #FF00FF 50%, #00FFFF 50%);
+  background-image: -ms-linear-gradient(bottom, #FF00FF 50%, #00FFFF 50%);
+
+  -webkit-animation: spinner 2s infinite linear;
+  -moz-animation: spinner 2s infinite linear;
+  -ms-animation: spinner 2s infinite linear;
+  animation: spinner 2s infinite linear;
+}

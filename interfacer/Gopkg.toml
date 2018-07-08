@@ -1,0 +1,19 @@
+[[constraint]]
+  name = "github.com/gorilla/websocket"
+  version = "1.2.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/gdamore/tcell"
+
+[[constraint]]
+  name = "github.com/shuLhan/go-bindata"
+  version = "3.2.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/shibukawa/configdir"
+
+[[constraint]]
+  name = "github.com/NYTimes/gziphandler"
+  version = "v1.0.1"

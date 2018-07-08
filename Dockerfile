@@ -1,43 +1,43 @@
-FROM alpine
-COPY . /app
+FROM bitnami/minideb:stretch
 
-RUN echo "http://mirror1.hs-esslingen.de/pub/Mirrors/alpine/v3.3/main" > /etc/apk/repositories
-RUN echo "http://mirror1.hs-esslingen.de/pub/Mirrors/alpine/v3.3/community" >> /etc/apk/repositories
-RUN echo "@testing http://mirror1.hs-esslingen.de/pub/Mirrors/alpine/edge/testing" >> /etc/apk/repositories
+RUN install_packages xvfb libgtk-3-0 curl ca-certificates bzip2 libdbus-glib-1-2 procps
 
-# Main dependencies
-RUN apk add --no-cache bc xvfb ttf-dejavu xdotool@testing ffmpeg openssh mosh firefox dbus
+# Logging client for Google's Stackdriver logging service.
+# NB Not used by default. Only used by the Browsh as a Service platform on the
+#    anonymous accounts.
+RUN curl -L -o /usr/local/bin/gcloud_logger https://github.com/tombh/gcloud_pipe_logger/releases/download/v0.0.5/gcloud_pipe_logger_0.0.5_linux_amd64
+RUN chmod a+x /usr/local/bin/gcloud_logger
 
-# Installing Hiptext, video to text renderer and our own interfacer.go
-# Keep this all in one RUN command so that the resulting Docker image is smaller.
-RUN apk --no-cache add --virtual build-dependencies \
-  build-base git go freetype-dev jpeg-dev ffmpeg-dev ragel libx11-dev libxt-dev libxext-dev \
-  && apk --no-cache add libgflags-dev@testing glog-dev@testing \
-  && mkdir -p build \
-  && cd build \
+RUN curl -o /etc/hosts https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts
 
-  # Currently need to use a patched vesion of hiptext that supports video streams and ffmpeg v3
-  # Watch: https://github.com/jart/hiptext/pull/27
-  && git clone https://github.com/tombh/hiptext \
-  && cd hiptext \
-  && git checkout ffmpeg-updates-and-unicode-hack \
-  && make \
-  # Alpine's version of `install` doesn't support the `--mode=` format
-  && install -m 0755 hiptext /usr/local/bin \
-  && cd ../.. && rm -rf build \
-
-  # Build the interfacer.go/xzoom code
-  && export GOPATH=/go && export GOBIN=/app/interfacer \
-  && cd /app/interfacer && go get && go build \
-
-  && apk --no-cache del build-dependencies
-
-# Generate host keys
-RUN ssh-keygen -A
-
-RUN sed -i 's/#Port 22/Port 7777/' /etc/ssh/sshd_config
-
-RUN mkdir -p /app/logs
-
+RUN useradd -m user --home /app
+USER user
+ENV HOME=/app
 WORKDIR /app
-CMD ["/usr/sbin/sshd", "-D"]
+
+# These are needed to detect versions
+ADD .travis.yml .
+ADD ./webext/manifest.json .
+
+# Setup Firefox
+ENV PATH="/app/bin/firefox:${PATH}"
+ADD ./interfacer/contrib/setup_firefox.sh .
+RUN ./setup_firefox.sh
+RUN rm ./setup_firefox.sh && rm .travis.yml
+
+# Setup Browsh
+ADD ./interfacer/contrib/setup_browsh.sh .
+RUN ./setup_browsh.sh
+# Firefox behaves quite differently to normal on its first run, so by getting
+# that over and done with here when there's no user to be dissapointed means
+# that all future runs will be consistent.
+RUN TERM=xterm script \
+      --return \
+      -c "/app/browsh" \
+      /dev/null \
+      >/dev/null & \
+      sleep 10
+RUN rm ./setup_browsh.sh && rm manifest.json
+
+CMD ["/app/browsh"]
+

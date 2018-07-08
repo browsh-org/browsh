@@ -1,0 +1,55 @@
+@font-face {
+  /* A special font that only has unicode full blocks in it, so we can detect */
+  /* font colors and text visibility more easily. */
+  font-family: 'BlockCharMono';
+  src: url('/assets/BlockCharMono.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'BlankMono';
+  src: url('/assets/BlankMono.ttf') format('truetype');
+}
+
+/* Force text into a reliable grid */
+html * {
+  font-size: 15px !important;
+  line-height: 20px !important;
+  letter-spacing: 0px !important;
+  font-style: normal !important;
+  font-weight: normal !important;
+}
+
+a {
+  text-decoration: none !important;
+}
+
+.browsh-hide-text,
+.browsh-hide-text *,
+html * {
+  font-family: 'BlankMono' !important;
+}
+
+.browsh-show-text,
+.browsh-show-text * {
+  font-family: 'BlockCharMono' !important;
+}
+
+sup, sub {
+  vertical-align: baseline !important;
+}
+
+/* Prevents duplicated text caused by the rendering of the DOM's input box content
+ * and the CLI app's input box content */
+input, textarea {
+  color: transparent !important;
+}
+
+/**
+ * Site-specific fixes
+ *
+ * TODO: This is going to need to be much more formally organised
+ */
+/* Stackoverflow cookie banner */
+#js-gdpr-consent-banner {
+  display: none;
+}
