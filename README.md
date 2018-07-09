@@ -31,7 +31,7 @@ like VNC.
 One final reason to use terminal Browsh could be to offload the battery-drain of a modern
 browser from your laptop or low-powered device like a Raspberry Pi. If you're a CLI-native,
 then you could potentially get a few more hours life if your CPU-hungry browser
-is running somehwere else on mains electricity.
+is running somewhere else on mains electricity.
 
 ## Installation
 
