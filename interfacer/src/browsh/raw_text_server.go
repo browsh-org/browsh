@@ -91,6 +91,10 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 			io.WriteString(w, message)
 			return
 		}
+		if (strings.Contains(r.Host, "mail.google.com")) {
+			http.Redirect(w, r, "https://html.brow.sh", 301)
+			return
+		}
 		urlForBrowsh = "https://www.brow.sh/html-service-welcome"
 	}
 	if urlForBrowsh == "robots.txt" {
