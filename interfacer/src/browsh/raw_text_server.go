@@ -83,16 +83,16 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Cache-Control", "public, max-age=600")
+	if (strings.Contains(urlForBrowsh, "mail.google.com")) {
+		http.Redirect(w, r, "/", 301)
+		return
+	}
 	if strings.TrimSpace(urlForBrowsh) == "" {
 		if (strings.Contains(r.Host, "text.")) {
 			message = "Welcome to the Browsh plain text client.\n" +
 				"You can use it by appending URLs like this;\n" +
 				"https://html.brow.sh/https://www.brow.sh"
 			io.WriteString(w, message)
-			return
-		}
-		if (strings.Contains(r.Host, "mail.google.com")) {
-			http.Redirect(w, r, "https://html.brow.sh", 301)
 			return
 		}
 		urlForBrowsh = "https://www.brow.sh/html-service-welcome"
