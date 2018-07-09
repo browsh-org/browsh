@@ -8,6 +8,8 @@
 # repeat the build process (having done so in Travis after successfully
 # passing tests). So we simply just download the already built binary.
 
+set -e
+
 if [ ! -f manifest.json ]; then
   PROJECT_ROOT=$(git rev-parse --show-toplevel)/webext
 else
@@ -21,5 +23,5 @@ version=$(echo $line | grep -o '".*"' | cut -d " " -f 2 | sed 's/"//g')
 base='https://github.com/browsh-org/browsh/releases/download'
 release_url="$base/v$version/browsh_${version}_linux_amd64"
 
-curl -L -o browsh $release_url
+curl -L -o --fail browsh $release_url
 chmod a+x browsh
