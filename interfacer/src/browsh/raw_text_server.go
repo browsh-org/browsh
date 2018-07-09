@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"io"
 	"time"
+	"regexp"
 
 	"github.com/ulule/limiter"
 	"github.com/ulule/limiter/drivers/store/memory"
@@ -83,7 +84,7 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Cache-Control", "public, max-age=600")
-	if (strings.Contains(urlForBrowsh, "mail.google.com")) {
+	if (isDisallowedURL(urlForBrowsh)) {
 		http.Redirect(w, r, "/", 301)
 		return
 	}
@@ -109,6 +110,11 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		mode + "," +
 		urlForBrowsh)
 	waitForResponse(rawTextRequestID, w)
+}
+
+func isDisallowedURL(urlForBrowsh string) bool {
+	r, _ := regexp.Compile("[mail|accounts].google.com")
+	return r.MatchString(urlForBrowsh)
 }
 
 func isProductionHTTP(r *http.Request) bool {
