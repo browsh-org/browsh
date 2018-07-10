@@ -107,7 +107,7 @@ func ensureFirefoxBinary() {
 		if runtime.GOOS == "windows" {
 			*firefoxBinary = `c:\Program Files\Mozilla Firefox\firefox.exe`
 			if _, err := os.Stat(*firefoxBinary); os.IsNotExist(err) {
-				Shutdown(errors.New("Firefox binary not found in: " + *firefoxBinary + " or c:\Program Files (x86)\Mozilla Firefox\firefox.exe"))
+				Shutdown(errors.New(`Firefox binary not found in: c:\Program Files (x86)\Mozilla Firefox\firefox.exe or ` + *firefoxBinary))
 			}
 		} else {
 			Shutdown(errors.New("Firefox binary not found: " + *firefoxBinary))
