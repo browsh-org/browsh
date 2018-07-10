@@ -92,7 +92,7 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		if (strings.Contains(r.Host, "text.")) {
 			message = "Welcome to the Browsh plain text client.\n" +
 				"You can use it by appending URLs like this;\n" +
-				"https://html.brow.sh/https://www.brow.sh"
+				"https://text.brow.sh/https://www.brow.sh"
 			io.WriteString(w, message)
 			return
 		}
