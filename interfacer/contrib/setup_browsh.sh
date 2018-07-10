@@ -23,5 +23,5 @@ version=$(echo $line | grep -o '".*"' | cut -d " " -f 2 | sed 's/"//g')
 base='https://github.com/browsh-org/browsh/releases/download'
 release_url="$base/v$version/browsh_${version}_linux_amd64"
 
-curl -L -o --fail browsh $release_url
+curl -L -o browsh $release_url
 chmod a+x browsh
