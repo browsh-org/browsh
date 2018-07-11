@@ -1,8 +1,8 @@
 package test
 
 import (
-	"time"
 	"net/http"
+	"time"
 	"unicode/utf8"
 
 	"github.com/gdamore/tcell"
@@ -78,7 +78,9 @@ func WaitForText(text string, x, y int) {
 	start := time.Now()
 	for time.Since(start) < perTestTimeout {
 		found = GetText(x, y, runeCount(text))
-		if found == text { return }
+		if found == text {
+			return
+		}
 		time.Sleep(100 * time.Millisecond)
 	}
 	panic("Waiting for '" + text + "' to appear but it didn't")
@@ -126,8 +128,8 @@ func elementColourForTTY(element tcell.SimCell) string {
 	r1, g1, b1 := fg.RGB()
 	r2, g2, b2 := bg.RGB()
 	return ti.TParm(ti.SetFgBgRGB,
-			int(r1), int(g1), int(b1),
-			int(r2), int(g2), int(b2))
+		int(r1), int(g1), int(b1),
+		int(r2), int(g2), int(b2))
 }
 
 // GetText retruns an individual piece of a frame
@@ -139,7 +141,9 @@ func GetText(x, y, length int) string {
 	for {
 		text += string(frame[index])
 		index++
-		if runeCount(text) == length { break }
+		if runeCount(text) == length {
+			break
+		}
 	}
 	return text
 }
@@ -167,15 +171,15 @@ func GetBgColour(x, y int) [3]int32 {
 }
 
 func ensureOnlyOneTab() {
-	if (len(browsh.Tabs) > 1) {
+	if len(browsh.Tabs) > 1 {
 		SpecialKey(tcell.KeyCtrlW)
 	}
 }
 
 func startStaticFileServer() {
 	serverMux := http.NewServeMux()
-	serverMux.Handle("/", http.FileServer(http.Dir(rootDir + "/interfacer/test/sites")))
-	http.ListenAndServe(":" + staticFileServerPort, serverMux)
+	serverMux.Handle("/", http.FileServer(http.Dir(rootDir+"/interfacer/test/sites")))
+	http.ListenAndServe(":"+staticFileServerPort, serverMux)
 }
 
 func startBrowsh() {
@@ -188,7 +192,7 @@ func runeCount(text string) int {
 	return utf8.RuneCountInString(text)
 }
 
-var _ =	ginkgo.BeforeEach(func() {
+var _ = ginkgo.BeforeEach(func() {
 	browsh.IsMonochromeMode = false
 	browsh.Log("\n---------")
 	browsh.Log(ginkgo.CurrentGinkgoTestDescription().FullTestText)
@@ -202,6 +206,6 @@ var _ = ginkgo.BeforeSuite(func() {
 	sleepUntilPageLoad(startupWait)
 })
 
-var _	= ginkgo.AfterSuite(func() {
+var _ = ginkgo.AfterSuite(func() {
 	browsh.Shell(rootDir + "/webext/contrib/firefoxheadless.sh kill")
 })

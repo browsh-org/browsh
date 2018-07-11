@@ -16,7 +16,7 @@ func TestIntegration(t *testing.T) {
 var _ = Describe("Showing a basic webpage", func() {
 	BeforeEach(func() {
 		GotoURL(testSiteURL + "/smorgasbord/")
-  })
+	})
 
 	Describe("Browser UI", func() {
 		It("should have the page title and current URL", func() {
@@ -166,8 +166,12 @@ var _ = Describe("Showing a basic webpage", func() {
 				waitForNextFrame()
 			}
 			for i := 0; i < 10; i++ {
-				if colours[i] == [3]int32{0, 255, 255} { greens++ }
-				if colours[i] == [3]int32{255, 0, 255} { pinks++ }
+				if colours[i] == [3]int32{0, 255, 255} {
+					greens++
+				}
+				if colours[i] == [3]int32{255, 0, 255} {
+					pinks++
+				}
 			}
 			Expect(greens).To(BeNumerically(">=", 1))
 			Expect(pinks).To(BeNumerically(">=", 1))

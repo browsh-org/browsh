@@ -37,5 +37,3 @@ var _ = Describe("Raw text server", func() {
 		})
 	})
 })
-
-

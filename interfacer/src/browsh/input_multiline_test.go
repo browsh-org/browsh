@@ -78,10 +78,10 @@ var _ = Describe("Multiline text", func() {
 	Describe("Moving the Y cursor", func() {
 		It("should move to a line of greater width", func() {
 			toMulti(
-				`some words !o make ` +
-				`a long sent+nce ` +
-				`with many words on ` +
-				`each line `, 20)
+				`some words !o make `+
+					`a long sent+nce `+
+					`with many words on `+
+					`each line `, 20)
 			input.textCursor = 11
 			input.multiLiner.moveYCursorBy(1)
 			Expect(input.textCursor).To(Equal(30))
@@ -91,10 +91,10 @@ var _ = Describe("Multiline text", func() {
 
 		It("should move to a line of smaller width", func() {
 			toMulti(
-				`some words to make ` +
-				`a long sentence ` +
-				`with many w!rds on ` +
-				`each line+`, 20)
+				`some words to make `+
+					`a long sentence `+
+					`with many w!rds on `+
+					`each line+`, 20)
 			input.textCursor = 47
 			input.multiLiner.moveYCursorBy(1)
 			Expect(input.textCursor).To(Equal(64))
@@ -104,17 +104,16 @@ var _ = Describe("Multiline text", func() {
 		Describe("In text that has user-added line breaks", func() {
 			It("should move to a line of smaller width", func() {
 				toMulti(
-					`some words to make ` +
-					"a long \n" +
-					`sentence with man! ` +
-					`words+`, 20)
-					input.textCursor = 45
-					input.multiLiner.moveYCursorBy(1)
-					Expect(input.textCursor).To(Equal(52))
-					Expect(input.xCursor).To(Equal(6))
-					Expect(input.yCursor).To(Equal(3))
+					`some words to make `+
+						"a long \n"+
+						`sentence with man! `+
+						`words+`, 20)
+				input.textCursor = 45
+				input.multiLiner.moveYCursorBy(1)
+				Expect(input.textCursor).To(Equal(52))
+				Expect(input.xCursor).To(Equal(6))
+				Expect(input.yCursor).To(Equal(3))
 			})
 		})
 	})
 })
-

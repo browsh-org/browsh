@@ -2,9 +2,9 @@ package test
 
 import (
 	"fmt"
-	"time"
-	"net/http"
 	"io/ioutil"
+	"net/http"
+	"time"
 
 	ginkgo "github.com/onsi/ginkgo"
 
@@ -16,8 +16,8 @@ var rootDir = browsh.Shell("git rev-parse --show-toplevel")
 
 func startStaticFileServer() {
 	serverMux := http.NewServeMux()
-	serverMux.Handle("/", http.FileServer(http.Dir(rootDir + "/interfacer/test/sites")))
-	http.ListenAndServe(":" + staticFileServerPort, serverMux)
+	serverMux.Handle("/", http.FileServer(http.Dir(rootDir+"/interfacer/test/sites")))
+	http.ListenAndServe(":"+staticFileServerPort, serverMux)
 }
 
 func startBrowsh() {
@@ -31,7 +31,7 @@ func getPath(path string, mode string) string {
 	staticFileServerBase := "http://localhost:" + staticFileServerPort
 	fullBase := browshServiceBase + "/" + staticFileServerBase
 	client := &http.Client{}
-	request, err := http.NewRequest("GET", fullBase + path, nil)
+	request, err := http.NewRequest("GET", fullBase+path, nil)
 	if mode == "plain" {
 		request.Header.Add("X-Browsh-Raw-Mode", "PLAIN")
 	}
@@ -49,7 +49,7 @@ func getPath(path string, mode string) string {
 	}
 }
 
-var _ =	ginkgo.BeforeEach(func() {
+var _ = ginkgo.BeforeEach(func() {
 	browsh.IsMonochromeMode = false
 	browsh.Log("\n---------")
 	browsh.Log(ginkgo.CurrentGinkgoTestDescription().FullTestText)
@@ -65,6 +65,6 @@ var _ = ginkgo.BeforeSuite(func() {
 	getPath("/smorgasbord", "plain")
 })
 
-var _	= ginkgo.AfterSuite(func() {
+var _ = ginkgo.AfterSuite(func() {
 	browsh.Shell(rootDir + "/webext/contrib/firefoxheadless.sh kill")
 })

@@ -1,8 +1,8 @@
 package browsh
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -260,4 +260,3 @@ var _ = Describe("Frame struct", func() {
 		})
 	})
 })
-

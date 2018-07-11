@@ -7,14 +7,14 @@ import (
 )
 
 type multiLine struct {
-	inputBox *inputBox
-	index int
-	finalText []string
+	inputBox          *inputBox
+	index             int
+	finalText         []string
 	previousCharacter string
-	currentCharacter string
-	currentWordish string
-	currentLine string
-	userAddedLines []int
+	currentCharacter  string
+	currentWordish    string
+	currentLine       string
+	userAddedLines    []int
 }
 
 func (m *multiLine) convert() []rune {
@@ -32,7 +32,9 @@ func (m *multiLine) convert() []rune {
 		} else {
 			m.addWhitespace()
 		}
-		if m.isFinalCharacter() { m.finish() }
+		if m.isFinalCharacter() {
+			m.finish()
+		}
 	}
 	finalText := []rune(strings.Join(m.finalText, "\n"))
 	return finalText
@@ -53,14 +55,20 @@ func (m *multiLine) isInsideWord() bool {
 
 func (m *multiLine) isPreviousCharacterWhitespace() bool {
 	// TODO: Not certain returning `true` for emptiness is best
-	if m.previousCharacter == "" { return true }
+	if m.previousCharacter == "" {
+		return true
+	}
 	runes := []rune(m.previousCharacter)
-	if len(runes) == 0 { return true }
+	if len(runes) == 0 {
+		return true
+	}
 	return unicode.IsSpace(runes[0])
 }
 
 func (m *multiLine) isCurrentCharacterWhitespace() bool {
-	if (len([]rune(m.currentCharacter)) == 0) { return false }
+	if len([]rune(m.currentCharacter)) == 0 {
+		return false
+	}
 	return unicode.IsSpace([]rune(m.currentCharacter)[0])
 }
 
@@ -89,7 +97,7 @@ func (m *multiLine) currentLineLength() int {
 }
 
 func (m *multiLine) isProjectedLineFull() bool {
-	return m.currentLineLength() + m.currentWordishLength() >= m.inputBox.Width
+	return m.currentLineLength()+m.currentWordishLength() >= m.inputBox.Width
 }
 
 func (m *multiLine) addWordish() {
@@ -118,7 +126,7 @@ func (m *multiLine) addLineButWrapWord() {
 }
 
 func (m *multiLine) noteUserAddedLineIndex() {
-	m.userAddedLines = append(m.userAddedLines, m.lineCount() - 1)
+	m.userAddedLines = append(m.userAddedLines, m.lineCount()-1)
 }
 
 func (m *multiLine) appendWordToLine() {
@@ -145,7 +153,7 @@ func (m *multiLine) isNaturalLineBreak() bool {
 }
 
 func (m *multiLine) isFinalCharacter() bool {
-	return m.index + 1 == utf8.RuneCountInString(m.inputBox.text) + 1
+	return m.index+1 == utf8.RuneCountInString(m.inputBox.text)+1
 }
 
 func (m *multiLine) lineCount() int {
@@ -170,25 +178,37 @@ func (m *multiLine) updateCursor() {
 			xCursor++
 			index++
 		}
-		if !m.isUserAddedLine(lineIndex) { index-- }
+		if !m.isUserAddedLine(lineIndex) {
+			index--
+		}
 		xCursor = 0
 		yCursor++
 	}
 }
 
 func (m *multiLine) moveYCursorBy(magnitude int) {
-	if !m.inputBox.isMultiLine() { return }
+	if !m.inputBox.isMultiLine() {
+		return
+	}
 	m.convert()
 	m.updateCursor()
 	lastLineIndex := m.lineCount() - 1
 	m.inputBox.yCursor += magnitude
-	if m.inputBox.yCursor < 0 { m.inputBox.yCursor = 0 }
-	if m.inputBox.yCursor > lastLineIndex { m.inputBox.yCursor = lastLineIndex }
+	if m.inputBox.yCursor < 0 {
+		m.inputBox.yCursor = 0
+	}
+	if m.inputBox.yCursor > lastLineIndex {
+		m.inputBox.yCursor = lastLineIndex
+	}
 	targetLineLength := utf8.RuneCountInString(m.finalText[m.inputBox.yCursor])
-	if m.inputBox.xCursor > targetLineLength - 1 {
+	if m.inputBox.xCursor > targetLineLength-1 {
 		m.inputBox.xCursor = targetLineLength
-		if !m.isUserAddedLine(m.inputBox.yCursor) { m.inputBox.xCursor-- }
-		if m.inputBox.xCursor < 0 { m.inputBox.xCursor = 0 }
+		if !m.isUserAddedLine(m.inputBox.yCursor) {
+			m.inputBox.xCursor--
+		}
+		if m.inputBox.xCursor < 0 {
+			m.inputBox.xCursor = 0
+		}
 	}
 	m.convertXYCursorToTextCursor()
 }

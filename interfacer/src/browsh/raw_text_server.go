@@ -1,19 +1,19 @@
 package browsh
 
 import (
+	"crypto/rand"
 	"fmt"
-	"strings"
+	"io"
 	"net/http"
 	"net/url"
-	"crypto/rand"
-	"io"
-	"time"
 	"regexp"
+	"strings"
+	"time"
 
-	"github.com/ulule/limiter"
-	"github.com/ulule/limiter/drivers/store/memory"
-	"github.com/ulule/limiter/drivers/middleware/stdlib"
 	"github.com/NYTimes/gziphandler"
+	"github.com/ulule/limiter"
+	"github.com/ulule/limiter/drivers/middleware/stdlib"
+	"github.com/ulule/limiter/drivers/store/memory"
 )
 
 // In order to communicate between the incoming HTTP request and the websocket request to the
@@ -35,7 +35,7 @@ func HTTPServerStart() {
 	uncompressed := http.HandlerFunc(handleHTTPServerRequest)
 	limiterMiddleware := setupRateLimiter()
 	serverMux.Handle("/", limiterMiddleware.Handler(gziphandler.GzipHandler(uncompressed)))
-	if err := http.ListenAndServe(*httpServerBind + ":" + *HTTPServerPort, &slashFix{serverMux}); err != nil {
+	if err := http.ListenAndServe(*httpServerBind+ ":"+*HTTPServerPort, &slashFix{serverMux}); err != nil {
 		Shutdown(err)
 	}
 }
@@ -87,7 +87,7 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if isProductionHTTP(r) {
-		http.Redirect(w, r, "https://" + r.Host + "/" + urlForBrowsh, 301)
+		http.Redirect(w, r, "https://"+r.Host+"/"+urlForBrowsh, 301)
 		return
 	}
 	if urlForBrowsh == "favicon.ico" {
@@ -95,12 +95,12 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Cache-Control", "public, max-age=600")
-	if (isDisallowedURL(urlForBrowsh)) {
+	if isDisallowedURL(urlForBrowsh) {
 		http.Redirect(w, r, "/", 301)
 		return
 	}
 	if strings.TrimSpace(urlForBrowsh) == "" {
-		if (strings.Contains(r.Host, "text.")) {
+		if strings.Contains(r.Host, "text.") {
 			message = "Welcome to the Browsh plain text client.\n" +
 				"You can use it by appending URLs like this;\n" +
 				"https://text.brow.sh/https://www.brow.sh"
@@ -118,8 +118,8 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 	mode := getRawTextMode(r)
 	sendMessageToWebExtension(
 		"/raw_text_request," + rawTextRequestID + "," +
-		mode + "," +
-		urlForBrowsh)
+			mode + "," +
+			urlForBrowsh)
 	waitForResponse(rawTextRequestID, w)
 }
 
@@ -141,7 +141,7 @@ func isDisallowedURL(urlForBrowsh string) bool {
 }
 
 func isProductionHTTP(r *http.Request) bool {
-	if (strings.Contains(r.Host, "brow.sh")) {
+	if strings.Contains(r.Host, "brow.sh") {
 		return r.Header.Get("X-Forwarded-Proto") == "http"
 	}
 	return false
@@ -151,8 +151,12 @@ func isProductionHTTP(r *http.Request) bool {
 // 'HTML' mode returns some basic HTML tags for things like anchor links.
 func getRawTextMode(r *http.Request) string {
 	var mode = "HTML"
-	if (strings.Contains(r.Host, "text.")) { mode = "PLAIN" }
-	if (r.Header.Get("X-Browsh-Raw-Mode") == "PLAIN") { mode = "PLAIN" }
+	if strings.Contains(r.Host, "text.") {
+		mode = "PLAIN"
+	}
+	if r.Header.Get("X-Browsh-Raw-Mode") == "PLAIN" {
+		mode = "PLAIN"
+	}
 	return mode
 }
 

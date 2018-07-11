@@ -1,29 +1,32 @@
 package browsh
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 )
 
 // Tabs is a map of all tab data
 var Tabs = make(map[int]*tab)
+
 // CurrentTab is the currently active tab in the TTY browser
 var CurrentTab *tab
+
 // Slice of the order in which tabs appear in the tab bar
 var tabsOrder []int
+
 // There can be a race condition between the webext sending a tab state update and the
 // the tab being deleted, so we need to keep track of all deleted IDs
 var tabsDeleted []int
 
 // A single tab synced from the browser
 type tab struct {
-	ID int `json:"id"`
-	Active bool `json:"active"`
-	Title string `json:"title"`
-	URI string `json:"uri"`
-	PageState string `json:"page_state"`
+	ID            int    `json:"id"`
+	Active        bool   `json:"active"`
+	Title         string `json:"title"`
+	URI           string `json:"uri"`
+	PageState     string `json:"page_state"`
 	StatusMessage string `json:"status_message"`
-	frame frame
+	frame         frame
 }
 
 func ensureTabExists(id int) {
@@ -52,7 +55,9 @@ func newTab(id int) {
 }
 
 func removeTab(id int) {
-	if (len(Tabs) == 1) { quitBrowsh() }
+	if len(Tabs) == 1 {
+		quitBrowsh()
+	}
 	tabsDeleted = append(tabsDeleted, id)
 	sendMessageToWebExtension(fmt.Sprintf("/remove_tab,%d", id))
 	nextTab()
@@ -77,7 +82,9 @@ func removeTabIDfromTabsOrder(id int) {
 // tab then we can't talk to it to tell it navigate. So we need to only create a real new
 // tab when we actually have a URL.
 func createNewEmptyTab() {
-	if isNewEmptyTabActive() { return }
+	if isNewEmptyTabActive() {
+		return
+	}
 	newTab(-1)
 	tab := Tabs[-1]
 	tab.Title = "New Tab"
@@ -97,8 +104,8 @@ func isNewEmptyTabActive() bool {
 func nextTab() {
 	for i := 0; i < len(tabsOrder); i++ {
 		if tabsOrder[i] == CurrentTab.ID {
-			if (i + 1 == len(tabsOrder)) {
-				i = 0;
+			if i+1 == len(tabsOrder) {
+				i = 0
 			} else {
 				i++
 			}
@@ -126,21 +133,20 @@ func parseJSONTabState(jsonString string) {
 	if err := json.Unmarshal(jsonBytes, &incoming); err != nil {
 		Shutdown(err)
 	}
-	if (isTabPreviouslyDeleted(incoming.ID)) {
+	if isTabPreviouslyDeleted(incoming.ID) {
 		return
 	}
 	ensureTabExists(incoming.ID)
-	if (incoming.Active && !isNewEmptyTabActive()) {
+	if incoming.Active && !isNewEmptyTabActive() {
 		CurrentTab = Tabs[incoming.ID]
 	}
 	Tabs[incoming.ID].handleStateChange(&incoming)
 }
 
-
 func (t *tab) handleStateChange(incoming *tab) {
-	if (t.PageState != incoming.PageState) {
+	if t.PageState != incoming.PageState {
 		// TODO: Take the browser's scroll events as lead
-		if (incoming.PageState == "page_init") {
+		if incoming.PageState == "page_init" {
 			t.frame.yScroll = 0
 		}
 	}

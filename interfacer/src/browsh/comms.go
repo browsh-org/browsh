@@ -1,39 +1,39 @@
 package browsh
 
 import (
-	"strings"
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"encoding/json"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
 
 var (
-	upgrader             = websocket.Upgrader{
+	upgrader = websocket.Upgrader{
 		CheckOrigin:     func(r *http.Request) bool { return true },
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
-	stdinChannel   = make(chan string)
+	stdinChannel              = make(chan string)
 	isConnectedToWebExtension = false
 )
 
 type incomingRawText struct {
 	RequestID string `json:"request_id"`
-	RawText string `json:"body"`
+	RawText   string `json:"body"`
 }
 
 func startWebSocketServer() {
 	serverMux := http.NewServeMux()
 	serverMux.HandleFunc("/", webSocketServer)
-	if err := http.ListenAndServe(":" + *webSocketPort, serverMux); err != nil {
+	if err := http.ListenAndServe(":"+*webSocketPort, serverMux); err != nil {
 		Shutdown(err)
 	}
 }
 
 func sendMessageToWebExtension(message string) {
-	if (!isConnectedToWebExtension) {
+	if !isConnectedToWebExtension {
 		Log("Webextension not connected. Message not sent: " + message)
 		return
 	}

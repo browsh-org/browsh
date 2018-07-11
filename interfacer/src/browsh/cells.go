@@ -11,8 +11,8 @@ import (
 // of this frame for fast scrolling.
 type cell struct {
 	character []rune
-	fgColour tcell.Color
-	bgColour tcell.Color
+	fgColour  tcell.Color
+	bgColour  tcell.Color
 }
 
 // Both updating a frame and scrolling a frame can happen at the same time, so we need

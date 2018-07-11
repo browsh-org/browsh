@@ -8,14 +8,15 @@ import (
 
 var (
 	urlInputBox = inputBox{
-		X: 0,
-		Y: 1,
-		Height: 1,
-		text: "",
+		X:        0,
+		Y:        1,
+		Height:   1,
+		text:     "",
 		FgColour: [3]int32{255, 255, 255},
 		bgColour: [3]int32{-1, -1, -1},
 	}
 )
+
 // Render tabs, URL bar, status messages, etc
 func renderUI() {
 	renderTabs()
@@ -45,7 +46,7 @@ func writeString(x, y int, str string, style tcell.Style) {
 
 func fillLineToEnd(x, y int) {
 	width, _ := screen.Size()
-	for i := x; i < width - 1; i++ {
+	for i := x; i < width-1; i++ {
 		writeString(i, y, " ", tcell.StyleDefault)
 	}
 }
@@ -61,12 +62,14 @@ func renderTabs() {
 		tabTitle := []rune(tab.Title)
 		tabTitleContent := string(tabTitle[0:tabTitleLength])
 		style = tcell.StyleDefault
-		if (CurrentTab.ID == tabID) { style = tcell.StyleDefault.Reverse(true) }
+		if CurrentTab.ID == tabID {
+			style = tcell.StyleDefault.Reverse(true)
+		}
 		writeString(xPosition, 0, tabTitleContent, style)
 		style = tcell.StyleDefault.Reverse(false)
 		count++
 		xPosition = count * (tabTitleLength + 1)
-		writeString(xPosition - 1, 0, "|", style)
+		writeString(xPosition-1, 0, "|", style)
 	}
 	fillLineToEnd(xPosition, 0)
 }
@@ -109,7 +112,7 @@ func urlBarFocus(on bool) {
 
 func overlayPageStatusMessage() {
 	_, height := screen.Size()
-	writeString(0, height - 1, CurrentTab.StatusMessage, tcell.StyleDefault)
+	writeString(0, height-1, CurrentTab.StatusMessage, tcell.StyleDefault)
 }
 
 func reverseCellColour(x, y int) {

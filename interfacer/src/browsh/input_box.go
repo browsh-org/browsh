@@ -1,8 +1,8 @@
 package browsh
 
 import (
-	"unicode/utf8"
 	"encoding/json"
+	"unicode/utf8"
 
 	"github.com/gdamore/tcell"
 )
@@ -18,25 +18,25 @@ var activeInputBox *inputBox
 // input boxes - namely overlaying them onto the existing graphics and having them
 // scroll in sync.
 type inputBox struct {
-	ID string `json:"id"`
-	X int `json:"x"`
-	Y int `json:"y"`
-	Width int `json:"width"`
-	Height int `json:"height"`
-	TagName string `json:"tag_name"`
-	Type string `json:"type"`
-	FgColour [3]int32 `json:"colour"`
-	bgColour [3]int32
-	isActive bool
-	multiLiner multiLine
-	text string
-	xCursor int
-	yCursor int
-	textCursor int
-	xScroll int
-	yScroll int
+	ID             string   `json:"id"`
+	X              int      `json:"x"`
+	Y              int      `json:"y"`
+	Width          int      `json:"width"`
+	Height         int      `json:"height"`
+	TagName        string   `json:"tag_name"`
+	Type           string   `json:"type"`
+	FgColour       [3]int32 `json:"colour"`
+	bgColour       [3]int32
+	isActive       bool
+	multiLiner     multiLine
+	text           string
+	xCursor        int
+	yCursor        int
+	textCursor     int
+	xScroll        int
+	yScroll        int
 	selectionStart int
-	selectionEnd int
+	selectionEnd   int
 }
 
 func newInputBox(id string) *inputBox {
@@ -65,14 +65,18 @@ func (i *inputBox) renderURLBox() {
 
 // This is used for all input boxes in the frame
 func (i *inputBox) setCells() {
-	if i == nil { return }
+	if i == nil {
+		return
+	}
 	i.resetCells()
 	x := i.X
 	y := i.Y
 	lineCount := 0
 	for index, c := range i.textToDisplay() {
 		if i.isMultiLine() && lineCount < i.yScroll {
-			if isLineBreak(string(c)) { lineCount++ }
+			if isLineBreak(string(c)) {
+				lineCount++
+			}
 			continue
 		}
 		if i.Type == "password" && index != utf8.RuneCountInString(i.text) {
@@ -84,7 +88,9 @@ func (i *inputBox) setCells() {
 			x = i.X
 			y++
 			lineCount++
-			if lineCount - i.yScroll > i.Height { break }
+			if lineCount-i.yScroll > i.Height {
+				break
+			}
 		}
 	}
 	screen.Show()
@@ -100,10 +106,10 @@ func (i *inputBox) resetCells() {
 
 func (i *inputBox) addCharacterToFrame(x int, y int, c rune) {
 	var (
-		index int
+		index                      int
 		inputBoxCell, existingCell cell
 		cellFGColour, cellBGColour tcell.Color
-		ok bool
+		ok                         bool
 	)
 	cellFGColour = tcell.NewRGBColor(i.FgColour[0], i.FgColour[1], i.FgColour[2])
 	index = (y * CurrentTab.frame.totalWidth) + x
@@ -114,8 +120,8 @@ func (i *inputBox) addCharacterToFrame(x int, y int, c rune) {
 	}
 	inputBoxCell = cell{
 		character: []rune{c},
-		fgColour: cellFGColour,
-		bgColour: cellBGColour,
+		fgColour:  cellFGColour,
+		bgColour:  cellBGColour,
 	}
 	CurrentTab.frame.cells.store(index, inputBoxCell)
 }
@@ -123,7 +129,9 @@ func (i *inputBox) addCharacterToFrame(x int, y int, c rune) {
 // Different methods are used for containing and displaying overflowed text depending on the
 // size of the input box.
 func (i *inputBox) isMultiLine() bool {
-	if urlInputBox.isActive { return false }
+	if urlInputBox.isActive {
+		return false
+	}
 	return i.TagName == "TEXTAREA" || i.Type == "textbox"
 }
 
@@ -138,11 +146,13 @@ func (i *inputBox) textToDisplayForSingleLine() []rune {
 	var textToDisplay string
 	index := 0
 	for _, c := range i.text + " " {
-		if (index >= i.xScroll) {
+		if index >= i.xScroll {
 			textToDisplay += string(c)
 		}
-		if utf8.RuneCountInString(textToDisplay) >= i.Width { break }
-    index++
+		if utf8.RuneCountInString(textToDisplay) >= i.Width {
+			break
+		}
+		index++
 	}
 	return []rune(textToDisplay)
 }
@@ -157,7 +167,7 @@ func isLineBreak(character string) bool {
 
 func (i *inputBox) sendInputBoxToBrowser() {
 	inputBoxMap := map[string]interface{}{
-		"id": i.ID,
+		"id":   i.ID,
 		"text": i.text,
 	}
 	marshalled, _ := json.Marshal(inputBoxMap)
@@ -196,7 +206,9 @@ func (i *inputBox) selectAll() {
 }
 
 func (i *inputBox) removeSelectedText() {
-	if (i.selectionEnd - i.selectionStart <= 0) { return }
+	if i.selectionEnd-i.selectionStart <= 0 {
+		return
+	}
 	start := i.text[:i.selectionStart]
 	end := i.text[i.selectionEnd:]
 	i.text = start + end
@@ -235,4 +247,3 @@ func handleInputBoxInput(ev *tcell.EventKey) {
 		renderCurrentTabWindow()
 	}
 }
-

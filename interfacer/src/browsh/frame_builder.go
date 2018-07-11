@@ -1,8 +1,8 @@
 package browsh
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"unicode"
 
 	"github.com/gdamore/tcell"
@@ -13,14 +13,14 @@ import (
 type frame struct {
 	// Dimensions of the frame's real data. Can be less than the DOM dimensions because
 	// we cannot sync frames of unlimited size from the browser.
-	subWidth int
+	subWidth  int
 	subHeight int
 	// If the frame is smaller than the DOM, then this is the frame's position
 	// within the overall DOM.
 	subLeft int
-	subTop int
+	subTop  int
 	// The total DOM dimensions. These are measured in the same units of the frame
-	totalWidth int
+	totalWidth  int
 	totalHeight int
 	// The current position of the scroll in the TTY. Should be synced with the real
 	// browser.
@@ -31,8 +31,8 @@ type frame struct {
 	// of a different size and shape will interact with data from another DOM.
 	isDOMSizeChanged bool
 	// Raw data used to build a single, usable frame
-	pixels map[int][2]tcell.Color
-	text map[int][]rune
+	pixels      map[int][2]tcell.Color
+	text        map[int][]rune
 	textColours map[int]tcell.Color
 	// The actual built frame, can be used to render cells to the TTY
 	cells *threadSafeCellsMap
@@ -41,26 +41,26 @@ type frame struct {
 }
 
 type jsonFrameBase struct {
-	TabID int `json:"id"`
-	SubWidth int `json:"sub_width"`
-	SubHeight int `json:"sub_height"`
-	SubLeft int `json:"sub_left"`
-	SubTop int `json:"sub_top"`
-	TotalWidth int `json:"total_width"`
+	TabID       int `json:"id"`
+	SubWidth    int `json:"sub_width"`
+	SubHeight   int `json:"sub_height"`
+	SubLeft     int `json:"sub_left"`
+	SubTop      int `json:"sub_top"`
+	TotalWidth  int `json:"total_width"`
 	TotalHeight int `json:"total_height"`
 }
 
 type incomingFrameText struct {
-	Meta jsonFrameBase `json:"meta"`
-	Text []string `json:"text"`
-	Colours []int32 `json:"colours"`
+	Meta       jsonFrameBase       `json:"meta"`
+	Text       []string            `json:"text"`
+	Colours    []int32             `json:"colours"`
 	InputBoxes map[string]inputBox `json:"input_boxes"`
 }
 
 // TODO: Can these be sent as binary blobs?
 type incomingFramePixels struct {
-	Meta jsonFrameBase `json:"meta"`
-	Colours []int32 `json:"colours"`
+	Meta    jsonFrameBase `json:"meta"`
+	Colours []int32       `json:"colours"`
 }
 
 func (f *frame) domRowCount() int {
@@ -77,7 +77,7 @@ func parseJSONFrameText(jsonString string) {
 	if err := json.Unmarshal(jsonBytes, &incoming); err != nil {
 		Shutdown(err)
 	}
-	if (!isTabPresent(incoming.Meta.TabID)) {
+	if !isTabPresent(incoming.Meta.TabID) {
 		Log(fmt.Sprintf("Not building frame for non-existent tab ID: %d", incoming.Meta.TabID))
 		return
 	}
@@ -86,7 +86,9 @@ func parseJSONFrameText(jsonString string) {
 
 func (f *frame) buildFrameText(incoming incomingFrameText) {
 	f.setup(incoming.Meta)
-	if (!f.isIncomingFrameTextValid(incoming)) { return }
+	if !f.isIncomingFrameTextValid(incoming) {
+		return
+	}
 	f.updateInputBoxes(incoming)
 	f.populateFrameText(incoming)
 }
@@ -97,17 +99,21 @@ func parseJSONFramePixels(jsonString string) {
 	if err := json.Unmarshal(jsonBytes, &incoming); err != nil {
 		Shutdown(err)
 	}
-	if (!isTabPresent(incoming.Meta.TabID)) {
+	if !isTabPresent(incoming.Meta.TabID) {
 		Log(fmt.Sprintf("Not building frame for non-existent tab ID: %d", incoming.Meta.TabID))
 		return
 	}
-	if (len(Tabs[incoming.Meta.TabID].frame.text) == 0) { return }
+	if len(Tabs[incoming.Meta.TabID].frame.text) == 0 {
+		return
+	}
 	Tabs[incoming.Meta.TabID].frame.buildFramePixels(incoming)
 }
 
 func (f *frame) buildFramePixels(incoming incomingFramePixels) {
 	f.setup(incoming.Meta)
-	if (!f.isIncomingFramePixelsValid(incoming)) { return }
+	if !f.isIncomingFramePixelsValid(incoming) {
+		return
+	}
 	f.populateFramePixels(incoming)
 }
 
@@ -132,7 +138,7 @@ func (f *frame) resetCells() {
 }
 
 func (f *frame) isIncomingFrameTextValid(incoming incomingFrameText) bool {
-	if (len(incoming.Text) == 0) {
+	if len(incoming.Text) == 0 {
 		Log("Not parsing zero-size text frame")
 		return false
 	}
@@ -166,21 +172,21 @@ func (f *frame) updateInputBoxes(incoming incomingFrameText) {
 func (f *frame) populateFrameText(incoming incomingFrameText) {
 	var cellIndex, frameIndex, colourIndex int
 	if f.isDOMSizeChanged || f.text == nil {
-		f.text = make(map[int][]rune, (f.domRowCount()) * f.totalWidth)
-		f.textColours = make(map[int]tcell.Color, (f.domRowCount()) * f.totalWidth)
+		f.text = make(map[int][]rune, (f.domRowCount())*f.totalWidth)
+		f.textColours = make(map[int]tcell.Color, (f.domRowCount())*f.totalWidth)
 	}
 	for y := 0; y < f.subRowCount(); y++ {
 		for x := 0; x < f.subWidth; x++ {
-			cellIndex = f.getCellIndexFromSubCoords(x, y * 2)
+			cellIndex = f.getCellIndexFromSubCoords(x, y*2)
 			frameIndex = (y * f.subWidth) + x
 			colourIndex = frameIndex * 3
 			f.textColours[cellIndex] = tcell.NewRGBColor(
-				incoming.Colours[colourIndex + 0],
-				incoming.Colours[colourIndex + 1],
-				incoming.Colours[colourIndex + 2],
+				incoming.Colours[colourIndex+0],
+				incoming.Colours[colourIndex+1],
+				incoming.Colours[colourIndex+2],
 			)
 			f.text[cellIndex] = []rune(incoming.Text[frameIndex])
-			f.buildCell(f.subLeft + x, (f.subTop / 2) + y);
+			f.buildCell(f.subLeft+x, (f.subTop/2)+y)
 		}
 	}
 }
@@ -188,7 +194,7 @@ func (f *frame) populateFrameText(incoming incomingFrameText) {
 func (f *frame) populateFramePixels(incoming incomingFramePixels) {
 	var cellIndex, frameIndexFg, frameIndexBg, pixelIndexFg, pixelIndexBg int
 	if f.isDOMSizeChanged || f.pixels == nil {
-		f.pixels = make(map[int][2]tcell.Color, f.totalHeight * f.totalWidth)
+		f.pixels = make(map[int][2]tcell.Color, f.totalHeight*f.totalWidth)
 	}
 	data := incoming.Colours
 	for y := 0; y < f.subHeight; y += 2 {
@@ -200,24 +206,24 @@ func (f *frame) populateFramePixels(incoming incomingFramePixels) {
 			pixelIndexFg = frameIndexFg * 3
 			pixels := [2]tcell.Color{
 				tcell.NewRGBColor(
-					data[pixelIndexBg + 0],
-					data[pixelIndexBg + 1],
-					data[pixelIndexBg + 2],
+					data[pixelIndexBg+0],
+					data[pixelIndexBg+1],
+					data[pixelIndexBg+2],
 				),
 				tcell.NewRGBColor(
-					data[pixelIndexFg + 0],
-					data[pixelIndexFg + 1],
-					data[pixelIndexFg + 2],
+					data[pixelIndexFg+0],
+					data[pixelIndexFg+1],
+					data[pixelIndexFg+2],
 				),
 			}
 			f.pixels[cellIndex] = pixels
-			f.buildCell(f.subLeft + x, (f.subTop + y) / 2);
+			f.buildCell(f.subLeft+x, (f.subTop+y)/2)
 		}
 	}
 }
 
 func (f *frame) isIncomingFramePixelsValid(incoming incomingFramePixels) bool {
-	if (len(incoming.Colours) == 0) {
+	if len(incoming.Colours) == 0 {
 		Log("Not parsing zero-size text frame")
 		return false
 	}
@@ -233,7 +239,7 @@ func (f *frame) buildCell(x int, y int) {
 	index := (y * f.totalWidth) + x
 	character, fgColour := f.getCharacterAt(index)
 	pixelFg, bgColour := f.getPixelColoursAt(index)
-	if (isCharacterTransparent(character)) {
+	if isCharacterTransparent(character) {
 		character = []rune("▄")
 		fgColour = pixelFg
 	}
@@ -266,13 +272,13 @@ func (f *frame) getPixelColoursAt(index int) (tcell.Color, tcell.Color) {
 }
 
 func isCharacterTransparent(character []rune) bool {
-	return string(character) == "" || unicode.IsSpace(character[0]);
+	return string(character) == "" || unicode.IsSpace(character[0])
 }
 
 func (f *frame) addCell(index int, fgColour, bgColour tcell.Color, character []rune) {
 	newCell := cell{
-		fgColour: fgColour,
-		bgColour: bgColour,
+		fgColour:  fgColour,
+		bgColour:  bgColour,
 		character: character,
 	}
 	f.cells.store(index, newCell)
@@ -289,8 +295,12 @@ func (f *frame) getCellIndexFromSubCoords(x, y int) int {
 
 func (f *frame) limitScroll(height int) {
 	maxYScroll := f.domRowCount() - height
-	if (f.yScroll > maxYScroll) { f.yScroll = maxYScroll }
-	if (f.yScroll < 0) { f.yScroll = 0 }
+	if f.yScroll > maxYScroll {
+		f.yScroll = maxYScroll
+	}
+	if f.yScroll < 0 {
+		f.yScroll = 0
+	}
 }
 
 func (f *frame) maybeFocusInputBox(x, y int) {

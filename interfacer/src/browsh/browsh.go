@@ -4,12 +4,12 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
-	"strconv"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"runtime"
 	"path/filepath"
+	"runtime"
+	"strconv"
 	"strings"
 
 	// TCell seems to be one of the best projects in any language for handling terminal
@@ -43,15 +43,15 @@ var (
 	isDebug              = flag.Bool("debug", false, "Log to ./debug.log")
 	timeLimit            = flag.Int("time-limit", 0, "Kill Browsh after the specified number of seconds")
 	// StartupURL is the URL of the first tab at boot
-	StartupURL           = flag.String("startup-url", "https://google.com", "URL to launch at startup")
+	StartupURL = flag.String("startup-url", "https://google.com", "URL to launch at startup")
 	// IsHTTPServer needs to be exported for use in tests
-	IsHTTPServer         = flag.Bool("http-server", false, "Run as an HTTP service")
+	IsHTTPServer = flag.Bool("http-server", false, "Run as an HTTP service")
 	// HTTPServerPort also needs to be exported for use in tests
-	HTTPServerPort       = flag.String("http-server-port", "4333", "HTTP server address")
-	httpServerBind       = flag.String("http-server-bind", "0.0.0.0", "HTTP server binding address")
+	HTTPServerPort = flag.String("http-server-port", "4333", "HTTP server address")
+	httpServerBind = flag.String("http-server-bind", "0.0.0.0", "HTTP server binding address")
 	// IsTesting is used in tests, so it needs to be exported
-	IsTesting            = false
-	logfile              string
+	IsTesting = false
+	logfile   string
 )
 
 func setupLogging() {
@@ -153,7 +153,7 @@ func getConfigFolder() string {
 func Shell(command string) string {
 	parts := strings.Fields(command)
 	head := parts[0]
-	parts = parts[1:len(parts)]
+	parts = parts[1:]
 	out, err := exec.Command(head, parts...).CombinedOutput()
 	if err != nil {
 		Log(fmt.Sprintf(
@@ -211,7 +211,7 @@ func ttyEntry() {
 // MainEntry decides between running Browsh as a CLI app or as an HTTP web server
 func MainEntry() {
 	flag.Parse()
-	if (*IsHTTPServer) {
+	if *IsHTTPServer {
 		HTTPServerStart()
 	} else {
 		ttyEntry()

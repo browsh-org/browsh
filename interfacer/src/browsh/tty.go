@@ -1,16 +1,16 @@
 package browsh
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
-	"encoding/json"
 
 	"github.com/gdamore/tcell"
 	"github.com/go-errors/errors"
 )
 
 var (
-	screen tcell.Screen
+	screen   tcell.Screen
 	uiHeight = 2
 	// IsMonochromeMode decides whether to render the TTY in full colour or monochrome
 	IsMonochromeMode = false
@@ -50,7 +50,9 @@ func readStdin() {
 
 func handleUserKeyPress(ev *tcell.EventKey) {
 	if CurrentTab == nil {
-		if ev.Key() == tcell.KeyCtrlQ { quitBrowsh() }
+		if ev.Key() == tcell.KeyCtrlQ {
+			quitBrowsh()
+		}
 		return
 	}
 	switch ev.Key() {
@@ -67,13 +69,13 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 			sendMessageToWebExtension("/tab_command,/history_back")
 		}
 	}
-	if (ev.Rune() == 'm' && ev.Modifiers() == 4) {
+	if ev.Rune() == 'm' && ev.Modifiers() == 4 {
 		toggleMonochromeMode()
 	}
-	if (ev.Key() == 279 && ev.Modifiers() == 0) {
+	if ev.Key() == 279 && ev.Modifiers() == 0 {
 		openHelpTab()
 	}
-	if (ev.Key() == 9 && ev.Modifiers() == 0) {
+	if ev.Key() == 9 && ev.Modifiers() == 0 {
 		nextTab()
 	}
 	if !urlInputBox.isActive {
@@ -102,7 +104,9 @@ func openHelpTab() {
 }
 
 func forwardKeyPress(ev *tcell.EventKey) {
-	if isMultiLineEnter(ev) { return }
+	if isMultiLineEnter(ev) {
+		return
+	}
 	eventMap := map[string]interface{}{
 		"key":  int(ev.Key()),
 		"char": string(ev.Rune()),
@@ -115,7 +119,9 @@ func forwardKeyPress(ev *tcell.EventKey) {
 // Allow user to use ENTER key without triggering submission on multiline input
 // boxes.
 func isMultiLineEnter(ev *tcell.EventKey) bool {
-	if activeInputBox == nil { return false }
+	if activeInputBox == nil {
+		return false
+	}
 	return activeInputBox.isMultiLine() && ev.Key() == 13 && ev.Modifiers() != 4
 }
 
@@ -140,14 +146,16 @@ func handleScrolling(ev *tcell.EventKey) {
 		fmt.Sprintf(
 			"/tab_command,/scroll_status,%d,%d",
 			CurrentTab.frame.xScroll,
-			CurrentTab.frame.yScroll * 2))
-	if (CurrentTab.frame.yScroll != yScrollOriginal) {
+			CurrentTab.frame.yScroll*2))
+	if CurrentTab.frame.yScroll != yScrollOriginal {
 		renderCurrentTabWindow()
 	}
 }
 
 func handleMouseEvent(ev *tcell.EventMouse) {
-	if CurrentTab == nil { return }
+	if CurrentTab == nil {
+		return
+	}
 	x, y := ev.Position()
 	xInFrame := x + CurrentTab.frame.xScroll
 	yInFrame := y - uiHeight + CurrentTab.frame.yScroll
@@ -185,12 +193,14 @@ func renderCurrentTabWindow() {
 		return
 	}
 	CurrentTab.frame.overlayInputBoxContent()
-	for y := 0; y < height - uiHeight; y++ {
+	for y := 0; y < height-uiHeight; y++ {
 		for x := 0; x < width; x++ {
 			currentCell = getCell(x, y)
 			runeChars = currentCell.character
 			// TODO: do this is in isCharacterTransparent()
-			if (len(runeChars) == 0) { continue }
+			if len(runeChars) == 0 {
+				continue
+			}
 			if IsMonochromeMode {
 				styling = styling.Foreground(tcell.ColorWhite)
 				styling = styling.Background(tcell.ColorBlack)
@@ -201,10 +211,12 @@ func renderCurrentTabWindow() {
 				styling = styling.Foreground(currentCell.fgColour)
 				styling = styling.Background(currentCell.bgColour)
 			}
-			screen.SetCell(x, y + uiHeight, styling, runeChars[0])
+			screen.SetCell(x, y+uiHeight, styling, runeChars[0])
 		}
 	}
-	if activeInputBox != nil { activeInputBox.renderCursor() }
+	if activeInputBox != nil {
+		activeInputBox.renderCursor()
+	}
 	overlayPageStatusMessage()
 	screen.Show()
 }
@@ -213,12 +225,12 @@ func getCell(x, y int) cell {
 	var currentCell cell
 	var ok bool
 	frame := &CurrentTab.frame
-	index := ((y + frame.yScroll) * frame.totalWidth) + ((x + frame.xScroll))
+	index := ((y + frame.yScroll) * frame.totalWidth) + (x + frame.xScroll)
 	if currentCell, ok = frame.cells.load(index); !ok {
 		fgColour, bgColour := getHatchedCellColours(x)
 		currentCell = cell{
-			fgColour: fgColour,
-			bgColour: bgColour,
+			fgColour:  fgColour,
+			bgColour:  bgColour,
 			character: []rune("▄"),
 		}
 	}
@@ -227,7 +239,7 @@ func getCell(x, y int) cell {
 
 func getHatchedCellColours(x int) (tcell.Color, tcell.Color) {
 	var bgColour, fgColour tcell.Color
-	if (x % 2 == 0) {
+	if x%2 == 0 {
 		bgColour = tcell.NewHexColor(0xa9a9a9)
 		fgColour = tcell.NewHexColor(0x797979)
 	} else {
