@@ -78,7 +78,14 @@ func (h *slashFix) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 	var message string
+	var isErrored bool
 	urlForBrowsh, _ := url.PathUnescape(strings.TrimPrefix(r.URL.Path, "/"))
+	urlForBrowsh, isErrored = deRecurseURL(urlForBrowsh)
+	if isErrored {
+		message = "Invalid URL"
+		io.WriteString(w, message)
+		return
+	}
 	if isProductionHTTP(r) {
 		http.Redirect(w, r, "https://" + r.Host + "/" + urlForBrowsh, 301)
 		return
@@ -110,6 +117,18 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		mode + "," +
 		urlForBrowsh)
 	waitForResponse(rawTextRequestID, w)
+}
+
+// Prevent https://html.brow.sh/html.brow.sh/... being recursive
+func deRecurseURL(urlForBrowsh string) (string, bool) {
+	nestedURL, err := url.Parse(urlForBrowsh)
+	if err != nil {
+		return urlForBrowsh, false
+	}
+	if nestedURL.Host != "html.brow.sh" && nestedURL.Host != "text.brow.sh" {
+		return urlForBrowsh, false
+	}
+	return deRecurseURL(strings.TrimPrefix(nestedURL.RequestURI(), "/"))
 }
 
 func isDisallowedURL(urlForBrowsh string) bool {
