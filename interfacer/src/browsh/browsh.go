@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"path/filepath"
 	"strings"
-	"unicode"
 
 	// TCell seems to be one of the best projects in any language for handling terminal
 	// standards across the major OSs.
@@ -150,15 +149,6 @@ func getConfigFolder() string {
 	return folders[0].Path
 }
 
-func stripWhitespace(str string) string {
-	return strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) {
-			return -1
-		}
-		return r
-	}, str)
-}
-
 // Shell provides nice and easy shell commands
 func Shell(command string) string {
 	parts := strings.Fields(command)
@@ -170,7 +160,7 @@ func Shell(command string) string {
 			"Browsh tried to run `%s` but failed with: %s", command, string(out)))
 		Shutdown(err)
 	}
-	return stripWhitespace(string(out))
+	return strings.TrimSpace(string(out))
 }
 
 // TTYStart starts Browsh

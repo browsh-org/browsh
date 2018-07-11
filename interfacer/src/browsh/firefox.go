@@ -8,9 +8,9 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strings"
-	"regexp"
 	"time"
 
 	"github.com/gdamore/tcell"
@@ -56,6 +56,7 @@ func startHeadlessFirefox() {
 	checkIfFirefoxIsAlreadyRunning()
 	Log("Starting Firefox in headless mode")
 	ensureFirefoxBinary()
+	ensureFirefoxVersion()
 	args := []string{"--marionette"}
 	if !*isFFGui {
 		args = append(args, "--headless")
@@ -84,7 +85,9 @@ func startHeadlessFirefox() {
 }
 
 func checkIfFirefoxIsAlreadyRunning() {
-	if runtime.GOOS == "windows" { return }
+	if runtime.GOOS == "windows" {
+		return
+	}
 	processes := Shell("ps aux")
 	r, _ := regexp.Compile("firefox.*--headless")
 	if r.MatchString(processes) {
@@ -115,6 +118,47 @@ func ensureFirefoxBinary() {
 	}
 }
 
+func ensureFirefoxVersion() {
+	output := Shell(*firefoxBinary + " --version")
+	pieces := strings.Split(output, " ")
+	version := pieces[len(pieces)-1]
+	if versionOrdinal(version) < versionOrdinal("57") {
+		message := "Installed Firefox version " + version + " is too old. " +
+			"Firefox 57 or newer is needed."
+		Shutdown(errors.New(message))
+	}
+}
+
+// Taken from https://stackoverflow.com/a/18411978/575773
+func versionOrdinal(version string) string {
+	// ISO/IEC 14651:2011
+	const maxByte = 1<<8 - 1
+	vo := make([]byte, 0, len(version)+8)
+	j := -1
+	for i := 0; i < len(version); i++ {
+		b := version[i]
+		if '0' > b || b > '9' {
+			vo = append(vo, b)
+			j = -1
+			continue
+		}
+		if j == -1 {
+			vo = append(vo, 0x00)
+			j = len(vo) - 1
+		}
+		if vo[j] == 1 && vo[j+1] == '0' {
+			vo[j+1] = b
+			continue
+		}
+		if vo[j]+1 > maxByte {
+			panic("VersionOrdinal: invalid version")
+		}
+		vo = append(vo, b)
+		vo[j]++
+	}
+	return string(vo)
+}
+
 // Start Firefox via the `web-ext` CLI tool. This is for development and testing,
 // because I haven't been able to recreate the way `web-ext` injects an unsigned
 // extension.
@@ -127,7 +171,7 @@ func startWERFirefox() {
 		"--verbose",
 		"--no-reload",
 	}
-	firefoxProcess := exec.Command(rootDir + "/webext/node_modules/.bin/web-ext", args...)
+	firefoxProcess := exec.Command(rootDir+"/webext/node_modules/.bin/web-ext", args...)
 	firefoxProcess.Dir = rootDir + "/webext/dist/"
 	defer firefoxProcess.Process.Kill()
 	stdout, err := firefoxProcess.StdoutPipe()
@@ -140,8 +184,8 @@ func startWERFirefox() {
 	in := bufio.NewScanner(stdout)
 	for in.Scan() {
 		if strings.Contains(in.Text(), "JavaScript strict") ||
-		   strings.Contains(in.Text(), "D-BUS") ||
-		   strings.Contains(in.Text(), "dbus") {
+			strings.Contains(in.Text(), "D-BUS") ||
+			strings.Contains(in.Text(), "dbus") {
 			continue
 		}
 		Log("FF-CONSOLE: " + in.Text())
@@ -160,13 +204,13 @@ func startWERFirefox() {
 // from the Python Marionette package.
 func firefoxMarionette() {
 	var (
-		err error
+		err  error
 		conn net.Conn
 	)
 	connected := false
 	Log("Attempting to connect to Firefox Marionette")
 	start := time.Now()
-	for time.Since(start) < 30 * time.Second {
+	for time.Since(start) < 30*time.Second {
 		conn, err = net.Dial("tcp", "127.0.0.1:2828")
 		if err != nil {
 			if !strings.Contains(err.Error(), "connection refused") {
@@ -244,7 +288,7 @@ func setDefaultPreferences() {
 
 func beginTimeLimit() {
 	warningLength := 10
-	warningLimit := time.Duration(*timeLimit - warningLength);
+	warningLimit := time.Duration(*timeLimit - warningLength)
 	time.Sleep(warningLimit * time.Second)
 	message := fmt.Sprintf("Browsh will close in %d seconds...", warningLength)
 	sendMessageToWebExtension("/status," + message)
@@ -257,7 +301,7 @@ func beginTimeLimit() {
 // We can't bump the version and create a new signed webextension for every commit.
 func setupFirefox() {
 	go startHeadlessFirefox()
-	if (*timeLimit > 0) {
+	if *timeLimit > 0 {
 		go beginTimeLimit()
 	}
 	firefoxMarionette()
