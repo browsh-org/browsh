@@ -8,8 +8,10 @@ builds:
       - linux
       - freebsd
     goarch:
+      - 386
       - amd64
       - arm
+      - arm64
     ldflags: -s -w
     hooks:
       post: ../contrib/upx_compress_binary.sh
