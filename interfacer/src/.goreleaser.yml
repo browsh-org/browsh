@@ -30,3 +30,24 @@ nfpm:
   dependencies:
     - firefox
 
+release:
+  disable: true
+
+brew:
+  name: browsh
+
+  # Reporitory to push the tap to.
+  github:
+    owner: browsh-org
+    name: homebrew-browsh
+
+  commit_author:
+    name: Goreleaser Bot care of Travis CI
+    email: builds@travis-ci.com
+
+  homepage: "https://www.brow.sh"
+
+  description: "The modern, text-based browser"
+
+  dependencies:
+    - firefox
