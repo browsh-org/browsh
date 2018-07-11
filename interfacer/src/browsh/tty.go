@@ -147,6 +147,7 @@ func handleScrolling(ev *tcell.EventKey) {
 }
 
 func handleMouseEvent(ev *tcell.EventMouse) {
+	if CurrentTab == nil { return }
 	x, y := ev.Position()
 	xInFrame := x + CurrentTab.frame.xScroll
 	yInFrame := y - uiHeight + CurrentTab.frame.yScroll
