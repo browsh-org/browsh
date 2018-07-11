@@ -10,4 +10,4 @@ interfacer/browsh
 webextension.go
 webext/node_modules
 webext/dist/*
-
+dist

@@ -15,13 +15,19 @@ builds:
       post: ../contrib/upx_compress_binary.sh
 
 archive:
-  format: binary
+  format_overrides:
+    - goos: windows
+      format: binary
+    - goos: linux
+      format: binary
+    - goos: freebsd
+      format: binary
 
 nfpm:
   vendor: Browsh
-  homepage: https://brow.sh
+  homepage: https://www.brow.sh
   maintainer: Thomas Buckley-Houston <tom@tombh.co.uk>
-  description: A fully interactive, realtime and modern browser rendered to TTY
+  description: The modern, text-based browser
   license: GPL v3
   formats:
     - deb
@@ -30,13 +36,10 @@ nfpm:
   dependencies:
     - firefox
 
-release:
-  disable: true
-
 brew:
   name: browsh
 
-  # Reporitory to push the tap to.
+  # Repository to push the tap to.
   github:
     owner: browsh-org
     name: homebrew-browsh
