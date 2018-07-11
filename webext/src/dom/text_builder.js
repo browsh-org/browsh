@@ -1,10 +1,10 @@
-import _ from 'lodash';
+import _ from "lodash";
 
-import utils from 'utils';
-import CommonMixin from 'dom/common_mixin';
-import SerialiseMixin from 'dom/serialise_mixin';
-import TTYCell from 'dom/tty_cell';
-import TTYGrid from 'dom/tty_grid';
+import utils from "utils";
+import CommonMixin from "dom/common_mixin";
+import SerialiseMixin from "dom/serialise_mixin";
+import TTYCell from "dom/tty_cell";
+import TTYGrid from "dom/tty_grid";
 
 // Convert the text on the page into a snapped 2-dimensional grid to be displayed directly
 // in the terminal.
@@ -59,20 +59,20 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   _getTextNodes() {
     this.logPerformance(() => {
       this.__getTextNodes();
-    }, 'tree walker');
+    }, "tree walker");
   }
 
   // This should be around ?? for a largish Wikipedia page of 13,000 words
   _positionTextNodes() {
     this.logPerformance(() => {
       this.__positionTextNodes();
-    }, 'position text nodes');
+    }, "position text nodes");
   }
 
   _serialiseFrame() {
     this.logPerformance(() => {
       this.__serialiseFrame();
-    }, 'serialise text frame');
+    }, "serialise text frame");
   }
 
   // Search through every node in the DOM looking for displayable text.
@@ -84,9 +84,9 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
       null,
       false
     );
-    while(walker.nextNode()) {
+    while (walker.nextNode()) {
       if (this._isRelevantTextNode(walker.currentNode)) {
-        this._text_nodes.push(walker.currentNode)
+        this._text_nodes.push(walker.currentNode);
       }
     }
   }
@@ -115,36 +115,38 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   _convertSubFrameToViewportCoords() {
     this._viewport_relative_sub_frame = {
       top: this.dimensions.dom.sub.top - window.scrollY,
-      bottom: this.dimensions.dom.sub.top + this.dimensions.dom.sub.height - window.scrollY,
+      bottom:
+        this.dimensions.dom.sub.top +
+        this.dimensions.dom.sub.height -
+        window.scrollY,
       left: this.dimensions.dom.sub.left - window.scrollX,
-      right: this.dimensions.dom.sub.left + this.dimensions.dom.sub.width - window.scrollX
-    }
+      right:
+        this.dimensions.dom.sub.left +
+        this.dimensions.dom.sub.width -
+        window.scrollX
+    };
   }
 
   _isDOMRectInSubFrame(dom_rect) {
-    const isBottomIn = (
+    const isBottomIn =
       dom_rect.bottom >= this._viewport_relative_sub_frame.top &&
-      dom_rect.bottom <= this._viewport_relative_sub_frame.bottom
-    )
-    const isTopIn = (
+      dom_rect.bottom <= this._viewport_relative_sub_frame.bottom;
+    const isTopIn =
       dom_rect.top >= this._viewport_relative_sub_frame.top &&
-      dom_rect.top <= this._viewport_relative_sub_frame.bottom
-    )
-    const isLeftIn = (
+      dom_rect.top <= this._viewport_relative_sub_frame.bottom;
+    const isLeftIn =
       dom_rect.left >= this._viewport_relative_sub_frame.left &&
-      dom_rect.left <= this._viewport_relative_sub_frame.right
-    )
-    const isRightIn = (
+      dom_rect.left <= this._viewport_relative_sub_frame.right;
+    const isRightIn =
       dom_rect.right >= this._viewport_relative_sub_frame.left &&
-      dom_rect.right <= this._viewport_relative_sub_frame.right
-    )
+      dom_rect.right <= this._viewport_relative_sub_frame.right;
     return (isBottomIn || isTopIn) && (isLeftIn || isRightIn);
   }
 
   __positionTextNodes() {
     for (const node of this._text_nodes) {
-      this._node = node
-      this._text = node.textContent
+      this._node = node;
+      this._text = node.textContent;
       this._formatText();
       this._character_index = 0;
       this._positionSingleTextNode();
@@ -170,7 +172,7 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   //   * Yet another thing, the style change doesn't actually get picked up until the
   //     next frame. Thus why the loop is independent of the `positionTextNodes()` loop.
   _fixJustifiedText() {
-    this._node.parentElement.style.textAlign = 'left';
+    this._node.parentElement.style.textAlign = "left";
   }
 
   // The need for this wasn't immediately obvious to me. The fact is that the DOM stores
@@ -216,10 +218,10 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
     let element = this._node.parentElement;
     const is_parse_started = _.includes(this._parse_started_elements, element);
     if (is_parse_started) {
-      return false
+      return false;
     } else {
       this._parse_started_elements.push(element);
-      return true
+      return true;
     }
   }
 
@@ -235,11 +237,13 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   _positionSingleTextNode() {
     this._dom_box = {};
     for (const dom_box of this._getNodeDOMBoxes()) {
-      if (!this._isDOMRectInSubFrame(dom_box)) { continue }
+      if (!this._isDOMRectInSubFrame(dom_box)) {
+        continue;
+      }
       this._dom_box.top = dom_box.top;
       this._dom_box.left = dom_box.left;
       this._dom_box.width = dom_box.width;
-      this._handleSingleDOMBox()
+      this._handleSingleDOMBox();
       this._previous_dom_box = _.clone(this._dom_box);
     }
   }
@@ -253,7 +257,7 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   // inside other selections for things like italics or anchor tags.
   _getNodeDOMBoxes() {
     this._range.selectNode(this._node);
-    return this._range.getClientRects()
+    return this._range.getClientRects();
   }
 
   // A single box is always a valid rectangle. Therefore a single box will, for example,
@@ -272,7 +276,7 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   _prepareToParseDOMBox() {
     this._dom_box = this._convertDOMRectToAbsoluteCoords(this._dom_box);
     this._createSyncedTTYBox();
-    this._createTrackers()
+    this._createTrackers();
     this._setCurrentCharacter();
     this._ignoreUnrenderedWhitespace();
   }
@@ -290,11 +294,11 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
     this._dom_tracker = {
       x: this._dom_box.left,
       y: this._dom_box.top
-    }
+    };
     this._tty_tracker = {
       x: this._tty_box.col_start,
       y: this._tty_box.row
-    }
+    };
   }
 
   _handleSingleCharacter() {
@@ -323,14 +327,15 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   // of a DOM rectangle's box (`this._dom_box`).
   _ignoreUnrenderedWhitespace() {
     if (this._isNewLine()) {
-      if (this._current_character.trim().length == 0) this._stepToNextCharacter(false);
+      if (this._current_character.trim().length == 0)
+        this._stepToNextCharacter(false);
     }
   }
 
   // Is the current DOM rectangle further down the page than the previous?
   _isNewLine() {
     if (Object.keys(this._previous_dom_box).length === 0) return false;
-    return this._dom_box.top > this._previous_dom_box.top
+    return this._dom_box.top > this._previous_dom_box.top;
   }
 
   // The DOM returns box coordinates relative to the viewport. As we are rendering the
@@ -344,16 +349,22 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
       right: dom_rect.right + window.scrollX,
       height: dom_rect.height,
       width: dom_rect.width
-    }
+    };
   }
 
   // Round and snap a DOM rectangle as if it were placed in the TTY frame
   _createSyncedTTYBox() {
     this._tty_box = {
-      col_start: utils.snap(this._dom_box.left * this.dimensions.scale_factor.width),
-      row: utils.snap(this._dom_box.top * this.dimensions.scale_factor.height / 2),
-      width: utils.snap(this._dom_box.width * this.dimensions.scale_factor.width),
-    }
+      col_start: utils.snap(
+        this._dom_box.left * this.dimensions.scale_factor.width
+      ),
+      row: utils.snap(
+        (this._dom_box.top * this.dimensions.scale_factor.height) / 2
+      ),
+      width: utils.snap(
+        this._dom_box.width * this.dimensions.scale_factor.width
+      )
+    };
   }
 
   // Purely for debugging.
@@ -367,20 +378,22 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
     // is the same as the rectangle's width.
     // Note: the overlays will be out of place if the user resizes or zooms.
     for (const rect of dom_rects) {
-      let tableRectDiv = document.createElement('div');
+      let tableRectDiv = document.createElement("div");
       // A DOMClientRect object only contains dimensions, so there's no way to identify it
       // to a node, so let's put its text as an attribute so we can cross-check if needs be.
-      tableRectDiv.setAttribute('browsh-text', normalised_text);
-      let tty_row = parseInt(Math.round(rect.top / this.dimemnsions.char.height));
-      tableRectDiv.setAttribute('tty_row', tty_row);
-      tableRectDiv.style.position = 'absolute';
-      tableRectDiv.style.border = '1px solid red';
-      tableRectDiv.style.margin = tableRectDiv.style.padding = '0';
-      tableRectDiv.style.top = rect.top + 'px';
-      tableRectDiv.style.left = rect.left + 'px';
+      tableRectDiv.setAttribute("browsh-text", normalised_text);
+      let tty_row = parseInt(
+        Math.round(rect.top / this.dimemnsions.char.height)
+      );
+      tableRectDiv.setAttribute("tty_row", tty_row);
+      tableRectDiv.style.position = "absolute";
+      tableRectDiv.style.border = "1px solid red";
+      tableRectDiv.style.margin = tableRectDiv.style.padding = "0";
+      tableRectDiv.style.top = rect.top + "px";
+      tableRectDiv.style.left = rect.left + "px";
       // We want rect.width to be the border width, so content width is 2px less.
-      tableRectDiv.style.width = (rect.width - 2) + 'px';
-      tableRectDiv.style.height = (rect.height - 2) + 'px';
+      tableRectDiv.style.width = rect.width - 2 + "px";
+      tableRectDiv.style.height = rect.height - 2 + "px";
       document.body.appendChild(tableRectDiv);
     }
   }

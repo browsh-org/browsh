@@ -1,4 +1,4 @@
-import utils from 'utils';
+import utils from "utils";
 
 // The TTY grid
 export default class {
@@ -13,7 +13,7 @@ export default class {
   }
 
   getCellAt(x, y) {
-    return this.cells[(y * this.dimensions.frame.width) + x];
+    return this.cells[y * this.dimensions.frame.width + x];
   }
 
   addCell(new_cell) {
@@ -45,21 +45,27 @@ export default class {
   }
 
   _calculateIndex(cell) {
-    return (cell.tty_coords.y * this.dimensions.frame.width) + cell.tty_coords.x;
+    return cell.tty_coords.y * this.dimensions.frame.width + cell.tty_coords.x;
   }
 
   // Get the colours right in the middle of the character's font. Returns both the colour
   // when the text is displayed and when it's hidden.
   _getColours(cell) {
     const offset_x = utils.snap(
-      cell.dom_coords.x + (this.dimensions.char.width * this._middle_of_em)
+      cell.dom_coords.x + this.dimensions.char.width * this._middle_of_em
     );
     const offset_y = utils.snap(
-      cell.dom_coords.y + (this.dimensions.char.height * this._middle_of_em)
+      cell.dom_coords.y + this.dimensions.char.height * this._middle_of_em
     );
-    const fg_colour = this.graphics_builder.getUnscaledFGPixelAt(offset_x, offset_y);
-    const bg_colour = this.graphics_builder.getUnscaledBGPixelAt(offset_x, offset_y);
-    return [fg_colour, bg_colour]
+    const fg_colour = this.graphics_builder.getUnscaledFGPixelAt(
+      offset_x,
+      offset_y
+    );
+    const bg_colour = this.graphics_builder.getUnscaledBGPixelAt(
+      offset_x,
+      offset_y
+    );
+    return [fg_colour, bg_colour];
   }
 
   // This is the value to reach the middle of a uni-glyph font character in order to
@@ -98,9 +104,10 @@ export default class {
   // case we can work with `z-index` so that characters justifiably overwrite each other in
   // the TTY grid.
   _isCharObscured(colours) {
-    return colours[0][0] === colours[1][0] &&
-           colours[0][1] === colours[1][1] &&
-           colours[0][2] === colours[1][2];
+    return (
+      colours[0][0] === colours[1][0] &&
+      colours[0][1] === colours[1][1] &&
+      colours[0][2] === colours[1][2]
+    );
   }
 }
-

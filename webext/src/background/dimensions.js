@@ -1,7 +1,7 @@
-import _ from 'lodash';
+import _ from "lodash";
 
-import utils from 'utils';
-import CommonMixin from 'background/common_mixin';
+import utils from "utils";
+import CommonMixin from "background/common_mixin";
 
 export default class extends utils.mixins(CommonMixin) {
   constructor() {
@@ -25,25 +25,32 @@ export default class extends utils.mixins(CommonMixin) {
     this.raw_text_tty_size = {
       width: 100,
       height: 30
-    }
+    };
   }
 
   setCharValues(incoming) {
-    if (this.char.width != incoming.width ||
-        this.char.height != incoming.height) {
+    if (
+      this.char.width != incoming.width ||
+      this.char.height != incoming.height
+    ) {
       this.char = _.clone(incoming);
       this.log(
         `Requesting browser resize for new char dimensions: ` +
-        `${this.char.width}x${this.char.height}`
+          `${this.char.width}x${this.char.height}`
       );
       this.resizeBrowserWindow();
     }
   }
 
   resizeBrowserWindow() {
-    if (!this.tty.width || !this.char.width || !this.tty.height || !this.char.height) {
+    if (
+      !this.tty.width ||
+      !this.char.width ||
+      !this.tty.height ||
+      !this.char.height
+    ) {
       this.log(
-        'Not resizing browser window without all of the TTY and character dimensions'
+        "Not resizing browser window without all of the TTY and character dimensions"
       );
       return;
     }
@@ -51,30 +58,33 @@ export default class extends utils.mixins(CommonMixin) {
     const window_width = parseInt(Math.round(this.tty.width * this.char.width));
     // Leave room for tabs and URL bar
     const tty_dom_height = this.tty.height - 2;
-    const window_height = parseInt(Math.round(
-      (tty_dom_height + this._window_ui_magic_number) * this.char.height
-    ));
+    const window_height = parseInt(
+      Math.round(
+        (tty_dom_height + this._window_ui_magic_number) * this.char.height
+      )
+    );
     const current_window = browser.windows.getCurrent();
     current_window.then(
       active_window => {
-        this._sendWindowResizeRequest(active_window, window_width, window_height);
+        this._sendWindowResizeRequest(
+          active_window,
+          window_width,
+          window_height
+        );
       },
       error => {
-        this.log('Error getting current browser window', error);
+        this.log("Error getting current browser window", error);
       }
     );
   }
 
   _sendWindowResizeRequest(active_window, width, height) {
-    const tag = 'Resizing browser window';
-    const updating = browser.windows.update(
-      active_window.id,
-      {
-        width: width,
-        height: height,
-        focused: false
-      }
-    );
+    const tag = "Resizing browser window";
+    const updating = browser.windows.update(active_window.id, {
+      width: width,
+      height: height,
+      focused: false
+    });
     updating.then(
       info => this.log(`${tag} successful (${info.width}x${info.height})`),
       error => this.log(tag + " error: ", error)

@@ -1,7 +1,7 @@
-import utils from 'utils';
+import utils from "utils";
 
-import CommonMixin from 'background/common_mixin';
-import TabCommandsMixin from 'background/tab_commands_mixin';
+import CommonMixin from "background/common_mixin";
+import TabCommandsMixin from "background/tab_commands_mixin";
 
 export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
   constructor() {
@@ -11,7 +11,7 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     // The maximum amount of times to try to recover a tab that won't connect
     this._max_number_of_tab_recovery_reloads = 3;
     // Type of raw text mode; HTML or plain
-    this.raw_text_mode_type = '';
+    this.raw_text_mode_type = "";
   }
 
   postDOMLoadInit(terminal, dimensions) {
@@ -30,7 +30,7 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
   _calculateMode() {
     let mode;
     if (!this._is_raw_text_mode) {
-      mode = 'interactive';
+      mode = "interactive";
     } else {
       mode = this.raw_text_mode_type;
     }
@@ -57,20 +57,20 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     );
   }
 
-  updateStatus(status, message = '') {
+  updateStatus(status, message = "") {
     let status_message;
     switch (status) {
-      case 'page_init':
+      case "page_init":
         status_message = `Loading ${this.url}`;
         break;
-      case 'parsing_complete':
-        status_message = '';
+      case "parsing_complete":
+        status_message = "";
         break;
-      case 'window_unload':
-        status_message = 'Loading...';
+      case "window_unload":
+        status_message = "Loading...";
         break;
       default:
-        if (message != '') status_message = message;
+        if (message != "") status_message = message;
     }
     this.page_state = status;
     this.status_message = status_message;
@@ -107,10 +107,11 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     if (this.native_last_change) {
       native_status = this.native_last_change.status;
     }
-    if (native_status === 'complete' && !this._isConnected()) {
+    if (native_status === "complete" && !this._isConnected()) {
       this.log(
-        `Automatically reloading tab ${this.id} that has loaded but not connected ` +
-        'to the webextension'
+        `Automatically reloading tab ${
+          this.id
+        } that has loaded but not connected ` + "to the webextension"
       );
       this.reload();
       this._reload_count++;
@@ -146,12 +147,14 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
   // first. So let's just close that tab.
   // TODO: Only do this for a testing ENV?
   _closeUnwantedStartupTabs() {
-    if (this.title === undefined) { return false }
+    if (this.title === undefined) {
+      return false;
+    }
     if (
-      this.title.includes('Firefox by default shares data to:') ||
-      this.title.includes('Firefox Privacy Notice')
+      this.title.includes("Firefox by default shares data to:") ||
+      this.title.includes("Firefox Privacy Notice")
     ) {
-      this.log("Removing Firefox startup page")
+      this.log("Removing Firefox startup page");
       this.remove();
       return true;
     }

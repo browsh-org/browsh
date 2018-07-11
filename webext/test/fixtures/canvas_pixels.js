@@ -44,19 +44,19 @@ export default class CanvasPixels {
   _getIndexValue(i) {
     // Add 1 to distinguish the zero value. Because zero values mean that nothing was
     // found.
-    return (i / 4) + 1;
+    return i / 4 + 1;
   }
 
   _checkForCharacter(x, y) {
     const char = global.mock_DOM_text[y].charAt(x);
     const mask_char = global.mock_DOM_template[y].charAt(x);
     const isCharThere = !this._isNullOrWhiteSpace(char);
-    const isMaskThere = mask_char === '!';
+    const isMaskThere = mask_char === "!";
     return isCharThere && !isMaskThere;
   }
 
   _isNullOrWhiteSpace(str) {
-    return (!str || str.length === 0 || /^\s*$/.test(str))
+    return !str || str.length === 0 || /^\s*$/.test(str);
   }
 
   // Using the blue channel indicates that this sample was taken from the withoutText()
@@ -76,4 +76,3 @@ export default class CanvasPixels {
     return this.without_text();
   }
 }
-

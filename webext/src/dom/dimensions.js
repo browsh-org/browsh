@@ -1,15 +1,15 @@
-import utils from 'utils';
+import utils from "utils";
 
-import CommonMixin from 'dom/common_mixin';
+import CommonMixin from "dom/common_mixin";
 
 // All the various dimensions, sizes, scales, etc
 export default class extends utils.mixins(CommonMixin) {
   constructor() {
-    super()
+    super();
 
     // ID for element we place in the DOM to measure the size of a single monospace
     // character.
-    this._measuring_box_id = 'browsh_em_measuring_box';
+    this._measuring_box_id = "browsh_em_measuring_box";
 
     if (TEST) {
       this._char_height_magic_number = 0;
@@ -34,7 +34,7 @@ export default class extends utils.mixins(CommonMixin) {
       y_scroll: 0,
       x_last_big_frame: 0,
       y_last_big_frame: 0
-    }
+    };
   }
 
   update() {
@@ -47,10 +47,10 @@ export default class extends utils.mixins(CommonMixin) {
 
   setSubFrameDimensions(size) {
     this._calculateSmallSubFrame();
-    if (size === 'big' || size === 'all') {
+    if (size === "big" || size === "all") {
       this._calculateBigSubFrame();
     }
-    if (size === 'raw_text') {
+    if (size === "raw_text") {
       this._calculateEntireDOMFrames();
     }
     // Only the height needs to be even because of the UTF8 half-block trick. A single
@@ -67,7 +67,7 @@ export default class extends utils.mixins(CommonMixin) {
       sub_height: utils.snap(this.frame.sub.height),
       total_width: utils.snap(this.frame.width),
       total_height: utils.snap(this.frame.height)
-    }
+    };
   }
 
   // This is the sub frame that is the view onto the frame that is visible by the user
@@ -78,20 +78,22 @@ export default class extends utils.mixins(CommonMixin) {
       top: this.frame.y_scroll,
       width: this.tty.width,
       height: this.tty.height * 2
-    }
+    };
 
-    this._scaleSubFrameToSubDOM()
+    this._scaleSubFrameToSubDOM();
   }
 
   // This is the sub frame that is a few factors bigger than what the user can see
   // in the TTY.
   _calculateBigSubFrame() {
     this.frame.sub = {
-      left: this.frame.x_scroll - (this._big_sub_frame_factor * this.tty.width),
-      top: this.frame.y_scroll - (this._big_sub_frame_factor * this.tty.height * 2),
-      width: this.tty.width + (this._big_sub_frame_factor * 2 * this.tty.width),
-      height: this.tty.height + (this._big_sub_frame_factor * 2 * this.tty.height * 2),
-    }
+      left: this.frame.x_scroll - this._big_sub_frame_factor * this.tty.width,
+      top:
+        this.frame.y_scroll - this._big_sub_frame_factor * this.tty.height * 2,
+      width: this.tty.width + this._big_sub_frame_factor * 2 * this.tty.width,
+      height:
+        this.tty.height + this._big_sub_frame_factor * 2 * this.tty.height * 2
+    };
     this._limitSubFrameDimensions();
     this._scaleSubFrameToSubDOM();
   }
@@ -103,8 +105,8 @@ export default class extends utils.mixins(CommonMixin) {
       left: 0,
       top: 0,
       width: this.dom.width,
-      height: this.dom.height,
-    }
+      height: this.dom.height
+    };
     if (this.dom.sub.width > this._entire_dom_limit) {
       this.dom.sub.width = this._entire_dom_limit;
       this.is_page_truncated = true;
@@ -118,12 +120,16 @@ export default class extends utils.mixins(CommonMixin) {
       top: 0,
       width: this.dom.sub.width * this.scale_factor.width,
       height: this.dom.sub.height * this.scale_factor.height
-    }
+    };
   }
 
   _limitSubFrameDimensions() {
-    if (this.frame.sub.left < 0) { this.frame.sub.left = 0 }
-    if (this.frame.sub.top < 0) { this.frame.sub.top = 0 }
+    if (this.frame.sub.left < 0) {
+      this.frame.sub.left = 0;
+    }
+    if (this.frame.sub.top < 0) {
+      this.frame.sub.top = 0;
+    }
     if (this.frame.sub.width > this.frame.width) {
       this.frame.sub.width = this.frame.width;
     }
@@ -138,7 +144,7 @@ export default class extends utils.mixins(CommonMixin) {
       top: this.frame.sub.top / this.scale_factor.height,
       width: this.frame.sub.width / this.scale_factor.width,
       height: this.frame.sub.height / this.scale_factor.height
-    }
+    };
   }
 
   // This is critical in order for the terminal to match the browser as closely as possible.
@@ -160,7 +166,7 @@ export default class extends utils.mixins(CommonMixin) {
     this.char = {
       width: dom_rect.width,
       height: dom_rect.height + this._char_height_magic_number
-    }
+    };
     this._largeEmFix();
   }
 
@@ -180,10 +186,10 @@ export default class extends utils.mixins(CommonMixin) {
   _getOrCreateMeasuringBox() {
     let measuring_box = this.findMeasuringBox();
     if (measuring_box) return measuring_box;
-    measuring_box = document.createElement('span');
+    measuring_box = document.createElement("span");
     measuring_box.id = this._measuring_box_id;
-    measuring_box.style.visibility = 'hidden';
-    var M = document.createTextNode('M');
+    measuring_box.style.visibility = "hidden";
+    var M = document.createTextNode("M");
     measuring_box.appendChild(M);
     document.body.appendChild(measuring_box);
     return measuring_box;
@@ -195,13 +201,13 @@ export default class extends utils.mixins(CommonMixin) {
 
   _updateDOMDimensions() {
     const [new_width, new_height] = this._calculateDOMDimensions();
-    const is_new = this.dom.width != new_width || this.dom.height != new_height
+    const is_new = this.dom.width != new_width || this.dom.height != new_height;
     this.dom = {
       sub: this.dom.sub,
       width: new_width,
       height: new_height,
       is_new: is_new
-    }
+    };
   }
 
   // For discussion on various methods to get total scrollable DOM dimensions, see:
@@ -211,7 +217,7 @@ export default class extends utils.mixins(CommonMixin) {
     if (window.innerWidth > width) width = window.innerWidth;
     let height = document.documentElement.scrollHeight;
     if (window.innerHeight > height) height = window.innerHeight;
-    return [width, height]
+    return [width, height];
   }
 
   // A frame represents the entire DOM page. Its height usually extends below the window's
@@ -245,7 +251,7 @@ export default class extends utils.mixins(CommonMixin) {
       width: 1 / this.char.width,
       // Recall that 2 UTF8 half-black "pixels" can fit into a single TTY cell
       height: 2 / this.char.height
-    }
+    };
   }
 
   _notifyBackground() {
@@ -253,8 +259,7 @@ export default class extends utils.mixins(CommonMixin) {
       dom: this.dom,
       frame: this.frame,
       char: this.char
-    }
-    this.sendMessage(`/dimensions,${JSON.stringify(dimensions)}`)
+    };
+    this.sendMessage(`/dimensions,${JSON.stringify(dimensions)}`);
   }
 }
-

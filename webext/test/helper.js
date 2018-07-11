@@ -1,28 +1,30 @@
-import sinon from 'sinon';
+import sinon from "sinon";
 
-import Dimensions from 'dom/dimensions';
-import GraphicsBuilder from 'dom/graphics_builder';
-import TextBuilder from 'dom/text_builder';
-import TTYCell from 'dom/tty_cell';
+import Dimensions from "dom/dimensions";
+import GraphicsBuilder from "dom/graphics_builder";
+import TextBuilder from "dom/text_builder";
+import TTYCell from "dom/tty_cell";
 
-import MockRange from 'mocks/range'
-import TextNodes from 'fixtures/text_nodes';
-import CanvasPixels from 'fixtures/canvas_pixels';
+import MockRange from "mocks/range";
+import TextNodes from "fixtures/text_nodes";
+import CanvasPixels from "fixtures/canvas_pixels";
 
 var sandbox = sinon.sandbox.create();
 let getPixelsStub;
-let channel = {name: 1};
+let channel = { name: 1 };
 
 beforeEach(() => {
-  sandbox.stub(Dimensions.prototype, '_getOrCreateMeasuringBox').returns(element);
-  sandbox.stub(Dimensions.prototype, 'sendMessage').returns(true);
-  sandbox.stub(GraphicsBuilder.prototype, '_hideText').returns(true);
-  sandbox.stub(GraphicsBuilder.prototype, '_showText').returns(true);
-  sandbox.stub(GraphicsBuilder.prototype, '_scaleCanvas').returns(true);
-  sandbox.stub(GraphicsBuilder.prototype, '_unScaleCanvas').returns(true);
-  sandbox.stub(TextBuilder.prototype, '_getAllInputBoxes').returns([]);
-  sandbox.stub(TTYCell.prototype, 'isHighestLayer').returns(true);
-  getPixelsStub = sandbox.stub(GraphicsBuilder.prototype, '_getPixelData');
+  sandbox
+    .stub(Dimensions.prototype, "_getOrCreateMeasuringBox")
+    .returns(element);
+  sandbox.stub(Dimensions.prototype, "sendMessage").returns(true);
+  sandbox.stub(GraphicsBuilder.prototype, "_hideText").returns(true);
+  sandbox.stub(GraphicsBuilder.prototype, "_showText").returns(true);
+  sandbox.stub(GraphicsBuilder.prototype, "_scaleCanvas").returns(true);
+  sandbox.stub(GraphicsBuilder.prototype, "_unScaleCanvas").returns(true);
+  sandbox.stub(TextBuilder.prototype, "_getAllInputBoxes").returns([]);
+  sandbox.stub(TTYCell.prototype, "isHighestLayer").returns(true);
+  getPixelsStub = sandbox.stub(GraphicsBuilder.prototype, "_getPixelData");
 });
 
 afterEach(() => {
@@ -34,30 +36,32 @@ global.dimensions = {
     width: 1,
     height: 2
   }
-}
+};
 
 global.document = {
   addEventListener: () => {},
   getElementById: () => {},
   getElementsByTagName: () => {
-    return [{
-      innerHTML: 'Google'
-    }]
+    return [
+      {
+        innerHTML: "Google"
+      }
+    ];
   },
   createRange: () => {
-    return new MockRange()
+    return new MockRange();
   },
   createElement: () => {
     return {
       getContext: () => {}
-    }
+    };
   },
   documentElement: {
     scrollWidth: null,
     scrollHeight: null
   },
   location: {
-    href: 'https://www.google.com'
+    href: "https://www.google.com"
   },
   scrollX: 0,
   scrollY: 0,
@@ -72,16 +76,16 @@ global.TEST = true;
 global.window = global.document;
 global.performance = {
   now: () => {}
-}
+};
 
 let element = {
   getBoundingClientRect: () => {
     return {
       width: global.dimensions.char.width,
       height: global.dimensions.char.height
-    }
+    };
   }
-}
+};
 
 function _setupMockDOMSize() {
   const width = global.mock_DOM_template[0].length;
@@ -105,9 +109,9 @@ function _setupDimensions() {
 }
 
 function _setupGraphicsBuilder(type) {
-  let dimensions = _setupDimensions()
+  let dimensions = _setupDimensions();
   let canvas_pixels = new CanvasPixels(dimensions);
-  if (type === 'with_text') {
+  if (type === "with_text") {
     getPixelsStub.onCall(0).returns(canvas_pixels.with_text());
     getPixelsStub.onCall(1).returns(canvas_pixels.without_text());
     getPixelsStub.onCall(2).returns(canvas_pixels.scaled());
@@ -121,7 +125,7 @@ function _setupGraphicsBuilder(type) {
 let functions = {
   runTextBuilder: () => {
     let text_nodes = new TextNodes();
-    let graphics_builder = _setupGraphicsBuilder('with_text');
+    let graphics_builder = _setupGraphicsBuilder("with_text");
     let text_builder = new TextBuilder(
       channel,
       graphics_builder.dimensions,
@@ -142,6 +146,6 @@ let functions = {
     graphics_builder._serialiseFrame();
     return graphics_builder;
   }
-}
+};
 
 export default functions;

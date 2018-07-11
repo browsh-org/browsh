@@ -1,12 +1,12 @@
-import _ from 'lodash';
+import _ from "lodash";
 
-import utils from 'utils';
+import utils from "utils";
 
-import CommonMixin from 'dom/common_mixin';
-import CommandsMixin from 'dom/commands_mixin';
-import Dimensions from 'dom/dimensions';
-import GraphicsBuilder from 'dom/graphics_builder';
-import TextBuilder from 'dom/text_builder';
+import CommonMixin from "dom/common_mixin";
+import CommandsMixin from "dom/commands_mixin";
+import Dimensions from "dom/dimensions";
+import GraphicsBuilder from "dom/graphics_builder";
+import TextBuilder from "dom/text_builder";
 
 // Entrypoint for managing a single tab
 export default class extends utils.mixins(CommonMixin, CommandsMixin) {
@@ -32,28 +32,30 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   }
 
   sendFrame() {
-    this.dimensions.update()
+    this.dimensions.update();
     if (this.dimensions.dom.is_new) {
       this.sendAllBigFrames();
     }
     this.sendSmallPixelFrame();
     this._sendTabInfo();
     if (!this._is_first_frame_finished) {
-      this.sendMessage('/status,parsing_complete');
+      this.sendMessage("/status,parsing_complete");
     }
     this._is_first_frame_finished = true;
   }
 
   sendAllBigFrames() {
-    if (!this._is_interactive_mode) { return }
+    if (!this._is_interactive_mode) {
+      return;
+    }
     if (!this.dimensions.tty.width) {
-      this.log("Not sending big frames without TTY data")
-      return
+      this.log("Not sending big frames without TTY data");
+      return;
     } else {
-      this.log("Sending big frames...")
+      this.log("Sending big frames...");
     }
     this.dimensions.update();
-    this.dimensions.setSubFrameDimensions('big');
+    this.dimensions.setSubFrameDimensions("big");
     this.text_builder.sendFrame();
     this.graphics_builder.sendFrame();
     this.dimensions.frame.x_last_big_frame = this.dimensions.frame.x_scroll;
@@ -62,37 +64,41 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
 
   sendRawText() {
     this.dimensions.update();
-    this.dimensions.setSubFrameDimensions('raw_text');
+    this.dimensions.setSubFrameDimensions("raw_text");
     this.text_builder.sendRawText(this._raw_mode_type);
   }
 
   sendSmallPixelFrame() {
-    if (!this._is_interactive_mode) { return }
-    if (!this.dimensions.tty.width) {
-      this.log("Not sending small frames without TTY data")
+    if (!this._is_interactive_mode) {
       return;
     }
-    this.dimensions.update()
-    this.dimensions.setSubFrameDimensions('small');
+    if (!this.dimensions.tty.width) {
+      this.log("Not sending small frames without TTY data");
+      return;
+    }
+    this.dimensions.update();
+    this.dimensions.setSubFrameDimensions("small");
     this.graphics_builder.sendFrame();
   }
 
   sendSmallTextFrame() {
-    if (!this._is_interactive_mode) { return }
-    if (!this.dimensions.tty.width) {
-      this.log("Not sending small frames without TTY data")
+    if (!this._is_interactive_mode) {
       return;
     }
-    this.dimensions.update()
-    this.dimensions.setSubFrameDimensions('small');
+    if (!this.dimensions.tty.width) {
+      this.log("Not sending small frames without TTY data");
+      return;
+    }
+    this.dimensions.update();
+    this.dimensions.setSubFrameDimensions("small");
     this.text_builder.sendFrame();
   }
 
   _postCommsInit() {
-    this.log('Webextension postCommsInit()');
+    this.log("Webextension postCommsInit()");
     this._postCommsConstructor();
     this._sendTabInfo();
-    this.sendMessage('/status,page_init');
+    this.sendMessage("/status,page_init");
     this._listenForBackgroundMessages();
     this._startWindowEventListeners();
     this._fixStickyElements();
@@ -101,28 +107,32 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   _setupInteractiveMode() {
     this._setupDebouncedFunctions();
     this._startMutationObserver();
-    this.sendAllBigFrames()
+    this.sendAllBigFrames();
     // Send again for pages that have page load transition effects :/
     // TODO:
     //   Disabling CSS transitions is not easy, many pages won't even render
     //   if they're disabled. Eg; Google's login process.
     //   What if we could get a post-transition hook?
-    setTimeout(()=> {this.sendAllBigFrames()}, 500);
+    setTimeout(() => {
+      this.sendAllBigFrames();
+    }, 500);
   }
 
   _setupDebouncedFunctions() {
-    this._debouncedSmallTextFrame = _.debounce(
-      this.sendSmallTextFrame,
-      100,
-      {leading: true}
-    );
+    this._debouncedSmallTextFrame = _.debounce(this.sendSmallTextFrame, 100, {
+      leading: true
+    });
   }
 
   _setupInit() {
     // TODO: Can we not just boot up as soon as we detect the background script?
-    document.addEventListener("DOMContentLoaded", () => {
-      this._init();
-    }, false);
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => {
+        this._init();
+      },
+      false
+    );
     // Whilst developing this webextension the auto reload only reloads this code,
     // not the page, so we don't get the `DOMContentLoaded` event to kick everything off.
     if (this._isWindowAlreadyLoaded()) this._init(100);
@@ -139,10 +149,10 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   }
 
   _registerWithBackground() {
-    let sending = browser.runtime.sendMessage('/register');
+    let sending = browser.runtime.sendMessage("/register");
     sending.then(
-      (r) => this._registrationSuccess(r),
-      (e) => this._registrationError(e)
+      r => this._registrationSuccess(r),
+      e => this._registrationError(e)
     );
   }
 
@@ -161,30 +171,33 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
 
   _startWindowEventListeners() {
     window.addEventListener("unload", () => {
-      this.sendMessage('/status,window_unload')
+      this.sendMessage("/status,window_unload");
     });
-    window.addEventListener('error', (error) => {
-      this.logError(error)
+    window.addEventListener("error", error => {
+      this.logError(error);
     });
   }
 
   _startMutationObserver() {
-    let target = document.querySelector('body');
-    let observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
+    let target = document.querySelector("body");
+    let observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
         this.log("!!MUTATION!!", mutation);
         this._debouncedSmallTextFrame();
       });
     });
-    observer.observe(target, {subtree: true, characterData: true, childList: true });
+    observer.observe(target, {
+      subtree: true,
+      characterData: true,
+      childList: true
+    });
   }
 
   _listenForBackgroundMessages() {
-    this.channel.onMessage.addListener((message) => {
+    this.channel.onMessage.addListener(message => {
       try {
         this._handleBackgroundMessage(message);
-      }
-      catch(error) {
+      } catch (error) {
         this.logError(error);
       }
     });
@@ -201,11 +214,12 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   // CSS tricks like this, then the call should be refactored.
   _fixStickyElements() {
     let position;
-    let i, elements = document.querySelectorAll('body *');
+    let i,
+      elements = document.querySelectorAll("body *");
     for (i = 0; i < elements.length; i++) {
       position = getComputedStyle(elements[i]).position;
-      if (position === 'fixed' || position === 'sticky') {
-        elements[i].style.setProperty('position', 'absolute', 'important');
+      if (position === "fixed" || position === "sticky") {
+        elements[i].style.setProperty("position", "absolute", "important");
       }
     }
   }

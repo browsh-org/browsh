@@ -13,14 +13,16 @@ export default class TextNodes {
     for (let line of global.mock_DOM_text) {
       this.addDomRect(line);
     }
-    return [{
-      textContent: global.mock_DOM_text.join(''),
-      parentElement: {
-        style: {}
-      },
-      bounding_box: this.boundingBox(),
-      dom_rects: this.dom_rects
-    }]
+    return [
+      {
+        textContent: global.mock_DOM_text.join(""),
+        parentElement: {
+          style: {}
+        },
+        bounding_box: this.boundingBox(),
+        dom_rects: this.dom_rects
+      }
+    ];
   }
 
   boundingBox() {
@@ -30,14 +32,14 @@ export default class TextNodes {
       left: this.offset,
       right: this.total_width + this.offset,
       width: this.total_width,
-      height: this.total_height,
-    }
+      height: this.total_height
+    };
   }
 
   addDomRect(line) {
     const width = line.length * this.char_width;
     const height = this.char_height;
-    const top = (this.dom_rects.length * this.char_height) + this.offset;
+    const top = this.dom_rects.length * this.char_height + this.offset;
     this.dom_rects.push({
       top: top,
       bottom: top + height,
@@ -45,7 +47,6 @@ export default class TextNodes {
       right: width + this.offset,
       width: width,
       height: height
-    })
+    });
   }
 }
-

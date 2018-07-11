@@ -8,9 +8,8 @@ export default class {
   isHighestLayer() {
     const found_element = document.elementFromPoint(
       this.dom_coords.x,
-      this.dom_coords.y,
+      this.dom_coords.y
     );
     return this.parent_element == found_element;
   }
 }
-
