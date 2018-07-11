@@ -33,7 +33,7 @@ install:
   - npm install
   - npm run build
   - diff -u <(echo -n) <(gofmt -d ./)
-  - ./node_modules/.bin/prettier --list-different "webext/{src,test}/**/*.js"
+  - ./node_modules/.bin/prettier --list-different "{src,test}/**/*.js"
 script:
   - cd $REPO_ROOT/webext && npm test
   - cd $REPO_ROOT/interfacer && go test src/browsh/*.go -v
