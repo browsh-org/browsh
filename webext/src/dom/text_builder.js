@@ -37,7 +37,7 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
     setTimeout(() => {
       this.buildFormattedText();
       this._sendRawText();
-    }, 200);
+    }, 400);
   }
 
   buildFormattedText() {
