@@ -40,7 +40,7 @@ nfpm:
   overrides:
     deb:
       dependencies:
-        'firefox | firefox-esr'
+        - 'firefox | firefox-esr'
 
 brew:
   name: browsh
