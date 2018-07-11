@@ -57,6 +57,3 @@ brew:
   homepage: "https://www.brow.sh"
 
   description: "The modern, text-based browser"
-
-  dependencies:
-    - firefox
