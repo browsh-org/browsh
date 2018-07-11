@@ -90,6 +90,10 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "https://" + r.Host + "/" + urlForBrowsh, 301)
 		return
 	}
+	if urlForBrowsh == "favicon.ico" {
+		http.Redirect(w, r, "https://www.brow.sh/assets/favicon-16x16.png", 301)
+		return
+	}
 	w.Header().Set("Cache-Control", "public, max-age=600")
 	if (isDisallowedURL(urlForBrowsh)) {
 		http.Redirect(w, r, "/", 301)
