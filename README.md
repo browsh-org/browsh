@@ -39,7 +39,7 @@ Download a binary from the [releases](https://github.com/browsh-org/browsh/relea
 You will need to have Firefox >=57 aleady installed.
 
 Or download and run the Docker image (~230MB) with:
-    `docker run -it browsh/browsh`
+    `docker run --rm -it browsh/browsh`
 
 ## Usage
 Most keys and mouse gestures should work as you'd expect on a desktop
