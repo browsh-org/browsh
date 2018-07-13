@@ -73,6 +73,7 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 		toggleMonochromeMode()
 	}
 	if ev.Key() == 279 && ev.Modifiers() == 0 {
+		// F1 key
 		openHelpTab()
 	}
 	if ev.Key() == 9 && ev.Modifiers() == 0 {

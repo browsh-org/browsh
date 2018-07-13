@@ -57,3 +57,5 @@ brew:
   homepage: "https://www.brow.sh"
 
   description: "The modern, text-based browser"
+
+  caveats: "You need Firefox 57 or newer to run Browsh"
