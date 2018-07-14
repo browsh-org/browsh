@@ -7,6 +7,7 @@ builds:
       - darwin
       - linux
       - freebsd
+      - openbsd
     goarch:
       - 386
       - amd64
@@ -23,6 +24,8 @@ archive:
     - goos: linux
       format: binary
     - goos: freebsd
+      format: binary
+    - goos: openbsd
       format: binary
 
 nfpm:
