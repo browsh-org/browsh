@@ -2,27 +2,27 @@
 
 ![Browsh Logo](https://www.brow.sh/assets/images/browsh-header.jpg)
 
-**A fully interactive, realtime and modern text-based browser rendered to TTYs and browsers**
+**A fully interactive, realtime, and modern text-based browser rendered to TTYs and browsers**
 
 ![Browsh Gif](https://media.giphy.com/media/bbsmVkYjPdOKHhMXOO/giphy.gif)
 
-## Why?
+## Why use Browsh?
 
 Not all the world has good Internet.
 
-If all you have is a 3kbps connection tethered from a phone
+If all you have is a 3kbps connection tethered from a phone,
 then it's good to SSH into a server and browse the web through, say,
 [elinks](https://github.com/browsh-org/browsh/issues/17). That way the
 _server_ downloads the web pages and uses the limited bandwidth of an
 SSH connection to display the result. But traditional text-based browsers
-lack JS support and all that other modern HTML5 goodness. Browsh is different
-in that it's backed by a real browser, namely headless Firefox, and uses that
-to create purely text-based version of web pages and web apps that can be easily
-rendered in a terminal or indeed, somewhat ironically, in another browser. Though note that currently the browser client doesn't have feature parity with the terminal client.
+lack JS support and all other modern HTML5 goodness. Browsh is different
+in that it's backed by a real browser, namely headless Firefox,
+to create a purely text-based version of web pages and web apps. These can be easily
+rendered in a terminal or indeed, ironically, in another browser. Do note that currently the browser client doesn't have a feature parity with the terminal client.
 
 Why not VNC? Well VNC is certainly one solution but it doesn't quite
-have the same ability to deal with extremely bad Internet. Also,
-terminal Browsh can use MoSH to further reduce bandwidth and increase stability
+have the same ability to deal with extremely bad Internet. Terminal 
+Browsh can also use MoSH to further reduce bandwidth and increase stability
 of the connection. Mosh offers features like automatic
 reconnection of dropped or roamed connections and diff-only screen updates.
 Furthermore, other than SSH or MoSH, terminal Browsh doesn't require a client
@@ -36,7 +36,7 @@ is running somewhere else on mains electricity.
 ## Installation
 
 Download a binary from the [releases](https://github.com/browsh-org/browsh/releases) (~2-6MB).
-You will need to have Firefox >=57 aleady installed.
+You will need to have Firefox 57 (or higher) aleady installed.
 
 Or download and run the Docker image (~230MB) with:
     `docker run --rm -it browsh/browsh`
@@ -45,7 +45,7 @@ Or download and run the Docker image (~230MB) with:
 Most keys and mouse gestures should work as you'd expect on a desktop
 browser.
 
-For full documentation see [the documentation](https://www.brow.sh/docs/introduction/).
+For full documentation click [here](https://www.brow.sh/docs/introduction/).
 
 ## Contributing
 To setup a dev env you will need NodeJS and Golang installed. If you get stuck
