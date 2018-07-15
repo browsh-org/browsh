@@ -18,7 +18,7 @@ SSH connection to display the result. But traditional text-based browsers
 lack JS support and all other modern HTML5 goodness. Browsh is different
 in that it's backed by a real browser, namely headless Firefox,
 to create a purely text-based version of web pages and web apps. These can be easily
-rendered in a terminal or indeed, ironically, in another browser. Do note that currently the browser client doesn't have a feature parity with the terminal client.
+rendered in a terminal or indeed, ironically, in another browser. Do note that currently the browser client doesn't have feature parity with the terminal client.
 
 Why not VNC? Well VNC is certainly one solution but it doesn't quite
 have the same ability to deal with extremely bad Internet. Terminal 
