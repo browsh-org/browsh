@@ -17,7 +17,7 @@ var input *inputBox
 
 func toMulti(text string, width int) string {
 	input = newInputBox("0")
-	input.text = text
+	input.text = []rune(text)
 	input.Width = width
 	input.TagName = "TEXTAREA"
 	textRunes := input.multiLiner.convert()

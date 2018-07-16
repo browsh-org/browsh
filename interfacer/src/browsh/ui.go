@@ -1,8 +1,6 @@
 package browsh
 
 import (
-	"unicode/utf8"
-
 	"github.com/gdamore/tcell"
 )
 
@@ -11,7 +9,7 @@ var (
 		X:        0,
 		Y:        1,
 		Height:   1,
-		text:     "",
+		text:     nil,
 		FgColour: [3]int32{255, 255, 255},
 		bgColour: [3]int32{-1, -1, -1},
 	}
@@ -75,16 +73,16 @@ func renderTabs() {
 }
 
 func renderURLBar() {
-	var content string
+	var content []rune
 	if urlInputBox.isActive {
-		writeString(0, 1, content, tcell.StyleDefault)
-		content += urlInputBox.text + " "
+		writeString(0, 1, string(content), tcell.StyleDefault)
+		content = append(urlInputBox.text, ' ')
 		urlInputBox.renderURLBox()
 	} else {
-		content += CurrentTab.URI
-		writeString(0, 1, content, tcell.StyleDefault)
+		content = []rune(CurrentTab.URI)
+		writeString(0, 1, string(content), tcell.StyleDefault)
 	}
-	fillLineToEnd(utf8.RuneCountInString(content), 1)
+	fillLineToEnd(len(content), 1)
 }
 
 func urlBarFocusToggle() {
@@ -104,7 +102,7 @@ func urlBarFocus(on bool) {
 		activeInputBox = &urlInputBox
 		urlInputBox.isActive = true
 		urlInputBox.xScroll = 0
-		urlInputBox.text = CurrentTab.URI
+		urlInputBox.text = []rune(CurrentTab.URI)
 		urlInputBox.putCursorAtEnd()
 		urlInputBox.selectAll()
 	}

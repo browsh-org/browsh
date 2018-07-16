@@ -1,7 +1,5 @@
 package browsh
 
-import "unicode/utf8"
-
 func (i *inputBox) renderCursor() {
 	if !i.isActive {
 		return
@@ -24,7 +22,7 @@ func (i *inputBox) renderSingleCursor() {
 
 func (i *inputBox) renderSelectionCursor() {
 	var x, y int
-	textLength := utf8.RuneCountInString(i.text)
+	textLength := len(i.text)
 	for index := 0; index < textLength; index++ {
 		x, y = i.getCoordsOfIndex(index)
 		if x >= i.selectionStart && x < i.selectionEnd {
@@ -78,7 +76,7 @@ func (i *inputBox) cursorDown() {
 }
 
 func (i *inputBox) cursorBackspace() {
-	if utf8.RuneCountInString(i.text) == 0 {
+	if len(i.text) == 0 {
 		return
 	}
 	if i.textCursor == 0 {
@@ -86,16 +84,16 @@ func (i *inputBox) cursorBackspace() {
 	}
 	start := i.text[:i.textCursor-1]
 	end := i.text[i.textCursor:]
-	i.text = start + end
+	i.text = append(start, end...)
 	i.cursorLeft()
 	i.sendInputBoxToBrowser()
 }
 
 func (i *inputBox) cursorInsertRune(theRune rune) {
-	character := string(theRune)
 	start := i.text[:i.textCursor]
 	end := i.text[i.textCursor:]
-	i.text = start + character + end
+	endWithRune := append([]rune{theRune}, end...)
+	i.text = append(start, endWithRune...)
 	i.cursorRight()
 	i.sendInputBoxToBrowser()
 }
@@ -116,19 +114,8 @@ func (i *inputBox) isCursorOverBottomEdge() bool {
 	return i.yCursor-i.yScroll > i.Height
 }
 
-func (i *inputBox) getCharacterAt() string {
-	var index int
-	var c rune
-	for index, c = range i.text {
-		if index == i.textCursor {
-			return string(c)
-		}
-	}
-	return ""
-}
-
 func (i *inputBox) putCursorAtEnd() {
-	i.textCursor = utf8.RuneCountInString(urlInputBox.text)
+	i.textCursor = len(urlInputBox.text)
 	// TODO: Do for multiline
 }
 
@@ -154,8 +141,8 @@ func (i *inputBox) limitTextCursor() {
 	if i.textCursor < 0 {
 		i.textCursor = 0
 	}
-	if i.textCursor > utf8.RuneCountInString(i.text) {
-		i.textCursor = utf8.RuneCountInString(i.text)
+	if i.textCursor > len(i.text) {
+		i.textCursor = len(i.text)
 	}
 }
 

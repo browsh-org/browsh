@@ -1,7 +1,5 @@
 package browsh
 
-import "unicode/utf8"
-
 func (i *inputBox) xScrollBy(magnitude int) {
 	if !i.isMultiLine() {
 		i.handleSingleLineScroll(magnitude)
@@ -17,7 +15,7 @@ func (i *inputBox) yScrollBy(magnitude int) {
 }
 
 func (i *inputBox) handleSingleLineScroll(magnitude int) {
-	detectionTextWidth := utf8.RuneCountInString(i.text)
+	detectionTextWidth := len(i.text)
 	detectionBoxWidth := i.Width
 	if magnitude < 0 {
 		detectionTextWidth++
@@ -38,7 +36,7 @@ func (i *inputBox) isCursorAtEdgeOfBox(detectionBoxWidth int) bool {
 }
 
 func (i *inputBox) isBestFit() bool {
-	lengthOfVisibleText := utf8.RuneCountInString(i.text) - i.xScroll
+	lengthOfVisibleText := len(i.text) - i.xScroll
 	return lengthOfVisibleText >= i.Width
 }
 
@@ -48,8 +46,8 @@ func (i *inputBox) limitScroll() {
 	if i.xScroll < 0 {
 		i.xScroll = 0
 	}
-	if i.xScroll > utf8.RuneCountInString(i.text) {
-		i.xScroll = utf8.RuneCountInString(i.text)
+	if i.xScroll > len(i.text) {
+		i.xScroll = len(i.text)
 	}
 	if i.isMultiLine() {
 		if i.yScroll < 0 {

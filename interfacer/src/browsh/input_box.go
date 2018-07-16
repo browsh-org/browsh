@@ -29,7 +29,7 @@ type inputBox struct {
 	bgColour       [3]int32
 	isActive       bool
 	multiLiner     multiLine
-	text           string
+	text           []rune
 	xCursor        int
 	yCursor        int
 	textCursor     int
@@ -79,7 +79,7 @@ func (i *inputBox) setCells() {
 			}
 			continue
 		}
-		if i.Type == "password" && index != utf8.RuneCountInString(i.text) {
+		if i.Type == "password" && index != len(i.text) {
 			c = '●'
 		}
 		i.addCharacterToFrame(x, y, c)
@@ -145,7 +145,7 @@ func (i *inputBox) textToDisplay() []rune {
 func (i *inputBox) textToDisplayForSingleLine() []rune {
 	var textToDisplay string
 	index := 0
-	for _, c := range i.text + " " {
+	for _, c := range append(i.text, ' ') {
 		if index >= i.xScroll {
 			textToDisplay += string(c)
 		}
@@ -168,7 +168,7 @@ func isLineBreak(character string) bool {
 func (i *inputBox) sendInputBoxToBrowser() {
 	inputBoxMap := map[string]interface{}{
 		"id":   i.ID,
-		"text": i.text,
+		"text": string(i.text),
 	}
 	marshalled, _ := json.Marshal(inputBoxMap)
 	sendMessageToWebExtension("/tab_command,/input_box," + string(marshalled))
@@ -177,9 +177,9 @@ func (i *inputBox) sendInputBoxToBrowser() {
 func (i *inputBox) handleEnterKey(modifier tcell.ModMask) {
 	if urlInputBox.isActive {
 		if isNewEmptyTabActive() {
-			sendMessageToWebExtension("/new_tab," + i.text)
+			sendMessageToWebExtension("/new_tab," + string(i.text))
 		} else {
-			sendMessageToWebExtension("/url_bar," + i.text)
+			sendMessageToWebExtension("/url_bar," + string(i.text))
 		}
 		urlBarFocus(false)
 	}
@@ -189,7 +189,7 @@ func (i *inputBox) handleEnterKey(modifier tcell.ModMask) {
 		i.isActive = false
 	}
 	if i.isMultiLine() && modifier == tcell.ModAlt {
-		i.text = ""
+		i.text = nil
 		i.isActive = true
 	}
 	i.updateAllCursors()
@@ -202,7 +202,7 @@ func (i *inputBox) selectionOff() {
 
 func (i *inputBox) selectAll() {
 	urlInputBox.selectionStart = 0
-	urlInputBox.selectionEnd = utf8.RuneCountInString(urlInputBox.text)
+	urlInputBox.selectionEnd = len(urlInputBox.text)
 }
 
 func (i *inputBox) removeSelectedText() {
@@ -211,7 +211,7 @@ func (i *inputBox) removeSelectedText() {
 	}
 	start := i.text[:i.selectionStart]
 	end := i.text[i.selectionEnd:]
-	i.text = start + end
+	i.text = append(start, end...)
 	i.textCursor = i.selectionStart
 	i.updateXYCursors()
 	activeInputBox.selectionOff()

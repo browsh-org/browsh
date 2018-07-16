@@ -20,7 +20,7 @@ type multiLine struct {
 func (m *multiLine) convert() []rune {
 	var aRune rune
 	m.reset()
-	for m.index, aRune = range m.inputBox.text + " " {
+	for m.index, aRune = range append(m.inputBox.text, ' ') {
 		m.previousCharacter = m.currentCharacter
 		m.currentCharacter = string(aRune)
 		if m.isWordishReady() {
@@ -153,7 +153,7 @@ func (m *multiLine) isNaturalLineBreak() bool {
 }
 
 func (m *multiLine) isFinalCharacter() bool {
-	return m.index+1 == utf8.RuneCountInString(m.inputBox.text)+1
+	return m.index+1 == len(m.inputBox.text)+1
 }
 
 func (m *multiLine) lineCount() int {
