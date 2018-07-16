@@ -17,7 +17,7 @@ export default class extends utils.mixins(CommonMixin) {
     this._pre_calculated_char = {
       width: 9,
       height: 15
-    }
+    };
 
     if (TEST) {
       this._char_height_magic_number = 0;
@@ -168,9 +168,15 @@ export default class extends utils.mixins(CommonMixin) {
   _calculateCharacterDimensions() {
     const element = this._getOrCreateMeasuringBox();
     const dom_rect = element.getBoundingClientRect();
-    if (dom_rect.width != this._pre_calculated_char.width ||
-        dom_rect.height != this._pre_calculated_char.height) {
-      this.log(`Using char dims ${this._pre_calculated_char.width}x${this._pre_calculated_char.height}`);
+    if (
+      dom_rect.width != this._pre_calculated_char.width ||
+      dom_rect.height != this._pre_calculated_char.height
+    ) {
+      this.log(
+        `Using char dims ${this._pre_calculated_char.width}x${
+          this._pre_calculated_char.height
+        }`
+      );
       this.log(`Actual char dims ${dom_rect.width}x${dom_rect.height}`);
     }
     this.char = {
