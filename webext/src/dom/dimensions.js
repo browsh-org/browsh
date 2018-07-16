@@ -168,8 +168,11 @@ export default class extends utils.mixins(CommonMixin) {
   _calculateCharacterDimensions() {
     const element = this._getOrCreateMeasuringBox();
     const dom_rect = element.getBoundingClientRect();
-    this.log(`Using char dims ${this._pre_calculated_char.width}x${this._pre_calculated_char.height}`)
-    this.log(`Actual char dims ${dom_rect.width}x${dom_rect.height}`)
+    if (dom_rect.width != this._pre_calculated_char.width ||
+        dom_rect.height != this._pre_calculated_char.height) {
+      this.log(`Using char dims ${this._pre_calculated_char.width}x${this._pre_calculated_char.height}`);
+      this.log(`Actual char dims ${dom_rect.width}x${dom_rect.height}`);
+    }
     this.char = {
       width: this._pre_calculated_char.width,
       height: this._pre_calculated_char.height + this._char_height_magic_number
