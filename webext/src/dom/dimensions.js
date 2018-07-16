@@ -11,6 +11,14 @@ export default class extends utils.mixins(CommonMixin) {
     // character.
     this._measuring_box_id = "browsh_em_measuring_box";
 
+    // This used to be dynamically calculated at _calculateCharacterDimensions()
+    // But it proved to be bugy, I think because of a race condition on lightweight sites
+    // where the webextension's CSS wouldn't get applied in time.
+    this._pre_calculated_char = {
+      width: 9,
+      height: 15
+    }
+
     if (TEST) {
       this._char_height_magic_number = 0;
     } else {
@@ -154,30 +162,18 @@ export default class extends utils.mixins(CommonMixin) {
   // map un-snapped text to the best grid cells - grid cells that represent the terminal's
   // character positions.
   //
-  // The reason that we can't just do some basic maths on the CSS `font-size` value we enforce
-  // is that there are various factors that can skew the actual font dimensions on the page.
-  // For instance, different browser families and even different versions of the same browser
-  // may have subtle differences in how they render text. Furthermore we can actually get
-  // floating point accuracy if we use `Element.getBoundingClientRect()` which further helps
-  // as calculations are compounded during our rendering processes.
+  // This used to dynamically allocate the character size but it proved to be buggy, both because
+  // of an occasional race condition and because some sites (eg; stackoverflow.com) returned values
+  // over 100.
   _calculateCharacterDimensions() {
     const element = this._getOrCreateMeasuringBox();
     const dom_rect = element.getBoundingClientRect();
+    this.log(`Using char dims ${this._pre_calculated_char.width}x${this._pre_calculated_char.height}`)
+    this.log(`Actual char dims ${dom_rect.width}x${dom_rect.height}`)
     this.char = {
-      width: dom_rect.width,
-      height: dom_rect.height + this._char_height_magic_number
+      width: this._pre_calculated_char.width,
+      height: this._pre_calculated_char.height + this._char_height_magic_number
     };
-    this._largeEmFix();
-  }
-
-  // Stackoverflow.com (and maybe other sites), for some reason generates an extremely
-  // large value for em measurement. Maybe it's because of the time at which the
-  // measurement is made?
-  _largeEmFix() {
-    if (this.char.width > 100) {
-      this.char.width = 9;
-      this.char.height = 15 + this._char_height_magic_number;
-    }
   }
 
   // Back when printing was done by physical stamps, it was convention to measure the
