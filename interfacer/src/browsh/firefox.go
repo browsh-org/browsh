@@ -99,33 +99,15 @@ func ensureFirefoxBinary() {
 	if *firefoxBinary == "firefox" {
 		switch runtime.GOOS {
 		case "windows":
-			*firefoxBinary = `c:\Program Files (x86)\Mozilla Firefox\firefox.exe`
+			*firefoxBinary = getFirefoxPath()
 		case "darwin":
 			*firefoxBinary = "/Applications/Firefox.app/Contents/MacOS/firefox"
 		default:
-			*firefoxBinary = Shell("which firefox")
+			*firefoxBinary = getFirefoxPath()
 		}
 	}
 	if _, err := os.Stat(*firefoxBinary); os.IsNotExist(err) {
-		if runtime.GOOS == "windows" {
-			*firefoxBinary = `c:\Program Files\Mozilla Firefox\firefox.exe`
-			if _, err := os.Stat(*firefoxBinary); os.IsNotExist(err) {
-				Shutdown(errors.New(`Firefox binary not found in: c:\Program Files (x86)\Mozilla Firefox\firefox.exe or ` + *firefoxBinary))
-			}
-		} else {
-			Shutdown(errors.New("Firefox binary not found: " + *firefoxBinary))
-		}
-	}
-}
-
-func ensureFirefoxVersion() {
-	output := Shell(*firefoxBinary + " --version")
-	pieces := strings.Split(output, " ")
-	version := pieces[len(pieces)-1]
-	if versionOrdinal(version) < versionOrdinal("57") {
-		message := "Installed Firefox version " + version + " is too old. " +
-			"Firefox 57 or newer is needed."
-		Shutdown(errors.New(message))
+		Shutdown(errors.New("Firefox binary not found: " + *firefoxBinary))
 	}
 }
 
@@ -213,7 +195,7 @@ func firefoxMarionette() {
 	for time.Since(start) < 30*time.Second {
 		conn, err = net.Dial("tcp", "127.0.0.1:2828")
 		if err != nil {
-			if !strings.Contains(err.Error(), "connection refused") {
+			if !strings.Contains(err.Error(), "refused") {
 				Shutdown(err)
 			} else {
 				time.Sleep(10 * time.Millisecond)
