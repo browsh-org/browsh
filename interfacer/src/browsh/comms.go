@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/websocket"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -27,7 +28,8 @@ type incomingRawText struct {
 func startWebSocketServer() {
 	serverMux := http.NewServeMux()
 	serverMux.HandleFunc("/", webSocketServer)
-	if err := http.ListenAndServe(":"+*webSocketPort, serverMux); err != nil {
+	port := viper.GetString("browsh.websocket-port")
+	if err := http.ListenAndServe(":"+port, serverMux); err != nil {
 		Shutdown(err)
 	}
 }
@@ -61,7 +63,7 @@ func webSocketReader(ws *websocket.Conn) {
 func handleWebextensionCommand(message []byte) {
 	parts := strings.Split(string(message), ",")
 	command := parts[0]
-	if *IsHTTPServer {
+	if viper.GetBool("http-server-mode") {
 		handleRawFrameTextCommands(parts)
 		return
 	}
@@ -139,12 +141,12 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	isConnectedToWebExtension = true
 	go webSocketWriter(ws)
 	go webSocketReader(ws)
-	if *IsHTTPServer {
+	if viper.GetBool("http-server-mode") {
 		sendMessageToWebExtension("/raw_text_mode")
 	} else {
 		sendTtySize()
 	}
 	// For some reason, using Firefox's CLI arg `--url https://google.com` doesn't consistently
 	// work. So we do it here instead.
-	sendMessageToWebExtension("/new_tab," + *StartupURL)
+	sendMessageToWebExtension("/new_tab," + viper.GetString("startup-url"))
 }

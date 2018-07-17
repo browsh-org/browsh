@@ -7,6 +7,7 @@ import (
 
 	"github.com/gdamore/tcell"
 	"github.com/go-errors/errors"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -90,7 +91,7 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 }
 
 func quitBrowsh() {
-	if !*isUseExistingFirefox {
+	if !viper.GetBool("firefox.use-existing") {
 		quitFirefox()
 	}
 	Shutdown(errors.New("normal"))

@@ -15,6 +15,7 @@ import (
 
 	"github.com/gdamore/tcell"
 	"github.com/go-errors/errors"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -58,18 +59,19 @@ func startHeadlessFirefox() {
 	ensureFirefoxBinary()
 	ensureFirefoxVersion()
 	args := []string{"--marionette"}
-	if !*isFFGui {
+	if !viper.GetBool("firefox.with-gui") {
 		args = append(args, "--headless")
 	}
-	if *useFFProfile != "default" {
-		Log("Using profile: " + *useFFProfile)
-		args = append(args, "-P", *useFFProfile)
+	profile := viper.GetString("firefox.profile")
+	if profile != "default" {
+		Log("Using profile: " + profile)
+		args = append(args, "-P", profile)
 	} else {
-		profilePath := getConfigFolder()
+		profilePath := getFirefoxProfilePath()
 		Log("Using default profile at: " + profilePath)
 		args = append(args, "--profile", profilePath)
 	}
-	firefoxProcess := exec.Command(*firefoxBinary, args...)
+	firefoxProcess := exec.Command(viper.GetString("firefox.path"), args...)
 	defer firefoxProcess.Process.Kill()
 	stdout, err := firefoxProcess.StdoutPipe()
 	if err != nil {
@@ -96,18 +98,19 @@ func checkIfFirefoxIsAlreadyRunning() {
 }
 
 func ensureFirefoxBinary() {
-	if *firefoxBinary == "firefox" {
+	path := viper.GetString("firefox.path")
+	if path == "firefox" {
 		switch runtime.GOOS {
 		case "windows":
-			*firefoxBinary = getFirefoxPath()
+			path = getFirefoxPath()
 		case "darwin":
-			*firefoxBinary = "/Applications/Firefox.app/Contents/MacOS/firefox"
+			path = "/Applications/Firefox.app/Contents/MacOS/firefox"
 		default:
-			*firefoxBinary = getFirefoxPath()
+			path = getFirefoxPath()
 		}
 	}
-	if _, err := os.Stat(*firefoxBinary); os.IsNotExist(err) {
-		Shutdown(errors.New("Firefox binary not found: " + *firefoxBinary))
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		Shutdown(errors.New("Firefox binary not found: " + path))
 	}
 }
 
@@ -292,7 +295,7 @@ func setupFirefox() {
 }
 
 func startFirefox() {
-	if !*isUseExistingFirefox {
+	if !viper.GetBool("firefox.use-existing") {
 		writeString(0, 16, "Waiting for Firefox to connect...", tcell.StyleDefault)
 		if IsTesting {
 			writeString(0, 17, "TEST MODE", tcell.StyleDefault)

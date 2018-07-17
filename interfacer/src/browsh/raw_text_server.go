@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/viper"
 	"github.com/NYTimes/gziphandler"
 	"github.com/ulule/limiter"
 	"github.com/ulule/limiter/drivers/middleware/stdlib"
@@ -31,11 +32,13 @@ func HTTPServerStart() {
 	startFirefox()
 	go startWebSocketServer()
 	Log("Starting Browsh HTTP server")
+	bind := viper.GetString("http-server.bind")
+	port := viper.GetString("http-server.port")
 	serverMux := http.NewServeMux()
 	uncompressed := http.HandlerFunc(handleHTTPServerRequest)
 	limiterMiddleware := setupRateLimiter()
 	serverMux.Handle("/", limiterMiddleware.Handler(gziphandler.GzipHandler(uncompressed)))
-	if err := http.ListenAndServe(*httpServerBind+":"+*HTTPServerPort, &slashFix{serverMux}); err != nil {
+	if err := http.ListenAndServe(bind+":"+port, &slashFix{serverMux}); err != nil {
 		Shutdown(err)
 	}
 }

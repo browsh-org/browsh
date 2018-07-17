@@ -1,6 +1,7 @@
 package browsh
 
 import (
+	"github.com/spf13/viper"
 	"github.com/gdamore/tcell"
 )
 
@@ -26,7 +27,7 @@ func renderUI() {
 // the browser that must be done through the webextension.
 func writeString(x, y int, str string, style tcell.Style) {
 	xOriginal := x
-	if *IsHTTPServer {
+	if viper.GetBool("http-server-mode") {
 		Log(str)
 		return
 	}

@@ -2,7 +2,6 @@ package browsh
 
 import (
 	"encoding/base64"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -17,7 +16,8 @@ import (
 	"github.com/gdamore/tcell"
 
 	"github.com/go-errors/errors"
-	"github.com/shibukawa/configdir"
+	"github.com/spf13/viper"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -35,20 +35,6 @@ var (
  ****///////////////////
    ********///////////////
      ***********************`
-	webSocketPort        = flag.String("websocket-port", "3334", "Web socket service address")
-	firefoxBinary        = flag.String("firefox", "firefox", "Path to Firefox executable")
-	isFFGui              = flag.Bool("with-gui", false, "Don't use headless Firefox")
-	isUseExistingFirefox = flag.Bool("use-existing-ff", false, "Whether Browsh should launch Firefox or not")
-	useFFProfile         = flag.String("ff-profile", "default", "Firefox profile to use")
-	isDebug              = flag.Bool("debug", false, "Log to ./debug.log")
-	timeLimit            = flag.Int("time-limit", 0, "Kill Browsh after the specified number of seconds")
-	// StartupURL is the URL of the first tab at boot
-	StartupURL = flag.String("startup-url", "https://google.com", "URL to launch at startup")
-	// IsHTTPServer needs to be exported for use in tests
-	IsHTTPServer = flag.Bool("http-server", false, "Run as an HTTP service")
-	// HTTPServerPort also needs to be exported for use in tests
-	HTTPServerPort = flag.String("http-server-port", "4333", "HTTP server address")
-	httpServerBind = flag.String("http-server-bind", "0.0.0.0", "HTTP server binding address")
 	// IsTesting is used in tests, so it needs to be exported
 	IsTesting = false
 	logfile   string
@@ -75,7 +61,7 @@ func Log(msg string) {
 	if !*isDebug {
 		return
 	}
-	if *IsHTTPServer && !IsTesting {
+	if viper.GetBool("http-server-mode") && !IsTesting {
 		fmt.Println(msg)
 	} else {
 		f, oErr := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
@@ -98,10 +84,15 @@ func initialise() {
 	if *isDebug {
 		setupLogging()
 	}
+	loadConfig()
 }
 
 // Shutdown tries its best to cleanly shutdown browsh and the associated browser
 func Shutdown(err error) {
+	if *isDebug {
+		out := err.(*errors.Error).ErrorStack()
+		Log(fmt.Sprintf(out))
+	}
 	exitCode := 0
 	if screen != nil {
 		screen.Fini()
@@ -109,10 +100,6 @@ func Shutdown(err error) {
 	if err.Error() != "normal" {
 		exitCode = 1
 		println(err.Error())
-	}
-	if *isDebug {
-		out := err.(*errors.Error).ErrorStack()
-		Log(fmt.Sprintf(out))
 	}
 	os.Exit(exitCode)
 }
@@ -139,14 +126,6 @@ func saveScreenshot(base64String string) {
 	message := "Screenshot saved to " + fullPath
 	sendMessageToWebExtension("/status," + message)
 	file.Close()
-}
-
-// Gets a cross-platform path to store Browsh config
-func getConfigFolder() string {
-	configDirs := configdir.New("browsh", "firefox_profile")
-	folders := configDirs.QueryFolders(configdir.Global)
-	folders[0].MkdirAll()
-	return folders[0].Path
 }
 
 // Shell provides nice and easy shell commands
@@ -210,8 +189,8 @@ func ttyEntry() {
 
 // MainEntry decides between running Browsh as a CLI app or as an HTTP web server
 func MainEntry() {
-	flag.Parse()
-	if *IsHTTPServer {
+	pflag.Parse()
+	if viper.GetBool("http-server-mode") {
 		HTTPServerStart()
 	} else {
 		ttyEntry()

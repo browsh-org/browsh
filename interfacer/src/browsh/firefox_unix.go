@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-errors/errors"
+	"github.com/spf13/viper"
 )
 
 func getFirefoxPath() string {
@@ -17,7 +18,7 @@ func ensureFirefoxVersion() {
 	if runtime.GOOS == "windows" {
 		return
 	}
-	output := Shell(*firefoxBinary + " --version")
+	output := Shell(viper.GetString("firefox.path") + " --version")
 	pieces := strings.Split(output, " ")
 	version := pieces[len(pieces)-1]
 	if versionOrdinal(version) < versionOrdinal("57") {
