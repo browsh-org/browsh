@@ -50,6 +50,14 @@ jpeg_compression = 0.9
 # Rate limit. For syntax, see: https://github.com/ulule/limiter
 rate-limit = "10-M"
 
+# Blocking is useful if the HTTP server is made public. All values are evaluated as
+# regular expressions.
+blocked-domains = [
+]
+
+blocked-user-agents = [
+]
+
 # HTML snippets to show at top and bottom of final page.
 header = ""
 footer = ""

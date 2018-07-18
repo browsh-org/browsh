@@ -97,9 +97,15 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Cache-Control", "public, max-age=600")
-	if isDisallowedURL(urlForBrowsh) {
+	if isDisallowedDomain(urlForBrowsh) {
 		http.Redirect(w, r, "/", 301)
 		return
+	}
+	if isDisallowedUserAgent(r.Header.Get("User-Agent")) {
+		if urlForBrowsh != "" {
+			http.Redirect(w, r, "/", 403)
+			return
+		}
 	}
 	if strings.TrimSpace(urlForBrowsh) == "" {
 		if strings.Contains(r.Host, "text.") {
@@ -137,9 +143,24 @@ func deRecurseURL(urlForBrowsh string) (string, bool) {
 	return deRecurseURL(strings.TrimPrefix(nestedURL.RequestURI(), "/"))
 }
 
-func isDisallowedURL(urlForBrowsh string) bool {
-	r, _ := regexp.Compile("[mail|accounts].google.com")
-	return r.MatchString(urlForBrowsh)
+func isDisallowedDomain(urlForBrowsh string) bool {
+	for _, domainish := range viper.GetStringSlice("http-server.blocked-domains") {
+		r, _ := regexp.Compile(domainish)
+		if r.MatchString(urlForBrowsh) {
+			return true
+		}
+	}
+	return false
+}
+
+func isDisallowedUserAgent(userAgent string) bool {
+	for _, agentish := range viper.GetStringSlice("http-server.blocked-user-agents") {
+		r, _ := regexp.Compile(agentish)
+		if r.MatchString(userAgent) {
+			return true
+		}
+	}
+	return false
 }
 
 func isProductionHTTP(r *http.Request) bool {

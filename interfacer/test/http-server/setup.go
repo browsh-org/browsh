@@ -28,8 +28,12 @@ func startBrowsh() {
 	browsh.HTTPServerStart()
 }
 
+func getBrowshServiceBase() string {
+	return "http://localhost:" + viper.GetString("http-server.port")
+}
+
 func getPath(path string, mode string) string {
-	browshServiceBase := "http://localhost:" + viper.GetString("http-server.port")
+	browshServiceBase := getBrowshServiceBase()
 	staticFileServerBase := "http://localhost:" + staticFileServerPort
 	fullBase := browshServiceBase + "/" + staticFileServerBase
 	client := &http.Client{}
