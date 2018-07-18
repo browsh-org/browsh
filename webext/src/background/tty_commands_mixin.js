@@ -186,6 +186,13 @@ export default MixinBase =>
           request_id: request_id,
           raw_text_mode_type: mode.toLowerCase()
         });
+        // Sometimes tabs fail to load for whatever reason. Make sure they get
+        // removed to save RAM in long-lived Browsh HTTP servers
+        setTimeout(() => {
+          if (this.tabs[native_tab.id]) {
+            this.removeTab(native_tab.id);
+          }
+        }, 60000);
       });
     }
 
