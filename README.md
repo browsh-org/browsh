@@ -10,12 +10,12 @@
 
 Not all the world has good Internet.
 
-If all you have is a 3kbps connection tethered from a phone,
+If you only have a 3kbps internet connection tethered from a phone,
 then it's good to SSH into a server and browse the web through, say,
 [elinks](https://github.com/browsh-org/browsh/issues/17). That way the
 _server_ downloads the web pages and uses the limited bandwidth of an
-SSH connection to display the result. But traditional text-based browsers
-lack JS support and all other modern HTML5 goodness. Browsh is different
+SSH connection to display the result. However, traditional text-based browsers
+lack JS and all other modern HTML5 support. Browsh is different
 in that it's backed by a real browser, namely headless Firefox,
 to create a purely text-based version of web pages and web apps. These can be easily
 rendered in a terminal or indeed, ironically, in another browser. Do note that currently the browser client doesn't have feature parity with the terminal client.
@@ -30,7 +30,7 @@ like VNC.
 
 One final reason to use terminal Browsh could be to offload the battery-drain of a modern
 browser from your laptop or low-powered device like a Raspberry Pi. If you're a CLI-native,
-then you could potentially get a few more hours life if your CPU-hungry browser
+then you could potentially get a few more hours of life if your CPU-hungry browser
 is running somewhere else on mains electricity.
 
 ## Installation
