@@ -220,6 +220,7 @@ func renderCurrentTabWindow() {
 		activeInputBox.renderCursor()
 	}
 	overlayPageStatusMessage()
+	overlayCallToSupport()
 	screen.Show()
 }
 

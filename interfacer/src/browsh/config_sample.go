@@ -15,9 +15,14 @@ mobile_user_agent = "Mozilla/5.0 (Android 7.0; Mobile; rv:54.0) Gecko/58.0 Firef
 websocket-port = 3334
 
 [firefox]
+# The path to your Firefox binary
 path = "firefox"
-profile = "default"
+# Browsh has its own profile, seperate from the normal user's. But you can change that.
+profile = "browsh-default"
+# Don't let Browsh launch Firefox, but make it try to connect to an existing one. Note
+# it will need to have been launched with the '--marionette' flag.
 use-existing = false
+# Launch Firefox in with its visible GUI window. Useful for setting up the Browsh profile.
 with-gui = false
 
 [tty]

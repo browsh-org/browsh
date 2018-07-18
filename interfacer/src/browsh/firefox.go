@@ -63,7 +63,7 @@ func startHeadlessFirefox() {
 		args = append(args, "--headless")
 	}
 	profile := viper.GetString("firefox.profile")
-	if profile != "default" {
+	if profile != "browsh-default" {
 		Log("Using profile: " + profile)
 		args = append(args, "-P", profile)
 	} else {

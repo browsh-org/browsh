@@ -40,7 +40,6 @@ func writeString(x, y int, str string, style tcell.Style) {
 		screen.SetContent(x, y, c, nil, style)
 		x++
 	}
-	screen.Show()
 }
 
 func fillLineToEnd(x, y int) {
@@ -112,6 +111,21 @@ func urlBarFocus(on bool) {
 func overlayPageStatusMessage() {
 	_, height := screen.Size()
 	writeString(0, height-1, CurrentTab.StatusMessage, tcell.StyleDefault)
+}
+
+func overlayCallToSupport() {
+	var right int
+	var message string
+	if viper.GetString("browsh_supporter") == "I have shown my support for Browsh" {
+		return
+	}
+	width, height := screen.Size()
+	message = " Unsupported version"
+	right = width - len(message)
+	writeString(right, height-2, message, tcell.StyleDefault)
+	message = "  See brow.sh/donate"
+	right = width - len(message)
+	writeString(right, height-1, message, tcell.StyleDefault)
 }
 
 func reverseCellColour(x, y int) {
