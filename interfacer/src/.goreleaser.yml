@@ -14,8 +14,6 @@ builds:
       - arm
       - arm64
     ldflags: -s -w
-    hooks:
-      post: ../contrib/upx_compress_binary.sh
 
 archive:
   format_overrides:

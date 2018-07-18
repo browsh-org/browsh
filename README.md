@@ -35,7 +35,7 @@ is running somewhere else on mains electricity.
 
 ## Installation
 
-Download a binary from the [releases](https://github.com/browsh-org/browsh/releases) (~2-6MB).
+Download a binary from the [releases](https://github.com/browsh-org/browsh/releases) (~7MB).
 You will need to have Firefox 57 (or higher) aleady installed.
 
 Or download and run the Docker image (~230MB) with:
