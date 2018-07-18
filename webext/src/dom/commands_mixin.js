@@ -3,12 +3,16 @@ import utils from "utils";
 export default MixinBase =>
   class extends MixinBase {
     _handleBackgroundMessage(message) {
-      let input, url;
+      let input, url, config;
       const parts = message.split(",");
       const command = parts[0];
       switch (command) {
         case "/mode":
           this._setupMode(parts[1]);
+          break;
+        case "/config":
+          config = JSON.parse(utils.rebuildArgsToSingleArg(parts));
+          this._loadConfig(config);
           break;
         case "/request_frame":
           this.sendFrame();
@@ -59,6 +63,11 @@ export default MixinBase =>
         this._is_interactive_mode = true;
         this._setupInteractiveMode();
       }
+    }
+
+    _loadConfig(config) {
+      this.config = config;
+      this._postSetupConstructor();
     }
 
     _handleUserInput(input) {

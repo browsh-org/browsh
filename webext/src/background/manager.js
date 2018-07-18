@@ -21,14 +21,10 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     // Used so that reconnections to the terminal don't also attempt to reconnect to the
     // browser DOM.
     this._is_connected_to_browser_dom = false;
-    // The time in milliseconds between requesting a new TTY-size pixel frame
-    this._small_pixel_frame_rate = 250;
     // Raw text mode is for when Browsh is running as an HTTP server that serves single
     // pages as entire DOMs, in plain text.
     this._is_raw_text_mode = false;
-    // A mobile user agent for forcing web pages to use its mobile layout
-    this._mobile_user_agent =
-      "Mozilla/5.0 (Android 7.0; Mobile; rv:54.0) Gecko/58.0 Firefox/58.0";
+    // Toggle user agent
     this._is_using_mobile_user_agent = false;
     this._addUserAgentListener();
     // Listen to HTTP requests. This allows us to display some helpful status messages at the
@@ -48,7 +44,6 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
       this.dimensions.terminal = this.terminal;
       this._listenForTerminalMessages();
       this._connectToBrowserDOM();
-      this._startFrameRequestLoop();
     });
     this.terminal.addEventListener("close", _event => {
       this._reconnectToTerminal();
@@ -139,6 +134,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     let tab = this.tabs[native_tab_object.id];
     tab.native_last_change = changes;
     tab.ensureConnectionToBackground();
+    tab.sendGlobalConfig(this.config);
   }
 
   // Note that although this callback signifies that the tab now exists, it is not fully
@@ -163,11 +159,13 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
 
   _applyUpdates(tabish_object) {
     let tab = this._maybeNewTab({ id: tabish_object.id });
-    ["id", "title", "url", "active", "request_id"].map(key => {
-      if (tabish_object.hasOwnProperty(key)) {
-        tab[key] = tabish_object[key];
+    ["id", "title", "url", "active", "request_id", "raw_text_mode_type"].map(
+      key => {
+        if (tabish_object.hasOwnProperty(key)) {
+          tab[key] = tabish_object[key];
+        }
       }
-    });
+    );
     if (tabish_object.active) {
       this.active_tab_id = tab.id;
     }
@@ -186,7 +184,10 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
       `Tab ${channel.name} connected for communication with background process`
     );
     let tab = this.tabs[parseInt(channel.name)];
-    tab.postConnectionInit(channel);
+    tab.postConnectionInit(channel, this.config);
+    if (!this._is_connected_to_browser_dom) {
+      this._startFrameRequestLoop();
+    }
     this._is_connected_to_browser_dom = true;
   }
 
@@ -240,13 +241,17 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   // graphics pixles are sent. Larger frames are sent in response to scroll events and
   // TTY-sized text frames are sent in response to DOM mutation events.
   _startFrameRequestLoop() {
-    this.log("BACKGROUND: Frame loop starting");
+    this.log(
+      "BACKGROUND: Frame loop starting at " +
+        this.config.tty.small_pixel_frame_rate +
+        "ms intervals"
+    );
     setInterval(() => {
       if (this._is_initial_window_size_pending) this._initialWindowResize();
       if (this._isAbleToRequestFrame()) {
         this.sendToCurrentTab("/request_frame");
       }
-    }, this._small_pixel_frame_rate);
+    }, this.config.tty.small_pixel_frame_rate);
   }
 
   _isAbleToRequestFrame() {

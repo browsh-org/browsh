@@ -7,6 +7,9 @@ export default MixinBase =>
       const parts = message.split(",");
       const command = parts[0];
       switch (command) {
+        case "/config":
+          this._loadConfig(message.slice(8));
+          break;
         case "/tab_command":
           this.sendToCurrentTab(message.slice(13));
           break;
@@ -40,6 +43,15 @@ export default MixinBase =>
           this._rawTextRequest(parts[1], parts[2], parts.slice(3).join(","));
           break;
       }
+    }
+
+    _loadConfig(json_string) {
+      this.log(json_string);
+      this.config = JSON.parse(json_string);
+      if (this.currentTab()) {
+        this.currentTab().sendGlobalConfig(this.config);
+      }
+      this.dimensions.postConfigSetup(this.config);
     }
 
     _updateTTYSize(width, height) {
@@ -87,7 +99,7 @@ export default MixinBase =>
     // TODO: move to CLI client
     _getURLfromUserInput(input) {
       let url;
-      const search_engine = "https://www.google.com/search?q=";
+      const search_engine = this.config.default_search_engine_base;
       // Basically just check to see if there is text either side of a dot
       const is_straddled_dot = RegExp(/^[^\s]+\.[^\s]+/);
       // More comprehensive URL pattern
@@ -171,9 +183,9 @@ export default MixinBase =>
       this.createNewTab(url, native_tab => {
         this._acknowledgeNewTab({
           id: native_tab.id,
-          request_id: request_id
+          request_id: request_id,
+          raw_text_mode_type: mode.toLowerCase()
         });
-        this.tabs[native_tab.id].setMode(`raw_text_${mode.toLowerCase()}`);
       });
     }
 
@@ -194,7 +206,7 @@ export default MixinBase =>
           if (this._is_using_mobile_user_agent) {
             e.requestHeaders.forEach(header => {
               if (header.name.toLowerCase() == "user-agent") {
-                header.value = this._mobile_user_agent;
+                header.value = this.config.mobile_user_agent;
               }
             });
             return { requestHeaders: e.requestHeaders };

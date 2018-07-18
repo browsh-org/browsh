@@ -16,8 +16,8 @@ import (
 	"github.com/gdamore/tcell"
 
 	"github.com/go-errors/errors"
-	"github.com/spf13/viper"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -77,7 +77,8 @@ func Log(msg string) {
 	}
 }
 
-func initialise() {
+// Initialise browsh
+func Initialise() {
 	if IsTesting {
 		*isDebug = true
 	}
@@ -145,7 +146,6 @@ func Shell(command string) string {
 // TTYStart starts Browsh
 func TTYStart(injectedScreen tcell.Screen) {
 	screen = injectedScreen
-	initialise()
 	setupTcell()
 	writeString(1, 0, logo, tcell.StyleDefault)
 	writeString(0, 15, "Starting Browsh, the modern text-based web browser.", tcell.StyleDefault)
@@ -190,6 +190,7 @@ func ttyEntry() {
 // MainEntry decides between running Browsh as a CLI app or as an HTTP web server
 func MainEntry() {
 	pflag.Parse()
+	Initialise()
 	if viper.GetBool("http-server-mode") {
 		HTTPServerStart()
 	} else {

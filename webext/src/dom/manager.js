@@ -20,13 +20,18 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     this._setupInit();
   }
 
-  _postCommsConstructor() {
+  _postSetupConstructor() {
     this.dimensions.channel = this.channel;
-    this.graphics_builder = new GraphicsBuilder(this.channel, this.dimensions);
+    this.graphics_builder = new GraphicsBuilder(
+      this.channel,
+      this.dimensions,
+      this.config
+    );
     this.text_builder = new TextBuilder(
       this.channel,
       this.dimensions,
-      this.graphics_builder
+      this.graphics_builder,
+      this.config
     );
     this.text_builder._raw_text_start = performance.now();
   }
@@ -96,7 +101,6 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
 
   _postCommsInit() {
     this.log("Webextension postCommsInit()");
-    this._postCommsConstructor();
     this._sendTabInfo();
     this.sendMessage("/status,page_init");
     this._listenForBackgroundMessages();
@@ -108,7 +112,6 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     this._setupDebouncedFunctions();
     this._startMutationObserver();
     this.sendAllBigFrames();
-    // Send again for pages that have page load transition effects :/
     // TODO:
     //   Disabling CSS transitions is not easy, many pages won't even render
     //   if they're disabled. Eg; Google's login process.

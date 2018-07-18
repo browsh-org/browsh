@@ -48,24 +48,53 @@ export default MixinBase =>
     }
 
     _wrapHTML(raw_text) {
-      let info = "";
-      const head = this._getHTMLHead();
+      return this._getHTMLHead() + raw_text + this._getFooter();
+    }
+
+    // Whether a use has shown support. This controls certain Browsh branding and
+    // nags to donate.
+    userHasShownSupport() {
+      this.log(this.config.browsh_supporter);
+      return (
+        this.config.browsh_supporter === "I have shown my support for Browsh"
+      );
+    }
+
+    _byBrowsh() {
+      if (this.userHasShownSupport()) {
+        return "";
+      }
+      return 'by <a href="https://www.brow.sh">Browsh</a> ';
+    }
+
+    _getUserFooter() {
+      return "\n" + this.config["http-server"].footer;
+    }
+
+    _getUserHeader() {
+      return this.config["http-server"].header + "\n";
+    }
+
+    _getMetaData() {
+      let metadata = "";
       const date_time = this._getCurrentDataTime();
       const elapsed = `${performance.now() - this._raw_text_start}ms`;
-      info +=
-        "\n\n" +
-        `Built by <a href="https://www.brow.sh">Browsh</a> ` +
-        `on ${date_time} in ${elapsed}.`;
+      metadata +=
+        "\n\n" + `Built ` + this._byBrowsh() + `on ${date_time} in ${elapsed}.`;
       if (this.dimensions.is_page_truncated) {
-        info +=
+        metadata +=
           "\nBrowsh parser: the page was too large, some text may have been truncated.";
       }
+      return metadata;
+    }
 
-      const donate =
-        '\nPlease consider <a href="https://www.brow.sh/donate/">donating</a> ' +
-        "to help all those with slow and/or expensive internet.";
-      const foot = `<span class="browsh-footer">${info}${donate}</span></pre></body></html>`;
-      return head + raw_text + foot;
+    _getFooter() {
+      return (
+        '<span class="browsh-footer">' +
+        this._getMetaData() +
+        this._getUserFooter() +
+        `</span></pre></body></html>`
+      );
     }
 
     _getHTMLHead() {
@@ -111,6 +140,7 @@ export default MixinBase =>
        </style>
      </head>
      <body>
+     ${this._getUserHeader()}
      <pre>`;
     }
 

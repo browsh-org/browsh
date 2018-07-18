@@ -1,11 +1,11 @@
 package browsh
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-	"bytes"
 
 	"github.com/shibukawa/configdir"
 	"github.com/spf13/pflag"
@@ -15,9 +15,9 @@ import (
 var (
 	configFilename = "config.toml"
 
-	isDebug = pflag.Bool("debug", false, "Log to ./debug.log")
+	isDebug   = pflag.Bool("debug", false, "Log to ./debug.log")
 	timeLimit = pflag.Int("time-limit", 0, "Kill Browsh after the specified number of seconds")
-	_ = pflag.Bool("http-server-mode", false, "Run as an HTTP service")
+	_         = pflag.Bool("http-server-mode", false, "Run as an HTTP service")
 
 	_ = pflag.String("startup-url", "https://google.com", "URL to launch at startup")
 	_ = pflag.String("firefox.path", "firefox", "Path to Firefox executable")
@@ -80,14 +80,12 @@ func loadConfig() {
 	// First load the sample config in case the user hasn't updated any new fields
 	err := viper.ReadConfig(bytes.NewBuffer([]byte(configSample)))
 	if err != nil {
-		Shutdown(err)
+		panic(fmt.Errorf("Config file error: %s \n", err))
 	}
 	// Then load the users own config file, overwriting the sample config
 	err = viper.MergeInConfig()
 	if err != nil {
-		Shutdown(err)
+		panic(fmt.Errorf("Config file error: %s \n", err))
 	}
 	viper.BindPFlags(pflag.CommandLine)
-	Log("Using the folowing config values:")
-	Log(fmt.Sprintf("%v", viper.AllSettings()))
 }

@@ -8,8 +8,8 @@ import (
 
 	ginkgo "github.com/onsi/ginkgo"
 
-	"github.com/spf13/viper"
 	"browsh/interfacer/src/browsh"
+	"github.com/spf13/viper"
 )
 
 var staticFileServerPort = "4444"
@@ -23,6 +23,7 @@ func startStaticFileServer() {
 
 func startBrowsh() {
 	browsh.IsTesting = true
+	browsh.Initialise()
 	viper.Set("http-server-mode", true)
 	browsh.HTTPServerStart()
 }

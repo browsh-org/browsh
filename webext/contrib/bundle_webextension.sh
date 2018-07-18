@@ -13,7 +13,8 @@ NODE_BIN=$PROJECT_ROOT/webext/node_modules/.bin
 destination=$PROJECT_ROOT/interfacer/src/browsh/webextension.go
 
 cd $PROJECT_ROOT/webext && $NODE_BIN/webpack
-cd $PROJECT_ROOT/webext/dist && $NODE_BIN/web-ext build --overwrite-dest
+cd $PROJECT_ROOT/webext/dist && rm *.map
+$NODE_BIN/web-ext build --overwrite-dest
 
 # Get the current version of Browsh
 version=$(cat $PROJECT_ROOT/webext/manifest.json | python2 -c \

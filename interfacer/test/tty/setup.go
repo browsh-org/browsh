@@ -185,6 +185,7 @@ func startStaticFileServer() {
 func startBrowsh() {
 	browsh.IsTesting = true
 	simScreen = tcell.NewSimulationScreen("UTF-8")
+	browsh.Initialise()
 	browsh.TTYStart(simScreen)
 }
 

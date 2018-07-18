@@ -7,13 +7,12 @@ import CommonMixin from "dom/common_mixin";
 // to aid in a clean separation of the graphics and text in the final frame
 // rendered in the terminal.
 export default class extends utils.mixins(CommonMixin) {
-  constructor(channel, dimensions) {
+  constructor(channel, dimensions, config) {
     super();
     this.channel = channel;
     this.dimensions = dimensions;
-    // The amount of lossy JPG compression to apply to the HTML services
-    // background image
-    this._html_image_compression = 0.9;
+    this.config = config;
+    this._html_image_compression = this.config["http-server"].jpeg_compression;
     this._screenshot_canvas = document.createElement("canvas");
     this._converter_canvas = document.createElement("canvas");
     this._screenshot_ctx = this._screenshot_canvas.getContext("2d");

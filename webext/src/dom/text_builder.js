@@ -9,11 +9,12 @@ import TTYGrid from "dom/tty_grid";
 // Convert the text on the page into a snapped 2-dimensional grid to be displayed directly
 // in the terminal.
 export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
-  constructor(channel, dimensions, graphics_builder) {
+  constructor(channel, dimensions, graphics_builder, config) {
     super();
     this.channel = channel;
     this.dimensions = dimensions;
     this.graphics_builder = graphics_builder;
+    this.config = config;
     this.tty_grid = new TTYGrid(dimensions, graphics_builder);
     this._parse_started_elements = [];
     // A `range` is the DOM's representation of elements and nodes as they are rendered in
@@ -37,7 +38,7 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
     setTimeout(() => {
       this.buildFormattedText();
       this._sendRawText();
-    }, 400);
+    }, this.config["http-server"].render_delay);
   }
 
   buildFormattedText() {

@@ -20,10 +20,11 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     this._closeUnwantedStartupTabs();
   }
 
-  postConnectionInit(channel) {
+  postConnectionInit(channel, config) {
     this.channel = channel;
     this._sendTTYDimensions();
     this._listenForMessages();
+    this.sendGlobalConfig(config);
     this._calculateMode();
   }
 
@@ -32,7 +33,7 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     if (!this._is_raw_text_mode) {
       mode = "interactive";
     } else {
-      mode = this.raw_text_mode_type;
+      mode = "raw_text_" + this.raw_text_mode_type;
     }
     this.channel.postMessage(`/mode,${mode}`);
   }
@@ -118,13 +119,8 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     }
   }
 
-  setMode(mode) {
-    this.raw_text_mode_type = mode;
-    // Send it here, in case there is a race condition with the postCommsInit() not knowing
-    // the mode.
-    if (this._is_raw_text_mode) {
-      this.channel.postMessage(`/mode,${mode}`);
-    }
+  sendGlobalConfig(config) {
+    this.channel.postMessage(`/config,${JSON.stringify(config)}`);
   }
 
   _listenForMessages() {

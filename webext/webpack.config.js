@@ -3,6 +3,7 @@ const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
+  mode: process.env['BROWSH_ENV'] === 'RELEASE' ? 'production' : 'development',
   target: 'node',
   entry: {
     content: './content.js',
@@ -18,6 +19,7 @@ module.exports = {
       'node_modules'
     ]
   },
+  devtool: 'source-map',
   plugins: [
     new webpack.DefinePlugin({
       DEVELOPMENT: JSON.stringify(true),

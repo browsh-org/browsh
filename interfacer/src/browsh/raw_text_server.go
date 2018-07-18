@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/viper"
 	"github.com/NYTimes/gziphandler"
+	"github.com/spf13/viper"
 	"github.com/ulule/limiter"
 	"github.com/ulule/limiter/drivers/middleware/stdlib"
 	"github.com/ulule/limiter/drivers/store/memory"
@@ -28,7 +28,6 @@ var rawTextRequests = make(map[string]string)
 // it will return:
 // `Something                                                                    `
 func HTTPServerStart() {
-	initialise()
 	startFirefox()
 	go startWebSocketServer()
 	Log("Starting Browsh HTTP server")
@@ -44,9 +43,9 @@ func HTTPServerStart() {
 }
 
 func setupRateLimiter() *stdlib.Middleware {
-	rate := limiter.Rate{
-		Period: 1 * time.Minute,
-		Limit:  10,
+	rate, err := limiter.NewRateFromFormatted(viper.GetString("http-server.rate-limit"))
+	if err != nil {
+		Shutdown(err)
 	}
 	// TODO: Centralise store amongst instances with Redis
 	store := memory.NewStore()

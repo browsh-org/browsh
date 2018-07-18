@@ -141,6 +141,7 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	isConnectedToWebExtension = true
 	go webSocketWriter(ws)
 	go webSocketReader(ws)
+	sendConfigToWebExtension()
 	if viper.GetBool("http-server-mode") {
 		sendMessageToWebExtension("/raw_text_mode")
 	} else {
@@ -149,4 +150,9 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	// For some reason, using Firefox's CLI arg `--url https://google.com` doesn't consistently
 	// work. So we do it here instead.
 	sendMessageToWebExtension("/new_tab," + viper.GetString("startup-url"))
+}
+
+func sendConfigToWebExtension() {
+	configJSON, _ := json.Marshal(viper.AllSettings())
+	sendMessageToWebExtension("/config," + string(configJSON))
 }

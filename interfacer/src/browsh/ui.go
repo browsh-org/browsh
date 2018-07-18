@@ -1,8 +1,8 @@
 package browsh
 
 import (
-	"github.com/spf13/viper"
 	"github.com/gdamore/tcell"
+	"github.com/spf13/viper"
 )
 
 var (
