@@ -119,10 +119,10 @@ function _setupGraphicsBuilder(type) {
     getPixelsStub.onCall(0).returns(canvas_pixels.scaled());
   }
   let config = {
-    'http-server': {
-      'jpeg-compression': 0.9
+    "http-server": {
+      "jpeg-compression": 0.9
     }
-  }
+  };
   let graphics_builder = new GraphicsBuilder(channel, dimensions, config);
   return graphics_builder;
 }
