@@ -48,6 +48,7 @@ export default MixinBase =>
     _loadConfig(json_string) {
       this.log(json_string);
       this.config = JSON.parse(json_string);
+      this.config.browsh_version = browser.runtime.getManifest().version;
       if (this.currentTab()) {
         this.currentTab().sendGlobalConfig(this.config);
       }

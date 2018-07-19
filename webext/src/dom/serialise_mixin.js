@@ -54,7 +54,6 @@ export default MixinBase =>
     // Whether a use has shown support. This controls certain Browsh branding and
     // nags to donate.
     userHasShownSupport() {
-      this.log(this.config.browsh_supporter);
       return (
         this.config.browsh_supporter === "I have shown my support for Browsh"
       );
@@ -64,7 +63,8 @@ export default MixinBase =>
       if (this.userHasShownSupport()) {
         return "";
       }
-      return 'by <a href="https://www.brow.sh">Browsh</a> ';
+      return 'by <a href="https://www.brow.sh">Browsh</a> v' +
+        this.config.browsh_version + ' ';
     }
 
     _getUserFooter() {
