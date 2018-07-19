@@ -38,6 +38,7 @@ var (
 	// IsTesting is used in tests, so it needs to be exported
 	IsTesting = false
 	logfile   string
+	_ = pflag.Bool("version", false, "Output current Browsh version")
 )
 
 func setupLogging() {
@@ -191,6 +192,10 @@ func ttyEntry() {
 func MainEntry() {
 	pflag.Parse()
 	Initialise()
+	if viper.GetBool("version") {
+		println(browshVersion)
+		os.Exit(0)
+	}
 	if viper.GetBool("http-server-mode") {
 		HTTPServerStart()
 	} else {
