@@ -88,10 +88,18 @@ export default MixinBase =>
       return metadata;
     }
 
+    _getDonateCall() {
+      if (this.userHasShownSupport()) { return '' }
+      return '\nPlease consider ' +
+        '<a href="https://www.brow.sh/donate">donating</a>' +
+        ' to help all those with slow and/or expensive internet.'
+    }
+
     _getFooter() {
       return (
         '<span class="browsh-footer">' +
         this._getMetaData() +
+        this._getDonateCall() +
         this._getUserFooter() +
         `</span></pre></body></html>`
       );
