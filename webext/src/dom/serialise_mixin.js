@@ -41,14 +41,17 @@ export default MixinBase =>
         }
         raw_text += "\n";
       }
-      if (this._raw_mode_type === "raw_text_html") {
-        raw_text = this._wrapHTML(raw_text);
-      }
-      return raw_text;
+      return this._wrap(raw_text);
     }
 
-    _wrapHTML(raw_text) {
-      return this._getHTMLHead() + raw_text + this._getFooter();
+    _wrap(raw_text) {
+      let head;
+      if (this._raw_mode_type === "raw_text_html") {
+        head = this._getHTMLHead();
+      } else {
+        head = this._getUserHeader();
+      }
+      return head + raw_text + this._getFooter();
     }
 
     // Whether a use has shown support. This controls certain Browsh branding and
@@ -60,10 +63,14 @@ export default MixinBase =>
     }
 
     _byBrowsh() {
-      if (this.userHasShownSupport()) {
-        return "";
+      let by;
+      if (this.userHasShownSupport()) { return ''}
+      if (this._raw_mode_type === "raw_text_html") {
+        by = 'by <a href="https://www.brow.sh">Browsh</a> v'
+      } else {
+        by = 'by Browsh v'
       }
-      return 'by <a href="https://www.brow.sh">Browsh</a> v' +
+      return by +
         this.config.browsh_version + ' ';
     }
 
@@ -89,19 +96,32 @@ export default MixinBase =>
     }
 
     _getDonateCall() {
+      let donating;
       if (this.userHasShownSupport()) { return '' }
-      return '\nPlease consider ' +
-        '<a href="https://www.brow.sh/donate">donating</a>' +
+      if (this._raw_mode_type === "raw_text_html") {
+        donating = '<a href="https://www.brow.sh/donate">donating</a>';
+      } else {
+        donating = 'brow.sh/donate';
+      }
+      return '\nPlease consider ' + donating +
         ' to help all those with slow and/or expensive internet.'
     }
 
     _getFooter() {
+      let start, end;
+      if (this._raw_mode_type === "raw_text_html") {
+        start = '<span class="browsh-footer">';
+        end = '</span></pre></body></html>';
+      } else {
+        start = '';
+        end = '';
+      }
       return (
-        '<span class="browsh-footer">' +
+        start +
         this._getMetaData() +
         this._getDonateCall() +
         this._getUserFooter() +
-        `</span></pre></body></html>`
+        end
       );
     }
 
