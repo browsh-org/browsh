@@ -10,8 +10,10 @@
 
 set -e
 
-PROJECT_ROOT=$(git rev-parse --show-toplevel)
-version=$($PROJECT_ROOT/contrib/get_browsh_version.sh)
+# This will typically be run inside Docker where we don't have the original
+# source code.
+line=$(cat $VERSION_FILE | grep 'browshVersion')
+version=$(echo $line | grep -o '".*"' | sed 's/"//g')
 
 base='https://github.com/browsh-org/browsh/releases/download'
 release_url="$base/v$version/browsh_${version}_linux_amd64"

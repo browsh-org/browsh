@@ -21,7 +21,10 @@ RUN rm ./setup_firefox.sh && rm .travis.yml
 
 # Setup Browsh
 ADD ./interfacer/contrib/setup_browsh.sh .
-RUN ./setup_browsh.sh
+ADD ./interfacer/src/browsh/version.go .
+RUN VERSION_FILE=version.go ./setup_browsh.sh
+RUN rm ./setup_browsh.sh && rm version.go
+
 # Firefox behaves quite differently to normal on its first run, so by getting
 # that over and done with here when there's no user to be dissapointed means
 # that all future runs will be consistent.
@@ -31,7 +34,6 @@ RUN TERM=xterm script \
       /dev/null \
       >/dev/null & \
       sleep 10
-RUN rm ./setup_browsh.sh && rm manifest.json
 
 CMD ["/app/browsh"]
 
