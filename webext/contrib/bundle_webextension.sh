@@ -13,7 +13,7 @@ NODE_BIN=$PROJECT_ROOT/webext/node_modules/.bin
 destination=$PROJECT_ROOT/interfacer/src/browsh/webextension.go
 
 cd $PROJECT_ROOT/webext && $NODE_BIN/webpack
-cd $PROJECT_ROOT/webext/dist && rm *.map
+cd $PROJECT_ROOT/webext/dist && rm *.map && rm core
 ls -alh .
 $NODE_BIN/web-ext build --overwrite-dest
 ls -alh web-ext-artifacts
