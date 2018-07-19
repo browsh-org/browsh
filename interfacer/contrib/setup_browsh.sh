@@ -10,15 +10,8 @@
 
 set -e
 
-if [ ! -f manifest.json ]; then
-  PROJECT_ROOT=$(git rev-parse --show-toplevel)/webext
-else
-  PROJECT_ROOT=.
-fi
-manifest=$PROJECT_ROOT/manifest.json
-
-line=$(cat $manifest | grep '"version"')
-version=$(echo $line | grep -o '".*"' | cut -d " " -f 2 | sed 's/"//g')
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+version=$($PROJECT_ROOT/contrib/get_browsh_version.sh)
 
 base='https://github.com/browsh-org/browsh/releases/download'
 release_url="$base/v$version/browsh_${version}_linux_amd64"

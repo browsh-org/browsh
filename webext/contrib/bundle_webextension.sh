@@ -16,10 +16,7 @@ cd $PROJECT_ROOT/webext && $NODE_BIN/webpack
 cd $PROJECT_ROOT/webext/dist && rm *.map
 $NODE_BIN/web-ext build --overwrite-dest
 
-# Get the current version of Browsh
-version=$(cat $PROJECT_ROOT/webext/manifest.json | python2 -c \
-  'import sys, json; print json.load(sys.stdin)["version"]'
-)
+version=$($PROJECT_ROOT/contrib/get_browsh_version.sh)
 
 xpi_file=browsh-$version-an+fx.xpi
 zip_file=browsh-$version.zip

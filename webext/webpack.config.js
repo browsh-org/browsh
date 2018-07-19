@@ -1,6 +1,7 @@
 const webpack = require('webpack');
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const fs = require('fs');
 
 module.exports = {
   mode: process.env['BROWSH_ENV'] === 'RELEASE' ? 'production' : 'development',
@@ -29,8 +30,17 @@ module.exports = {
     }),
     new CopyWebpackPlugin([
       { from: 'assets', to: 'dist/assets' },
-      { from: 'manifest.json', to: 'dist/' },
       { from: '.web-extension-id', to: 'dist/' },
+      { from: 'manifest.json', to: 'dist/',
+        // Inject the current Browsh version into the manifest JSON
+        transform(manifest, _) {
+          const version_path = '../interfacer/src/browsh/version.go';
+          let buffer = fs.readFileSync(version_path);
+          let version_contents = buffer.toString();
+          const matches = version_contents.match(/"(.*?)"/);
+          return manifest.toString().replace('BROWSH_VERSION', matches[1]);
+        }
+      },
     ])
   ]
 };
