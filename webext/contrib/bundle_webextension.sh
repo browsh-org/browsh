@@ -14,7 +14,9 @@ destination=$PROJECT_ROOT/interfacer/src/browsh/webextension.go
 
 cd $PROJECT_ROOT/webext && $NODE_BIN/webpack
 cd $PROJECT_ROOT/webext/dist && rm *.map
+ls -alh .
 $NODE_BIN/web-ext build --overwrite-dest
+ls -alh web-ext-artifacts
 
 version=$($PROJECT_ROOT/contrib/get_browsh_version.sh)
 
