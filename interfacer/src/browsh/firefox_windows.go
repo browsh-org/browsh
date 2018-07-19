@@ -4,12 +4,31 @@ package browsh
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/go-errors/errors"
 	"golang.org/x/sys/windows/registry"
 )
 
 func getFirefoxPath() string {
+	versionString := getWindowsFirefoxVersionString()
+
+	k, err := registry.OpenKey(
+		registry.CURRENT_USER,
+		`Software\Mozilla\Mozilla Firefox\`+versionString+`\Main`,
+		registry.QUERY_VALUE)
+	if err != nil {
+		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
+	}
+	path, _, err := k.GetStringValue("PathToExe")
+	if err != nil {
+		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
+	}
+
+	return path
+}
+
+func getWindowsFirefoxVersionString() string {
 	k, err := registry.OpenKey(
 		registry.CURRENT_USER,
 		`Software\Mozilla\Mozilla Firefox`,
@@ -26,20 +45,16 @@ func getFirefoxPath() string {
 
 	Log("Windows registry Firefox version: " + versionString)
 
-	k, err = registry.OpenKey(
-		registry.CURRENT_USER,
-		`Software\Mozilla\Mozilla Firefox\`+versionString+`\Main`,
-		registry.QUERY_VALUE)
-	if err != nil {
-		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
-	}
-	path, _, err := k.GetStringValue("PathToExe")
-	if err != nil {
-		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
-	}
-
-	return path
+	return versionString
 }
 
-func ensureFirefoxVersion() {
+func ensureFirefoxVersion(path string) {
+	versionString := getWindowsFirefoxVersionString()
+	pieces := strings.Split(versionString, " ")
+	version := pieces[0]
+	if versionOrdinal(version) < versionOrdinal("57") {
+		message := "Installed Firefox version " + version + " is too old. " +
+			"Firefox 57 or newer is needed."
+		Shutdown(errors.New(message))
+	}
 }

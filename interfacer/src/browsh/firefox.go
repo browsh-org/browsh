@@ -56,8 +56,8 @@ var (
 func startHeadlessFirefox() {
 	checkIfFirefoxIsAlreadyRunning()
 	Log("Starting Firefox in headless mode")
-	ensureFirefoxBinary()
-	ensureFirefoxVersion()
+	firefoxPath := ensureFirefoxBinary()
+	ensureFirefoxVersion(firefoxPath)
 	args := []string{"--marionette"}
 	if !viper.GetBool("firefox.with-gui") {
 		args = append(args, "--headless")
@@ -71,7 +71,7 @@ func startHeadlessFirefox() {
 		Log("Using default profile at: " + profilePath)
 		args = append(args, "--profile", profilePath)
 	}
-	firefoxProcess := exec.Command(viper.GetString("firefox.path"), args...)
+	firefoxProcess := exec.Command(firefoxPath, args...)
 	defer firefoxProcess.Process.Kill()
 	stdout, err := firefoxProcess.StdoutPipe()
 	if err != nil {
@@ -97,7 +97,7 @@ func checkIfFirefoxIsAlreadyRunning() {
 	}
 }
 
-func ensureFirefoxBinary() {
+func ensureFirefoxBinary() string {
 	path := viper.GetString("firefox.path")
 	if path == "firefox" {
 		switch runtime.GOOS {
@@ -109,9 +109,11 @@ func ensureFirefoxBinary() {
 			path = getFirefoxPath()
 		}
 	}
+	Log("Using Firefox at: " + path)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		Shutdown(errors.New("Firefox binary not found: " + path))
 	}
+	return path
 }
 
 // Taken from https://stackoverflow.com/a/18411978/575773
