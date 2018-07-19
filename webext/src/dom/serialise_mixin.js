@@ -64,14 +64,15 @@ export default MixinBase =>
 
     _byBrowsh() {
       let by;
-      if (this.userHasShownSupport()) { return ''}
-      if (this._raw_mode_type === "raw_text_html") {
-        by = 'by <a href="https://www.brow.sh">Browsh</a> v'
-      } else {
-        by = 'by Browsh v'
+      if (this.userHasShownSupport()) {
+        return "";
       }
-      return by +
-        this.config.browsh_version + ' ';
+      if (this._raw_mode_type === "raw_text_html") {
+        by = 'by <a href="https://www.brow.sh">Browsh</a> v';
+      } else {
+        by = "by Browsh v";
+      }
+      return by + this.config.browsh_version + " ";
     }
 
     _getUserFooter() {
@@ -97,24 +98,29 @@ export default MixinBase =>
 
     _getDonateCall() {
       let donating;
-      if (this.userHasShownSupport()) { return '' }
+      if (this.userHasShownSupport()) {
+        return "";
+      }
       if (this._raw_mode_type === "raw_text_html") {
         donating = '<a href="https://www.brow.sh/donate">donating</a>';
       } else {
-        donating = 'brow.sh/donate';
+        donating = "brow.sh/donate";
       }
-      return '\nPlease consider ' + donating +
-        ' to help all those with slow and/or expensive internet.'
+      return (
+        "\nPlease consider " +
+        donating +
+        " to help all those with slow and/or expensive internet."
+      );
     }
 
     _getFooter() {
       let start, end;
       if (this._raw_mode_type === "raw_text_html") {
         start = '<span class="browsh-footer">';
-        end = '</span></pre></body></html>';
+        end = "</span></pre></body></html>";
       } else {
-        start = '';
-        end = '';
+        start = "";
+        end = "";
       }
       return (
         start +

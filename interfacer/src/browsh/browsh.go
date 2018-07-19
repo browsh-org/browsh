@@ -38,7 +38,7 @@ var (
 	// IsTesting is used in tests, so it needs to be exported
 	IsTesting = false
 	logfile   string
-	_ = pflag.Bool("version", false, "Output current Browsh version")
+	_         = pflag.Bool("version", false, "Output current Browsh version")
 )
 
 func setupLogging() {
