@@ -13,6 +13,10 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   constructor() {
     super();
     this.dimensions = new Dimensions();
+    // Whether the DOM has loaded
+    this.is_dom_loaded = false;
+    // Whether the page has finished "spinning"
+    this.is_page_finished_loading = false;
     // For Browsh used via the interactive CLI ap
     this._is_interactive_mode = false;
     // For Browsh used via the HTTP server
@@ -34,6 +38,14 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
       this.config
     );
     this.text_builder._raw_text_start = performance.now();
+  }
+
+  _willHideText() {
+    if (this.is_dom_loaded) {
+      this.graphics_builder.hideText();
+    } else {
+      setTimeout(this._willHideText.bind(this), 1);
+    }
   }
 
   sendFrame() {
@@ -67,10 +79,22 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     this.dimensions.frame.y_last_big_frame = this.dimensions.frame.y_scroll;
   }
 
+  willSendRawText() {
+    if (this.is_dom_loaded) {
+      this.dimensions.update();
+      this.dimensions.setSubFrameDimensions("raw_text");
+      this.sendRawText();
+    } else {
+      setTimeout(this.willSendRawText.bind(this), 1);
+    }
+  }
+
   sendRawText() {
-    this.dimensions.update();
-    this.dimensions.setSubFrameDimensions("raw_text");
-    this.text_builder.sendRawText(this._raw_mode_type);
+    if (this.is_page_finished_loading) {
+      this.text_builder.sendRawText(this._raw_mode_type);
+    } else {
+      setTimeout(this.sendRawText.bind(this), 1);
+    }
   }
 
   sendSmallPixelFrame() {
@@ -105,9 +129,11 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     this.sendMessage("/status,page_init");
     this._listenForBackgroundMessages();
     this._startWindowEventListeners();
-    this._fixStickyElements();
   }
 
+  // Fire up the TTY interactive mode. It doesn't need to wait for any particular
+  // DOM stage as it's good to just get something in front of the user as soon
+  // as possible.
   _setupInteractiveMode() {
     this._setupDebouncedFunctions();
     this._startMutationObserver();
@@ -128,20 +154,15 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   }
 
   _setupInit() {
-    // TODO: Can we not just boot up as soon as we detect the background script?
-    document.addEventListener(
-      "DOMContentLoaded",
-      () => {
-        this._init();
-      },
-      false
-    );
-    // Whilst developing this webextension the auto reload only reloads this code,
-    // not the page, so we don't get the `DOMContentLoaded` event to kick everything off.
-    if (this._isWindowAlreadyLoaded()) this._init(100);
+    if (this._isWindowAlreadyLoaded()) {
+      this._init(100);
+    } else {
+      this._init();
+    }
   }
 
   _isWindowAlreadyLoaded() {
+    if (document.body === undefined) { return false }
     return !!this.dimensions.findMeasuringBox();
   }
 
@@ -173,6 +194,16 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   }
 
   _startWindowEventListeners() {
+    window.addEventListener("DOMContentLoaded", () => {
+      this.is_dom_loaded = true;
+      this.log("DOM LOADED");
+      this._fixStickyElements();
+      this._willHideText();
+    });
+    window.addEventListener("load", () => {
+      this.is_page_finished_loading = true;
+      this.log("PAGE LOADED");
+    });
     window.addEventListener("unload", () => {
       this.sendMessage("/status,window_unload");
     });

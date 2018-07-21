@@ -142,9 +142,7 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	go webSocketWriter(ws)
 	go webSocketReader(ws)
 	sendConfigToWebExtension()
-	if viper.GetBool("http-server-mode") {
-		sendMessageToWebExtension("/raw_text_mode")
-	} else {
+	if !viper.GetBool("http-server-mode") {
 		sendTtySize()
 	}
 	// For some reason, using Firefox's CLI arg `--url https://google.com` doesn't consistently

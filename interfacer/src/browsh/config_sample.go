@@ -41,7 +41,7 @@ bind = "0.0.0.0"
 # The time to wait in milliseconds after the DOM is ready before
 # trying to parse and render the page's text. Too soon and text risks not being
 # parsed, too long and you wait unecessarily.
-render_delay = 400
+render_delay = 100
 
 # The dimensions of a char-based window onto a webpage.
 # The columns are ultimately the width of the final text. Whereas the rows

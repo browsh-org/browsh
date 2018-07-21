@@ -25,7 +25,6 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     this._sendTTYDimensions();
     this._listenForMessages();
     this.sendGlobalConfig(config);
-    this._calculateMode();
   }
 
   _calculateMode() {
@@ -35,7 +34,7 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     } else {
       mode = "raw_text_" + this.raw_text_mode_type;
     }
-    this.channel.postMessage(`/mode,${mode}`);
+    return mode;
   }
 
   isConnected() {
@@ -120,6 +119,7 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
   }
 
   sendGlobalConfig(config) {
+    config.http_server_mode_type = this._calculateMode();
     this.channel.postMessage(`/config,${JSON.stringify(config)}`);
   }
 

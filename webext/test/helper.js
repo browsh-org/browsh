@@ -18,8 +18,8 @@ beforeEach(() => {
     .stub(Dimensions.prototype, "_getOrCreateMeasuringBox")
     .returns(element);
   sandbox.stub(Dimensions.prototype, "sendMessage").returns(true);
-  sandbox.stub(GraphicsBuilder.prototype, "_hideText").returns(true);
-  sandbox.stub(GraphicsBuilder.prototype, "_showText").returns(true);
+  sandbox.stub(GraphicsBuilder.prototype, "hideText").returns(true);
+  sandbox.stub(GraphicsBuilder.prototype, "showText").returns(true);
   sandbox.stub(GraphicsBuilder.prototype, "_scaleCanvas").returns(true);
   sandbox.stub(GraphicsBuilder.prototype, "_unScaleCanvas").returns(true);
   sandbox.stub(TextBuilder.prototype, "_getAllInputBoxes").returns([]);
@@ -120,7 +120,8 @@ function _setupGraphicsBuilder(type) {
   }
   let config = {
     "http-server": {
-      "jpeg-compression": 0.9
+      "jpeg-compression": 0.9,
+      "render_delay": 0
     }
   };
   let graphics_builder = new GraphicsBuilder(channel, dimensions, config);
@@ -128,7 +129,7 @@ function _setupGraphicsBuilder(type) {
 }
 
 let functions = {
-  runTextBuilder: () => {
+  runTextBuilder: (callback) => {
     let text_nodes = new TextNodes();
     let graphics_builder = _setupGraphicsBuilder("with_text");
     let text_builder = new TextBuilder(
@@ -136,13 +137,14 @@ let functions = {
       graphics_builder.dimensions,
       graphics_builder
     );
-    graphics_builder._getScreenshotWithText();
-    graphics_builder._getScreenshotWithoutText();
-    graphics_builder.__getScaledScreenshot();
-    text_builder._text_nodes = text_nodes.build();
-    text_builder._updateState();
-    text_builder._positionTextNodes();
-    return text_builder;
+    graphics_builder._getScreenshotWithText(() => {
+      graphics_builder._getScreenshotWithoutText();
+      graphics_builder.__getScaledScreenshot();
+      text_builder._text_nodes = text_nodes.build();
+      text_builder._updateState();
+      text_builder._positionTextNodes();
+      callback(text_builder)
+    });
   },
 
   runGraphicsBuilder: () => {

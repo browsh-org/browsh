@@ -7,9 +7,6 @@ export default MixinBase =>
       const parts = message.split(",");
       const command = parts[0];
       switch (command) {
-        case "/mode":
-          this._setupMode(parts[1]);
-          break;
         case "/config":
           config = JSON.parse(utils.rebuildArgsToSingleArg(parts));
           this._loadConfig(config);
@@ -51,12 +48,13 @@ export default MixinBase =>
       }
     }
 
-    _setupMode(mode) {
+    _launch() {
+      const mode = this.config.http_server_mode_type;
       if (mode === "raw_text_plain" || mode === "raw_text_html") {
         this._is_raw_text_mode = true;
         this._is_interactive_mode = false;
         this._raw_mode_type = mode;
-        this.sendRawText();
+        this.willSendRawText();
       }
       if (mode === "interactive") {
         this._is_raw_text_mode = false;
@@ -68,6 +66,7 @@ export default MixinBase =>
     _loadConfig(config) {
       this.config = config;
       this._postSetupConstructor();
+      this._launch();
     }
 
     _handleUserInput(input) {
@@ -130,10 +129,10 @@ export default MixinBase =>
     }
 
     _handleTTYSize(x, y) {
-      this.dimensions.tty.width = parseInt(x);
-      this.dimensions.tty.height = parseInt(y);
-      this.dimensions.update();
-      if (!this._is_first_frame_finished && this._is_interactive_mode) {
+      if (!this._is_first_frame_finished) {
+        this.dimensions.tty.width = parseInt(x);
+        this.dimensions.tty.height = parseInt(y);
+        this.dimensions.update();
         this.sendAllBigFrames();
       }
     }

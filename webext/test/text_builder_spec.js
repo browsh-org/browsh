@@ -4,7 +4,7 @@ import helper from "helper";
 let text_builder, grid;
 
 describe("Text Builder", () => {
-  beforeEach(() => {
+  beforeEach((done) => {
     global.mock_DOM_template = [
       "                ",
       "                ",
@@ -38,8 +38,11 @@ describe("Text Builder", () => {
       y_scroll: 0
     };
     global.frame_type = "small";
-    text_builder = helper.runTextBuilder();
-    grid = text_builder.tty_grid.cells;
+    helper.runTextBuilder((returned_text_builder) => {
+      text_builder = returned_text_builder;
+      grid = text_builder.tty_grid.cells;
+      done();
+    });
   });
 
   it("should convert text nodes to a grid of cell objects", () => {

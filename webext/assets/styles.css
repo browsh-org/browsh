@@ -24,8 +24,7 @@ a {
 }
 
 .browsh-hide-text,
-.browsh-hide-text *,
-html * {
+.browsh-hide-text *{
   font-family: 'BlankMono' !important;
 }
 

@@ -32,13 +32,6 @@ export default MixinBase =>
         case "/remove_tab":
           this.removeTab(parts.slice(1).join(","));
           break;
-        case "/raw_text_mode":
-          this._is_raw_text_mode = true;
-          this._updateTTYSize(
-            this.dimensions.raw_text_tty_size.width,
-            this.dimensions.raw_text_tty_size.height
-          );
-          break;
         case "/raw_text_request":
           this._rawTextRequest(parts[1], parts[2], parts.slice(3).join(","));
           break;
@@ -53,6 +46,16 @@ export default MixinBase =>
         this.currentTab().sendGlobalConfig(this.config);
       }
       this.dimensions.postConfigSetup(this.config);
+      this._setupRawTextMode();
+    }
+
+    _setupRawTextMode() {
+      if (!this.config['http-server-mode']) { return }
+      this._is_raw_text_mode = true;
+      this._updateTTYSize(
+        this.dimensions.raw_text_tty_size.width,
+        this.dimensions.raw_text_tty_size.height
+      );
     }
 
     _updateTTYSize(width, height) {

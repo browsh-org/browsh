@@ -17,7 +17,6 @@ export default class extends utils.mixins(CommonMixin) {
     this._converter_canvas = document.createElement("canvas");
     this._screenshot_ctx = this._screenshot_canvas.getContext("2d");
     this._converter_ctx = this._converter_canvas.getContext("2d");
-    this._hideText();
   }
 
   sendFrame() {
@@ -55,9 +54,9 @@ export default class extends utils.mixins(CommonMixin) {
     return [bg_rgb[0], bg_rgb[1], bg_rgb[2]];
   }
 
-  getScreenshotWithText() {
+  getScreenshotWithText(callback) {
     this.logPerformance(() => {
-      this._getScreenshotWithText();
+      this._getScreenshotWithText(callback);
     }, "get screenshot with text");
   }
 
@@ -67,16 +66,42 @@ export default class extends utils.mixins(CommonMixin) {
     }, "get screenshot without text");
   }
 
+  getOnOffScreenshots(callback) {
+    this.getScreenshotWithoutText();
+    this.getScreenshotWithText(callback);
+  }
+
   _getScreenshotWithoutText() {
     this.pixels_without_text = this._getScreenshot().data;
     return this.pixels_without_text;
   }
 
-  _getScreenshotWithText() {
-    this._showText();
+  _getScreenshotWithText(callback) {
+    this.showText();
+    if (this.config['http-server-mode']) {
+      // It's a little odd that `config['http-server'].render_delay` is named as such
+      // and placed here of all places. But the fact is that a delay is needed here
+      // *anyway* and extending the delay kills 2 birds with one stone. Firstly solving
+      // this tricky little need-to-wait-for-the-font-to-render issue *and* solving the
+      // the fact that some pages just don't finish loading at `windows.onload()`.
+      setTimeout(() => {
+        this._getScreenshotWithTextDelayable(callback);
+      }, this.config['http-server'].render_delay);
+    } else {
+      this._getScreenshotWithTextDelayable(callback);
+    }
+  }
+
+  // I'm not entirely clear on the reason, but when a Browsh tab's only purpose is
+  // to render a single frame (such as in the HTTP service), it needs a few milliseconds
+  // to show the text for the first time. My only theory is that at page load some time
+  // is needed to parse and render the font.
+  // However in normal TTY mode, no such delay is needed, indeed even placing this
+  // function inside `setTimeout()` causes oddities.
+  _getScreenshotWithTextDelayable(callback) {
     this.pixels_with_text = this._getScreenshot().data;
-    this._hideText();
-    return this.pixels_with_text;
+    this.hideText();
+    callback();
   }
 
   _getScaledScreenshot() {
@@ -125,12 +150,12 @@ export default class extends utils.mixins(CommonMixin) {
     }, "get scaled screenshot");
   }
 
-  _hideText() {
+  hideText() {
     document.body.classList.remove("browsh-show-text");
     document.body.classList.add("browsh-hide-text");
   }
 
-  _showText() {
+  showText() {
     document.body.classList.remove("browsh-hide-text");
     document.body.classList.add("browsh-show-text");
   }

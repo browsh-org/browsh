@@ -24,29 +24,21 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   }
 
   sendFrame() {
-    this.buildFormattedText();
-    this._sendFrame();
+    this.buildFormattedText(this._sendFrame.bind(this));
   }
 
   sendRawText(type) {
     this._raw_mode_type = type;
-    // TODO:
-    //   The presence of the `getScreenshotWithText()` and `setTimeout()` calls are a hack
-    //   that I am unable to understand the reasoning for - unfortunately they came about
-    //   by trial and error :( Without them the the returned raw text is largely empty.
-    this.graphics_builder.getScreenshotWithText();
-    setTimeout(() => {
-      this.buildFormattedText();
-      this._sendRawText();
-    }, this.config["http-server"].render_delay);
+    this.buildFormattedText(this._sendRawText.bind(this));
   }
 
-  buildFormattedText() {
+  buildFormattedText(callback) {
     this._updateState();
-    this.graphics_builder.getScreenshotWithoutText();
-    this.graphics_builder.getScreenshotWithText();
     this._getTextNodes();
-    this._positionTextNodes();
+    this.graphics_builder.getOnOffScreenshots(() => {
+      this._positionTextNodes();
+      callback();
+    });
   }
 
   _updateState() {
