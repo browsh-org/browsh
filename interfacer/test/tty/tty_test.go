@@ -142,7 +142,7 @@ var _ = Describe("Showing a basic webpage", func() {
 					Expect("                   ").To(BeInFrameAt(0, 1))
 					SpecialKey(tcell.KeyCtrlL)
 					GotoURL(testSiteURL + "/smorgasbord/another.html")
-					simScreen.InjectKey(9, 0, tcell.ModNone)
+					triggerUserKeyFor("tty.keys.next-tab")
 					URL := testSiteURL + "/smorgasbord/             "
 					Expect(URL).To(BeInFrameAt(0, 1))
 				})

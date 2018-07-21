@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/gdamore/tcell"
 	"github.com/go-errors/errors"
@@ -77,7 +78,7 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 		// F1 key
 		openHelpTab()
 	}
-	if ev.Key() == 9 && ev.Modifiers() == 0 {
+	if isKey("tty.keys.next-tab", ev) {
 		nextTab()
 	}
 	if !urlInputBox.isActive {
@@ -88,6 +89,16 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 	} else {
 		handleScrolling(ev) // TODO: shouldn't you be able to still use mouse scrolling?
 	}
+}
+
+func isKey(userKey string, ev *tcell.EventKey) bool {
+	key := viper.GetStringSlice(userKey)
+	runeMatch := []rune(key[0])[0] == ev.Rune()
+	intKey, _ := strconv.Atoi(key[1])
+	keyCodeMatch := intKey == int(ev.Key())
+	modifierKey, _ := strconv.Atoi(key[2])
+	modifierMatch := modifierKey == int(ev.Modifiers())
+	return runeMatch && keyCodeMatch && modifierMatch
 }
 
 func quitBrowsh() {

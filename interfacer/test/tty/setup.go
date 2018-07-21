@@ -4,12 +4,14 @@ import (
 	"net/http"
 	"time"
 	"unicode/utf8"
+	"strconv"
 
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/terminfo"
 	ginkgo "github.com/onsi/ginkgo"
 	gomega "github.com/onsi/gomega"
 
+	"github.com/spf13/viper"
 	"browsh/interfacer/src/browsh"
 )
 
@@ -49,6 +51,14 @@ func GetFrame() string {
 	log = "\n" + log + styleDefault
 	ginkgo.GinkgoWriter.Write([]byte(log))
 	return frame
+}
+
+// Trigger the key definition specified by name
+func triggerUserKeyFor(name string) {
+	key := viper.GetStringSlice(name)
+	intKey, _ := strconv.Atoi(key[1])
+	modifierKey, _ := strconv.Atoi(key[2])
+	simScreen.InjectKey(tcell.Key(intKey), []rune(key[0])[0], tcell.ModMask(modifierKey))
 }
 
 // SpecialKey injects a special key into the TTY. See Tcell's `keys.go` file for all

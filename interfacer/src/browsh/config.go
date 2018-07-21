@@ -23,6 +23,7 @@ var (
 	_ = pflag.String("firefox.path", "firefox", "Path to Firefox executable")
 	_ = pflag.Bool("firefox.with-gui", false, "Don't use headless Firefox")
 	_ = pflag.Bool("firefox.use-existing", false, "Whether Browsh should launch Firefox or not")
+
 )
 
 func getConfigNamespace() string {
@@ -69,6 +70,11 @@ func getFirefoxProfilePath() string {
 	return folders[0].Path
 }
 
+func setDefaults() {
+	// Temporary experimental configurable keybindings
+	viper.SetDefault("tty.keys.next-tab", []string{"\u001c", "28", "2"})
+}
+
 func loadConfig() {
 	dir := getConfigDir()
 	fullPath := filepath.Join(dir, configFilename)
@@ -77,6 +83,7 @@ func loadConfig() {
 	viper.SetConfigName(strings.Trim(configFilename, ".toml"))
 	viper.AddConfigPath(dir)
 	viper.AddConfigPath(".")
+	setDefaults()
 	// First load the sample config in case the user hasn't updated any new fields
 	err := viper.ReadConfig(bytes.NewBuffer([]byte(configSample)))
 	if err != nil {
