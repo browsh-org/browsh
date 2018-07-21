@@ -107,6 +107,11 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	Log(r.Header.Get("User-Agent"))
+	if isKubeReadinessProbe(r.Header.Get("User-Agent")) {
+		io.WriteString(w, "healthy")
+		return
+	}
 	if strings.TrimSpace(urlForBrowsh) == "" {
 		if strings.Contains(r.Host, "text.") {
 			message = "Welcome to the Browsh plain text client.\n" +
@@ -159,6 +164,14 @@ func isDisallowedUserAgent(userAgent string) bool {
 		if r.MatchString(userAgent) {
 			return true
 		}
+	}
+	return false
+}
+
+func isKubeReadinessProbe(userAgent string) bool {
+	r, _ := regexp.Compile("kube-probe")
+	if r.MatchString(userAgent) {
+		return true
 	}
 	return false
 }
