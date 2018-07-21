@@ -6,7 +6,7 @@ export default MixinBase =>
   class extends MixinBase {
     sendToCurrentTab(message) {
       if (this.currentTab().channel === undefined) {
-        this.log(`Attempting to send "${message}" to tab without a channel`);
+        this.log(`Attempt to send "${message}" to tab without a channel`);
       } else {
         this.currentTab().channel.postMessage(message);
       }

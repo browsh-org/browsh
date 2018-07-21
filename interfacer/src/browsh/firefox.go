@@ -22,8 +22,6 @@ var (
 	marionette     net.Conn
 	ffCommandCount = 0
 	defaultFFPrefs = map[string]string{
-		"browser.startup.homepage":                "'https://www.google.com'",
-		"startup.homepage_welcome_url":            "'https://www.google.com'",
 		"startup.homepage_welcome_url.additional": "''",
 		"devtools.errorconsole.enabled":           "true",
 		"devtools.chrome.enabled":                 "true",
