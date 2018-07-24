@@ -13,6 +13,10 @@ export default MixinBase =>
     }
 
     log(...messages) {
+      if (this.channel == undefined) {
+        return;
+      }
+      messages.unshift(this.channel.name)
       this.sendMessage(`/log,${JSON.stringify(messages)}`);
     }
 

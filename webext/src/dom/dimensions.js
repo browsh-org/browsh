@@ -173,18 +173,20 @@ export default class extends utils.mixins(CommonMixin) {
   // of an occasional race condition and because some sites (eg; stackoverflow.com) returned values
   // over 100.
   _calculateCharacterDimensions() {
-    const element = this._getOrCreateMeasuringBox();
-    const dom_rect = element.getBoundingClientRect();
-    if (
-      dom_rect.width != this._pre_calculated_char.width ||
-      dom_rect.height != this._pre_calculated_char.height
-    ) {
-      this.log(
-        `Using char dims ${this._pre_calculated_char.width}x${
-          this._pre_calculated_char.height
-        }`
-      );
-      this.log(`Actual char dims ${dom_rect.width}x${dom_rect.height}`);
+    if (document.body !== null) {
+      const element = this._getOrCreateMeasuringBox();
+      const dom_rect = element.getBoundingClientRect();
+      if (
+        dom_rect.width != this._pre_calculated_char.width ||
+        dom_rect.height != this._pre_calculated_char.height
+      ) {
+        this.log(
+          `Using char dims ${this._pre_calculated_char.width}x${
+            this._pre_calculated_char.height
+          }`
+        );
+        this.log(`Actual char dims ${dom_rect.width}x${dom_rect.height}`);
+      }
     }
     this.char = {
       width: this._pre_calculated_char.width,

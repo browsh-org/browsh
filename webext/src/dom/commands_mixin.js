@@ -54,7 +54,7 @@ export default MixinBase =>
         this._is_raw_text_mode = true;
         this._is_interactive_mode = false;
         this._raw_mode_type = mode;
-        this.willSendRawText();
+        this.sendRawText();
       }
       if (mode === "interactive") {
         this._is_raw_text_mode = false;

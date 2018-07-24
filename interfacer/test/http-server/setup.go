@@ -65,7 +65,7 @@ var _ = ginkgo.BeforeEach(func() {
 var _ = ginkgo.BeforeSuite(func() {
 	go startStaticFileServer()
 	go startBrowsh()
-	time.Sleep(5 * time.Second)
+	time.Sleep(15 * time.Second)
 	// Allow the browser to sort its sizing out, because sometimes the first test catches the
 	// browser before it's completed its resizing.
 	getPath("/smorgasbord", "plain")

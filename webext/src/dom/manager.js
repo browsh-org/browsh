@@ -40,7 +40,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   }
 
   _willHideText() {
-    if (this.is_dom_loaded) {
+    if (this.is_dom_loaded && this.graphics_builder) {
       this.graphics_builder.hideText();
     } else {
       setTimeout(this._willHideText.bind(this), 1);
@@ -78,18 +78,10 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     this.dimensions.frame.y_last_big_frame = this.dimensions.frame.y_scroll;
   }
 
-  willSendRawText() {
-    if (this.is_dom_loaded) {
-      this.dimensions.update();
-      this.dimensions.setSubFrameDimensions("raw_text");
-      this.sendRawText();
-    } else {
-      setTimeout(this.willSendRawText.bind(this), 1);
-    }
-  }
-
   sendRawText() {
     if (this.is_page_finished_loading) {
+      this.dimensions.update();
+      this.dimensions.setSubFrameDimensions("raw_text");
       this.text_builder.sendRawText(this._raw_mode_type);
     } else {
       setTimeout(this.sendRawText.bind(this), 1);
@@ -203,8 +195,6 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     });
     window.addEventListener("load", () => {
       this.is_page_finished_loading = true;
-      this.config.page_load_duration = Date.now() - this.config.start_time;
-      this.text_builder.config = this.config;
       this.log("PAGE LOADED");
     });
     window.addEventListener("unload", () => {
