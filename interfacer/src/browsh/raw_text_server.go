@@ -178,7 +178,7 @@ func isDisallowedUserAgent(userAgent string) bool {
 }
 
 func isKubeReadinessProbe(userAgent string) bool {
-	r, _ := regexp.Compile("kube-probe")
+	r, _ := regexp.Compile("GoogleHC")
 	if r.MatchString(userAgent) {
 		return true
 	}
