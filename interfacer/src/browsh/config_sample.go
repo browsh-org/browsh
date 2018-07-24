@@ -56,7 +56,7 @@ rows = 30
 jpeg_compression = 0.9
 
 # Rate limit. For syntax, see: https://github.com/ulule/limiter
-rate-limit = "10-M"
+rate-limit = "100000000-M"
 
 # Blocking is useful if the HTTP server is made public. All values are evaluated as
 # regular expressions.
