@@ -22,7 +22,7 @@ var (
 
 type incomingRawText struct {
 	RequestID string `json:"request_id"`
-	RawText   string `json:"body"`
+	RawJSON   string `json:"json"`
 }
 
 func startWebSocketServer() {
@@ -96,7 +96,7 @@ func handleRawFrameTextCommands(parts []string) {
 		}
 		if incoming.RequestID != "" {
 			Log("Raw text for " + incoming.RequestID)
-			rawTextRequests[incoming.RequestID] = incoming.RawText
+			rawTextRequests[incoming.RequestID] = incoming.RawJSON
 		} else {
 			Log("Raw text but no associated request ID")
 		}

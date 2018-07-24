@@ -2,6 +2,7 @@ package browsh
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,6 +21,12 @@ import (
 // In order to communicate between the incoming HTTP request and the websocket request to the
 // real browser to render the webpage, we keep track of requests in a map.
 var rawTextRequests = make(map[string]string)
+
+type rawTextResponse struct {
+	PageloadDuration int    `json:"page_load_duration"`
+	ParsingDuration  int    `json:"parsing_duration"`
+	Text             string `json:"body"`
+}
 
 // HTTPServerStart starts the HTTP server is a seperate service from the usual interactive TTY
 // app. It accepts normal HTTP requests and uses the path portion of the URL as the entry to the
@@ -81,6 +88,7 @@ func (h *slashFix) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 	var message string
 	var isErrored bool
+	var start = time.Now().Format(time.RFC3339)
 	urlForBrowsh, _ := url.PathUnescape(strings.TrimPrefix(r.URL.Path, "/"))
 	urlForBrowsh, isErrored = deRecurseURL(urlForBrowsh)
 	if isErrored {
@@ -128,6 +136,7 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rawTextRequestID := pseudoUUID()
+	rawTextRequests[rawTextRequestID+"-start"] = start
 	mode := getRawTextMode(r)
 	sendMessageToWebExtension(
 		"/raw_text_request," + rawTextRequestID + "," +
@@ -198,13 +207,36 @@ func getRawTextMode(r *http.Request) string {
 
 func waitForResponse(rawTextRequestID string, w http.ResponseWriter) {
 	var rawTextRequestResponse string
+	var jsonResponse rawTextResponse
+	var totalTime, pageLoad, parsing string
 	var ok bool
 	for {
 		if rawTextRequestResponse, ok = rawTextRequests[rawTextRequestID]; ok {
-			io.WriteString(w, rawTextRequestResponse)
+			jsonResponse = unpackResponse(rawTextRequestResponse)
+			totalTime = getTotalTiming(rawTextRequests[rawTextRequestID+"-start"])
+			pageLoad = fmt.Sprintf("%dms", jsonResponse.PageloadDuration)
+			parsing = fmt.Sprintf("%dms", jsonResponse.ParsingDuration)
+			w.Header().Set("X-Browsh-Duration-Total", totalTime+"ms")
+			w.Header().Set("X-Browsh-Duration-Pageload", pageLoad)
+			w.Header().Set("X-Browsh-Duration-Parsing", parsing)
+			io.WriteString(w, jsonResponse.Text)
 			delete(rawTextRequests, rawTextRequestID)
 			break
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 	}
+}
+
+func unpackResponse(jsonString string) rawTextResponse {
+	var response rawTextResponse
+	jsonBytes := []byte(jsonString)
+	if err := json.Unmarshal(jsonBytes, &response); err != nil {
+	}
+	return response
+}
+
+func getTotalTiming(startString string) string {
+	start, _ := time.Parse(time.RFC3339, startString)
+	elapsed := time.Since(start) / time.Millisecond
+	return fmt.Sprintf("%d", elapsed)
 }

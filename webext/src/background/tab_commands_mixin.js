@@ -47,8 +47,11 @@ export default MixinBase =>
     }
 
     _rawTextRequest(incoming) {
-      incoming.request_id = this.request_id;
-      this.sendToTerminal(`/raw_text,${JSON.stringify(incoming)}`);
+      let payload = {
+        json: JSON.stringify(incoming),
+        request_id: this.request_id
+      };
+      this.sendToTerminal(`/raw_text,${JSON.stringify(payload)}`);
       this._tabCount(count => {
         if (count > 1) {
           this.remove();

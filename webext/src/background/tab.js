@@ -120,6 +120,7 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
 
   sendGlobalConfig(config) {
     config.http_server_mode_type = this._calculateMode();
+    config.start_time = this.start_time;
     this.channel.postMessage(`/config,${JSON.stringify(config)}`);
   }
 

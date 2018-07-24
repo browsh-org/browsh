@@ -37,7 +37,6 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
       this.graphics_builder,
       this.config
     );
-    this.text_builder._raw_text_start = performance.now();
   }
 
   _willHideText() {
@@ -204,6 +203,8 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     });
     window.addEventListener("load", () => {
       this.is_page_finished_loading = true;
+      this.config.page_load_duration = Date.now() - this.config.start_time;
+      this.text_builder.config = this.config;
       this.log("PAGE LOADED");
     });
     window.addEventListener("unload", () => {

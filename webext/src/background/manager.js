@@ -158,14 +158,22 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   }
 
   _applyUpdates(tabish_object) {
-    let tab = this._maybeNewTab({ id: tabish_object.id });
-    ["id", "title", "url", "active", "request_id", "raw_text_mode_type"].map(
-      key => {
-        if (tabish_object.hasOwnProperty(key)) {
-          tab[key] = tabish_object[key];
-        }
+    let tab = this._maybeNewTab({
+      id: tabish_object.id
+    });
+    [
+      "id",
+      "title",
+      "url",
+      "active",
+      "request_id",
+      "raw_text_mode_type",
+      "start_time"
+    ].map(key => {
+      if (tabish_object.hasOwnProperty(key)) {
+        tab[key] = tabish_object[key];
       }
-    );
+    });
     if (tabish_object.active) {
       this.active_tab_id = tab.id;
     }
@@ -289,7 +297,9 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
           }
         }
       },
-      { urls: ["*://*/*"] },
+      {
+        urls: ["*://*/*"]
+      },
       ["blocking"]
     );
   }

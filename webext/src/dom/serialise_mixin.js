@@ -85,8 +85,9 @@ export default MixinBase =>
 
     _getMetaData() {
       let metadata = "";
+      this._markParsingDuration();
       const date_time = this._getCurrentDataTime();
-      const elapsed = `${performance.now() - this._raw_text_start}ms`;
+      const elapsed = `${this._parsing_duration}ms`;
       metadata +=
         "\n\n" + `Built ` + this._byBrowsh() + `on ${date_time} in ${elapsed}.`;
       if (this.dimensions.is_page_truncated) {
@@ -187,6 +188,10 @@ export default MixinBase =>
       } else {
         return "";
       }
+    }
+
+    _markParsingDuration() {
+      this._parsing_duration = performance.now() - this._parse_start_time;
     }
 
     _getCurrentDataTime() {
@@ -293,7 +298,9 @@ export default MixinBase =>
 
     _sendRawText() {
       let payload = {
-        body: this._serialiseRawText()
+        body: this._serialiseRawText(),
+        page_load_duration: this.config.page_load_duration,
+        parsing_duration: this._parsing_duration
       };
       this.sendMessage(`/raw_text,${JSON.stringify(payload)}`);
     }

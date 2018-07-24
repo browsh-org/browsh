@@ -190,7 +190,8 @@ export default MixinBase =>
         this._acknowledgeNewTab({
           id: native_tab.id,
           request_id: request_id,
-          raw_text_mode_type: mode.toLowerCase()
+          raw_text_mode_type: mode.toLowerCase(),
+          start_time: Date.now()
         });
         // Sometimes tabs fail to load for whatever reason. Make sure they get
         // removed to save RAM in long-lived Browsh HTTP servers
