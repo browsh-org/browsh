@@ -4,7 +4,7 @@ import helper from "helper";
 let text_builder, grid;
 
 describe("Text Builder", () => {
-  beforeEach((done) => {
+  beforeEach(done => {
     global.mock_DOM_template = [
       "                ",
       "                ",
@@ -38,7 +38,7 @@ describe("Text Builder", () => {
       y_scroll: 0
     };
     global.frame_type = "small";
-    helper.runTextBuilder((returned_text_builder) => {
+    helper.runTextBuilder(returned_text_builder => {
       text_builder = returned_text_builder;
       grid = text_builder.tty_grid.cells;
       done();

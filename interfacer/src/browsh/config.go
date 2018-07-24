@@ -23,7 +23,6 @@ var (
 	_ = pflag.String("firefox.path", "firefox", "Path to Firefox executable")
 	_ = pflag.Bool("firefox.with-gui", false, "Don't use headless Firefox")
 	_ = pflag.Bool("firefox.use-existing", false, "Whether Browsh should launch Firefox or not")
-
 )
 
 func getConfigNamespace() string {

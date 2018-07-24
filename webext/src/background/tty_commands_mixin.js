@@ -50,7 +50,9 @@ export default MixinBase =>
     }
 
     _setupRawTextMode() {
-      if (!this.config['http-server-mode']) { return }
+      if (!this.config["http-server-mode"]) {
+        return;
+      }
       this._is_raw_text_mode = true;
       this._updateTTYSize(
         this.dimensions.raw_text_tty_size.width,

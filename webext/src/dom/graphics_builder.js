@@ -78,7 +78,7 @@ export default class extends utils.mixins(CommonMixin) {
 
   _getScreenshotWithText(callback) {
     this.showText();
-    if (this.config['http-server-mode']) {
+    if (this.config["http-server-mode"]) {
       // It's a little odd that `config['http-server'].render_delay` is named as such
       // and placed here of all places. But the fact is that a delay is needed here
       // *anyway* and extending the delay kills 2 birds with one stone. Firstly solving
@@ -86,7 +86,7 @@ export default class extends utils.mixins(CommonMixin) {
       // the fact that some pages just don't finish loading at `windows.onload()`.
       setTimeout(() => {
         this._getScreenshotWithTextDelayable(callback);
-      }, this.config['http-server'].render_delay);
+      }, this.config["http-server"].render_delay);
     } else {
       this._getScreenshotWithTextDelayable(callback);
     }

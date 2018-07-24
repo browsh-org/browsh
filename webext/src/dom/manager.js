@@ -162,7 +162,9 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   }
 
   _isWindowAlreadyLoaded() {
-    if (document.body === undefined) { return false }
+    if (document.body === undefined) {
+      return false;
+    }
     return !!this.dimensions.findMeasuringBox();
   }
 

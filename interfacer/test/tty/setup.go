@@ -2,17 +2,17 @@ package test
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 	"unicode/utf8"
-	"strconv"
 
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/terminfo"
 	ginkgo "github.com/onsi/ginkgo"
 	gomega "github.com/onsi/gomega"
 
-	"github.com/spf13/viper"
 	"browsh/interfacer/src/browsh"
+	"github.com/spf13/viper"
 )
 
 var staticFileServerPort = "4444"
