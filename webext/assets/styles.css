@@ -17,6 +17,7 @@ html * {
   letter-spacing: 0px !important;
   font-style: normal !important;
   font-weight: normal !important;
+  font-family: 'BlockCharMono' !important;
 }
 
 a {
