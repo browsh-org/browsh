@@ -149,7 +149,7 @@ func TTYStart(injectedScreen tcell.Screen) {
 	screen = injectedScreen
 	setupTcell()
 	writeString(1, 0, logo, tcell.StyleDefault)
-	writeString(0, 15, "Starting Browsh, the modern text-based web browser.", tcell.StyleDefault)
+	writeString(0, 15, "Starting Browsh v"+browshVersion+", the modern text-based web browser.", tcell.StyleDefault)
 	startFirefox()
 	Log("Starting Browsh CLI client")
 	go readStdin()
