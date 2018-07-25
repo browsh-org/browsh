@@ -38,3 +38,12 @@ git add _data/browsh.yml
 git commit -m "(Travis CI) Updated Browsh version to $browsh_version"
 # `/dev/null` needed to prevent Github token appearing in logs
 git push --quiet https://$GITHUB_TOKEN@github.com/browsh-org/www.brow.sh > /dev/null 2>&1
+
+# Manually also include the signed Mozilla web extension in the release archives
+$PROJECT_ROOT/contrib/upload_github_release_asset.sh \
+  github_api_token=$GITHUB_TOKEN \
+  owner=browsh-org \
+  repo=browsh \
+  tag=v$browsh_version \
+  filename=$PROJECT_ROOT/webext/dist/web-ext-artifacts/browsh-$browsh_version-an+fx.xpi
+
