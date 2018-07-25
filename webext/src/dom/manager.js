@@ -195,6 +195,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     });
     window.addEventListener("load", () => {
       this.is_page_finished_loading = true;
+      this.config.page_load_duration = Date.now() - this.config.start_time;
       this.log("PAGE LOADED");
     });
     window.addEventListener("unload", () => {
