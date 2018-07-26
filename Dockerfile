@@ -27,14 +27,7 @@ ENV BASE=$GOPATH/src/browsh/interfacer
 WORKDIR $BASE
 ADD interfacer $BASE
 
-# Install `dep` the current defacto dependency manager for Golang
-RUN $BASE/contrib/setup_dep.sh
-
-# Install the tool to convert the web extenstion file into a Go-compatible binary
-RUN go get -u gopkg.in/shuLhan/go-bindata.v3/...
-
 # Build Browsh
-RUN dep ensure
 RUN $BASE/contrib/build_browsh.sh
 
 

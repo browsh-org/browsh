@@ -22,7 +22,7 @@ env:
     - secure: "boYctu4EQI2og3YWpD54yo1LzibgBNrYN3exbfwxaNNbJuQscprAlOOG5Y1O7MBgzG9AP1DeON3X0al7g/IYMrsMsrSGhJLq9w2/ntwMiUIyKfTAP8rB5fASRSYxA5mqhpjXK4iIzqG2xiOr1SmCbpT9ew0AXP/HgxQprsppBbH+H4HyrP4cejIbfk8ajU/XvrDmhOY4s/IZIy+vfEfZH5xheJnG3iWFICwWUF5CIjjr6fQpq9ZbL2sDMvzruYPMAQ3iDfBrUr+ZhN4PPjrzvCRUNpoUoPsXCsFDPMcZpBjSHH5ZELPRBzHSdJignIjHaV0UtLtFApZl49lzq749r2Sno2ba4JCd0RIgMERjNluXynkJiHrL2tMR8HYhOmoeLMdX0zrguv+136+Jn04gQde3S+FI1/sN0/Xa14xD7SGMUT1MgFnwKgFXOFeUd3VpvbpFg6RWVgpCnaDd2/AKL+mQDEgL4yRg9q95a6Q5ub/c6nla8/E4asEvYGlJPj0OG/MKvJMi0gnKuP4+nil0jgGeKki3k1UxwvldlS+n7HUhQ7c4B9c61KS19i+z5SxBiXjilL+zGlAVVgRcalIoKQrTRDSRKnKZkR5Ant0CLjt44pncHLwlYXD/aPuLNihCa4AqUlpYPYru0pQawXNkVnk6E/cg2DAsp7oDcpcg540="
 
 before_install:
-  - ./interfacer/contrib/setup_go.sh
+  - ./interfacer/contrib/setup_dep.sh
   - ./webext/contrib/setup_node.sh
   - mkdir -p $REPO_ROOT && cp -rfp $TRAVIS_BUILD_DIR -T $REPO_ROOT
 install:
