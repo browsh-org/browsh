@@ -22,7 +22,7 @@ ls -alh .
 $NODE_BIN/web-ext build --overwrite-dest
 ls -alh web-ext-artifacts
 
-version=$($PROJECT_ROOT/contrib/get_browsh_version.sh)
+version=$($PROJECT_ROOT/interfacer/contrib/get_browsh_version.sh)
 
 xpi_file=browsh-$version-an+fx.xpi
 zip_file=browsh-$version.zip
@@ -51,13 +51,5 @@ cp -f $source_file $bundle_file
 
 echo "Bundling $source_file to $destination using internal path $bundle_file"
 
-go-bindata -version
-go-bindata \
-  -nocompress \
-  -prefix $PROJECT_ROOT \
-  -pkg browsh \
-  -o $destination \
-  $bundle_file
-
-ls -alh $PROJECT_ROOT/interfacer/src/browsh/webextension.go
-echo "go-bindata exited with $(echo $?)"
+XPI_FILE=$bundle_file BIN_FILE=$destination \
+  $PROJECT_ROOT/interfacer/contrib/xpi2bin.sh

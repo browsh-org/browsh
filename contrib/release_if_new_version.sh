@@ -4,7 +4,7 @@ set -e
 
 PROJECT_ROOT=$(git rev-parse --show-toplevel)
 
-browsh_version=$($PROJECT_ROOT/contrib/get_browsh_version.sh)
+browsh_version=$($PROJECT_ROOT/interfacer/contrib/get_browsh_version.sh)
 latest_tagged_version=$(git tag --sort=v:refname --list 'v*.*.*' | tail -n1 | sed -e "s/^v//")
 
 echo "Browsh version: $browsh_version"

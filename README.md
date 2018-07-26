@@ -59,7 +59,7 @@ package manager. The current Golang version being used is stored in `.travis.yml
 
 You'll then need to install the project dependencies. For the webextension, just
 run: `npm install` inside the `webext/` folder. For the CLI client you will first
-need to install `dep`, there is a script for this in `interfacer/contrib/setup_go.sh`.
+need to install `dep`, there is a script for this in `interfacer/contrib/setup_dep.sh`.
 I don't fully understand Golang's best practices, but it seems you are forced to
 keep your Go project's code under `$GOPATH/src`, you might be able to get away
 with symlinks. Anyway, to install the dependencies use: `dep ensure` inside the
@@ -74,6 +74,13 @@ Then the ideal setup for development is:
     webextension everytime webpack rebuilds it: (in `webext/dist`)
     `web-ext run --verbose`
 
+## Building a Browsh release
+If you'd like to build Browsh for a new package manager, or for any other reason,
+you can use the script at `interfacer/contrib/build_browsh.go` as a guide. Note
+you won't be able to build the web extension as Mozilla only allows one canonical
+version of web extensions per version number. So the build script downloads the
+official web extension `.xpi` file from the Mozilla archives.
+    
 ## Tests
 
 For the webextension: in `webext/` folder, `npm test`    

@@ -11,3 +11,4 @@ webextension.go
 webext/node_modules
 webext/dist/*
 dist
+*.xpi
