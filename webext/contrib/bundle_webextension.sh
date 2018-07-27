@@ -33,7 +33,7 @@ then
   # The signed version. There can only be one canonical XPI for each semantic
   # version.
   source_file=$source_dir/$xpi_file
-  bundle_file=$source_dir/browsh.xpi
+  bundle_file=$PROJECT_ROOT/interfacer/browsh.xpi
   $NODE_BIN/web-ext sign --api-key $MDN_USER --api-secret $MDN_KEY
 else
   # TODO: This doesn't currently work with the Marionettte `tempAddon`
