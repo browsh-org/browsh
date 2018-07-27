@@ -13,6 +13,9 @@ builds:
       - amd64
       - arm
       - arm64
+    goarm:
+      - 6
+      - 7
     ldflags: -s -w
 
 archive:
