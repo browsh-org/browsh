@@ -93,4 +93,4 @@ For HTTP Service tests: in `/interfacer` run `go test test/http-server/*.go`
   * [@arasatasaygin](https://github.com/arasatasaygin) For the Browsh logo.
 
 ## License
-GNU General Public License v3.0
+GNU Lesser General Public License v2.1
