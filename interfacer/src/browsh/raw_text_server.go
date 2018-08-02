@@ -214,9 +214,9 @@ func waitForResponse(rawTextRequestID string, w http.ResponseWriter) {
 		if rawTextRequestResponse, ok = rawTextRequests[rawTextRequestID]; ok {
 			jsonResponse = unpackResponse(rawTextRequestResponse)
 			totalTime = getTotalTiming(rawTextRequests[rawTextRequestID+"-start"])
-			pageLoad = fmt.Sprintf("%dms", jsonResponse.PageloadDuration)
-			parsing = fmt.Sprintf("%dms", jsonResponse.ParsingDuration)
-			w.Header().Set("X-Browsh-Duration-Total", totalTime+"ms")
+			pageLoad = fmt.Sprintf("%d", jsonResponse.PageloadDuration)
+			parsing = fmt.Sprintf("%d", jsonResponse.ParsingDuration)
+			w.Header().Set("X-Browsh-Duration-Total", totalTime)
 			w.Header().Set("X-Browsh-Duration-Pageload", pageLoad)
 			w.Header().Set("X-Browsh-Duration-Parsing", parsing)
 			io.WriteString(w, jsonResponse.Text)
