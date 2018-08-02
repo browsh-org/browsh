@@ -2,6 +2,7 @@ package browsh
 
 import (
 	"crypto/rand"
+	"sync"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,7 +21,37 @@ import (
 
 // In order to communicate between the incoming HTTP request and the websocket request to the
 // real browser to render the webpage, we keep track of requests in a map.
-var rawTextRequests = make(map[string]string)
+var rawTextRequests = newRequestsMap()
+
+type threadSafeRequestsMap struct {
+	sync.RWMutex
+	internal map[string]string
+}
+
+func newRequestsMap() *threadSafeRequestsMap {
+	return &threadSafeRequestsMap{
+		internal: make(map[string]string),
+	}
+}
+
+func (m *threadSafeRequestsMap) load(key string) (value string, ok bool) {
+	m.RLock()
+	result, ok := m.internal[key]
+	m.RUnlock()
+	return result, ok
+}
+
+func (m *threadSafeRequestsMap) store(key string, value string) {
+	m.Lock()
+	m.internal[key] = value
+	m.Unlock()
+}
+
+func (m *threadSafeRequestsMap) remove(key string) {
+	m.Lock()
+	delete(m.internal, key)
+	m.Unlock()
+}
 
 type rawTextResponse struct {
 	PageloadDuration int    `json:"page_load_duration"`
@@ -136,7 +167,7 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rawTextRequestID := pseudoUUID()
-	rawTextRequests[rawTextRequestID+"-start"] = start
+	rawTextRequests.store(rawTextRequestID+"-start", start)
 	mode := getRawTextMode(r)
 	sendMessageToWebExtension(
 		"/raw_text_request," + rawTextRequestID + "," +
@@ -211,16 +242,17 @@ func waitForResponse(rawTextRequestID string, w http.ResponseWriter) {
 	var totalTime, pageLoad, parsing string
 	var ok bool
 	for {
-		if rawTextRequestResponse, ok = rawTextRequests[rawTextRequestID]; ok {
+		if rawTextRequestResponse, ok = rawTextRequests.load(rawTextRequestID); ok {
 			jsonResponse = unpackResponse(rawTextRequestResponse)
-			totalTime = getTotalTiming(rawTextRequests[rawTextRequestID+"-start"])
+			requestStart, _ := rawTextRequests.load(rawTextRequestID+"-start")
+			totalTime = getTotalTiming(requestStart)
 			pageLoad = fmt.Sprintf("%d", jsonResponse.PageloadDuration)
 			parsing = fmt.Sprintf("%d", jsonResponse.ParsingDuration)
 			w.Header().Set("X-Browsh-Duration-Total", totalTime)
 			w.Header().Set("X-Browsh-Duration-Pageload", pageLoad)
 			w.Header().Set("X-Browsh-Duration-Parsing", parsing)
 			io.WriteString(w, jsonResponse.Text)
-			delete(rawTextRequests, rawTextRequestID)
+			rawTextRequests.remove(rawTextRequestID)
 			break
 		}
 		time.Sleep(1 * time.Millisecond)

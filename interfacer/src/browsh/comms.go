@@ -96,7 +96,7 @@ func handleRawFrameTextCommands(parts []string) {
 		}
 		if incoming.RequestID != "" {
 			Log("Raw text for " + incoming.RequestID)
-			rawTextRequests[incoming.RequestID] = incoming.RawJSON
+			rawTextRequests.store(incoming.RequestID, incoming.RawJSON)
 		} else {
 			Log("Raw text but no associated request ID")
 		}
