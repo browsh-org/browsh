@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/browsh-org/browsh.svg?branch=master)](https://travis-ci.org/browsh-org/browsh)
+[![Build Status](https://travis-ci.org/browsh-org/browsh.svg?branch=master)](https://travis-ci.org/browsh-org/browsh) [![Follow @brow_sh](https://img.shields.io/twitter/follow/brow_sh.svg?style=social&label=Follow)](https://twitter.com/intent/follow?screen_name=brow_sh)
 
 ![Browsh Logo](https://www.brow.sh/assets/images/browsh-header.jpg)
 
