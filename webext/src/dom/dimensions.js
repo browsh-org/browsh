@@ -14,24 +14,18 @@ export default class extends utils.mixins(CommonMixin) {
     // This used to be dynamically calculated at _calculateCharacterDimensions()
     // But it proved to be bugy, I think because of a race condition on lightweight sites
     // where the webextension's CSS wouldn't get applied in time.
-    if (!TEST) {
-      this._pre_calculated_char = {
-        width: 9,
-        height: 15
-      };
-    } else {
-      this._pre_calculated_char = {
-        width: 1,
-        height: 2
-      };
-    }
+    this._pre_calculated_char = !TEST
+      ? {
+          width: 9,
+          height: 15
+        }
+      : {
+          width: 1,
+          height: 2
+        };
 
-    if (!TEST) {
-      // TODO: WTF is this magic number? The gap between lines?
-      this._char_height_magic_number = 5;
-    } else {
-      this._char_height_magic_number = 0;
-    }
+    // TODO: WTF is this magic number? The gap between lines?
+    this._char_height_magic_number = !TEST ? 5 : 0;
 
     // This is the region outside the visible area of the TTY that is pre-parsed and
     // sent to the TTY to be buffered to support faster scrolling.

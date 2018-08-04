@@ -2,7 +2,6 @@ package browsh
 
 import (
 	"crypto/rand"
-	"sync"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +9,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/NYTimes/gziphandler"
@@ -244,7 +244,7 @@ func waitForResponse(rawTextRequestID string, w http.ResponseWriter) {
 	for {
 		if rawTextRequestResponse, ok = rawTextRequests.load(rawTextRequestID); ok {
 			jsonResponse = unpackResponse(rawTextRequestResponse)
-			requestStart, _ := rawTextRequests.load(rawTextRequestID+"-start")
+			requestStart, _ := rawTextRequests.load(rawTextRequestID + "-start")
 			totalTime = getTotalTiming(requestStart)
 			pageLoad = fmt.Sprintf("%d", jsonResponse.PageloadDuration)
 			parsing = fmt.Sprintf("%d", jsonResponse.ParsingDuration)
