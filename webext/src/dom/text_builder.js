@@ -89,13 +89,12 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   _isRelevantTextNode(node) {
     // Ignore text outside of the sub-frame, therefore outside either the TTY view or
     // outside the larger buffered TTY view.
+    // Or ignore nodes with only whitespace
     const dom_rect = node.parentElement.getBoundingClientRect();
-    if (!this._isDOMRectInSubFrame(dom_rect)) {
-      return false;
-    }
-
-    // Ignore nodes with only whitespace
-    if (node.textContent.trim().length === 0) {
+    if (
+      !this._isDOMRectInSubFrame(dom_rect) ||
+      node.textContent.trim().length === 0
+    ) {
       return false;
     }
 
@@ -320,9 +319,8 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   // is then in fact never rendered - its existence is never registered within the dimensions
   // of a DOM rectangle's box (`this._dom_box`).
   _ignoreUnrenderedWhitespace() {
-    if (this._isNewLine()) {
-      if (this._current_character.trim().length == 0)
-        this._stepToNextCharacter(false);
+    if (this._isNewLine() && this._current_character.trim().length == 0) {
+      this._stepToNextCharacter(false);
     }
   }
 

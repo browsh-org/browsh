@@ -206,11 +206,9 @@ export default MixinBase =>
     toggleUserAgent() {
       let message;
       this._is_using_mobile_user_agent = !this._is_using_mobile_user_agent;
-      if (this._is_using_mobile_user_agent) {
-        message = "Mobile user agent active";
-      } else {
-        message = "Desktop user agent active";
-      }
+      message = this._is_using_mobile_user_agent
+        ? "Mobile user agent active"
+        : "Desktop user agent active";
       this.currentTab().updateStatus("info", message);
     }
 

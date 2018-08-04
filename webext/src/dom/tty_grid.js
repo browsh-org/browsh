@@ -20,17 +20,18 @@ export default class {
     new_cell.index = this._calculateIndex(new_cell);
     const is_cell_possibly_obscured = !this._handleCellVisibility(new_cell);
     const is_cell_at_highest_layer = this._isNewCellAtHighestLayer(new_cell);
-    if (is_cell_at_highest_layer) {
-      if (!is_cell_possibly_obscured) {
-        this.cells[new_cell.index] = new_cell;
-      }
+    if (is_cell_at_highest_layer && !is_cell_possibly_obscured) {
+      this.cells[new_cell.index] = new_cell;
     }
   }
 
   _isNewCellAtHighestLayer(new_cell) {
     let existing_cell = this.cells[new_cell.index];
-    if (existing_cell !== undefined) {
-      if (!new_cell.isHighestLayer(existing_cell)) return false;
+    if (
+      existing_cell !== undefined &&
+      !new_cell.isHighestLayer(existing_cell)
+    ) {
+      return false;
     }
     return true;
   }
@@ -77,11 +78,7 @@ export default class {
   // the snapped values rather unintuitive. So we just encourage the snaped values to
   // snap lower which just lends itself to more readable test values.
   _setMiddleOfEm() {
-    if (TEST) {
-      this._middle_of_em = 0.49;
-    } else {
-      this._middle_of_em = 0.5;
-    }
+    this._middle_of_em = TEST ? 0.49 : 0.5;
   }
 
   // This is somewhat of a, hopefully elegant, hack. So, imagine that situation where you're

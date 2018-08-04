@@ -46,11 +46,10 @@ export default MixinBase =>
 
     _wrap(raw_text) {
       let head;
-      if (this._raw_mode_type === "raw_text_html") {
-        head = this._getHTMLHead();
-      } else {
-        head = this._getUserHeader();
-      }
+      head =
+        this._raw_mode_type === "raw_text_html"
+          ? this._getHTMLHead()
+          : this._getUserHeader();
       return head + raw_text + this._getFooter();
     }
 
@@ -67,11 +66,10 @@ export default MixinBase =>
       if (this.userHasShownSupport()) {
         return "";
       }
-      if (this._raw_mode_type === "raw_text_html") {
-        by = 'by <a href="https://www.brow.sh">Browsh</a> v';
-      } else {
-        by = "by Browsh v";
-      }
+      by =
+        this._raw_mode_type === "raw_text_html"
+          ? 'by <a href="https://www.brow.sh">Browsh</a> v'
+          : "by Browsh v";
       return by + this.config.browsh_version + " ";
     }
 
@@ -102,11 +100,10 @@ export default MixinBase =>
       if (this.userHasShownSupport()) {
         return "";
       }
-      if (this._raw_mode_type === "raw_text_html") {
-        donating = '<a href="https://www.brow.sh/donate">donating</a>';
-      } else {
-        donating = "brow.sh/donate";
-      }
+      donating =
+        this._raw_mode_type === "raw_text_html"
+          ? '<a href="https://www.brow.sh/donate">donating</a>'
+          : "brow.sh/donate";
       return (
         "\nPlease consider " +
         donating +
@@ -247,11 +244,10 @@ export default MixinBase =>
         if (width == 0 || height == 0) {
           return;
         }
-        if (i.getAttribute("role") == "textbox") {
-          type = "textbox";
-        } else {
-          type = i.getAttribute("type");
-        }
+        type =
+          i.getAttribute("role") == "textbox"
+            ? "textbox"
+            : i.getAttribute("type");
         styles = window.getComputedStyle(i);
         font_rgb = styles["color"]
           .replace(/[^\d,]/g, "")
@@ -287,10 +283,11 @@ export default MixinBase =>
     }
 
     _isUnwantedInboxBox(input_box, styles) {
-      if (styles.display === "none" || styles.visibility === "hidden") {
-        return true;
-      }
-      if (input_box.getAttribute("aria-hidden") == "true") {
+      if (
+        styles.display === "none" ||
+        styles.visibility === "hidden" ||
+        input_box.getAttribute("aria-hidden") == "true"
+      ) {
         return true;
       }
       return false;
