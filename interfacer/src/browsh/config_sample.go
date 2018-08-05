@@ -5,7 +5,7 @@ var configSample = `
 # By showing your support you can disable the app's branding and nags to donate.
 browsh_supporter = "♥"
 
-# The page to show at startup. Browsh will failt to boot if this URL is not accessible
+# The page to show at startup. Browsh will fail to boot if this URL is not accessible
 startup-url = "http://www.brow.sh"
 
 # The base query when a non-URL is entered into the URL bar
