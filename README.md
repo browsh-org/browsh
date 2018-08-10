@@ -74,6 +74,9 @@ Then the ideal setup for development is:
     webextension everytime webpack rebuilds it: (in `webext/dist`)
     `web-ext run --verbose`
 
+### Communication
+Questions about Brow.sh? Stuck trying to resolve a tricky issue? Connect with the Brow.sh community on [Gitter](https://gitter.im/browsh)!
+
 ## Building a Browsh release
 If you'd like to build Browsh for a new package manager, or for any other reason,
 you can use the script at `interfacer/contrib/build_browsh.go` as a guide. Note
