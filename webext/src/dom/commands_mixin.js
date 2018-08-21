@@ -127,11 +127,11 @@ export default MixinBase =>
           break;
         case 256:
           console.log("ScrollUp")
-          window.scrollBy(0, -1)
+          this._handleScroll(0, -1)
           break;
         case 512:
           console.log("ScrollDown")
-          window.scrollBy(0, 1)
+          this._handleScroll(0, 1)
           break;
       }
     }
