@@ -125,14 +125,6 @@ export default MixinBase =>
           }
           this._mousedown = false;
           break;
-        case 256:
-          console.log("ScrollUp")
-          this._handleScroll(0, -1)
-          break;
-        case 512:
-          console.log("ScrollDown")
-          this._handleScroll(0, 1)
-          break;
       }
     }
 
