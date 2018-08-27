@@ -69,7 +69,7 @@ Then the ideal setup for development is:
   * have Webpack watch the JS code so that it rebuilds automatically:
     `webpack --watch`
   * run the CLI client without giving it the responsibility to launch Firefox:
-    `go run ./interfacer/src/main.go -use-existing-ff -debug`
+    `go run ./interfacer/src/main.go --firefox.use-existing --debug`
   * have Mozilla's handy `web-ext` tool run Firefox and reinstall the
     webextension everytime webpack rebuilds it: (in `webext/dist`)
     `web-ext run --verbose`
