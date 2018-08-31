@@ -39,6 +39,12 @@ var _ = Describe("Showing a basic webpage", func() {
 				Expect("Another").To(BeInFrameAt(0, 0))
 			})
 
+			It("should scroll the page by one line using the mouse", func() {
+				SpecialMouse(tcell.WheelDown)
+				SpecialMouse(tcell.WheelDown)
+				Expect("meal,▄originating▄in▄").To(BeInFrameAt(12, 11))
+			})
+
 			It("should scroll the page by one line", func() {
 				SpecialKey(tcell.KeyDown)
 				Expect("meal,▄originating▄in▄").To(BeInFrameAt(12, 11))

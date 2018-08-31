@@ -76,6 +76,13 @@ func Keyboard(keys string) {
 	}
 }
 
+// SpecialMouse injects a special mouse event into the TTY. See Tcell's `mouse.go` file for all
+// the available special mouse values.
+func SpecialMouse(mouse tcell.ButtonMask) {
+	simScreen.InjectMouse(0, 0, mouse, tcell.ModNone)
+	time.Sleep(100 * time.Millisecond)
+}
+
 func waitForNextFrame() {
 	// Need to wait so long because the frame rate is currently so slow
 	// TODO: Reduce the wait when the FPS is higher

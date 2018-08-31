@@ -173,6 +173,9 @@ func handleMouseEvent(ev *tcell.EventMouse) {
 	xInFrame := x + CurrentTab.frame.xScroll
 	yInFrame := y - uiHeight + CurrentTab.frame.yScroll
 	button := ev.Buttons()
+	if button == tcell.WheelUp || button == tcell.WheelDown {
+		handleMouseScroll(button)
+	}
 	if button == 1 {
 		CurrentTab.frame.maybeFocusInputBox(xInFrame, yInFrame)
 	}
@@ -184,6 +187,26 @@ func handleMouseEvent(ev *tcell.EventMouse) {
 	}
 	marshalled, _ := json.Marshal(eventMap)
 	sendMessageToWebExtension("/stdin," + string(marshalled))
+}
+
+func handleMouseScroll(scrollType tcell.ButtonMask) {
+	yScrollOriginal := CurrentTab.frame.yScroll
+	_, height := screen.Size()
+	height -= uiHeight
+	if scrollType == tcell.WheelUp {
+		CurrentTab.frame.yScroll -= 1
+	} else if scrollType == tcell.WheelDown {
+		CurrentTab.frame.yScroll += 1
+	}
+	CurrentTab.frame.limitScroll(height)
+	sendMessageToWebExtension(
+		fmt.Sprintf(
+			"/tab_command,/scroll_status,%d,%d",
+			CurrentTab.frame.xScroll,
+			CurrentTab.frame.yScroll*2))
+	if CurrentTab.frame.yScroll != yScrollOriginal {
+		renderCurrentTabWindow()
+	}
 }
 
 func handleTTYResize() {
