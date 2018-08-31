@@ -1,7 +1,7 @@
-# How to setup the build environment for browsh on a generic linux system
+# How to setup the build environment for browsh on a generic Linux system
 
 This guide was made for x86-64 based Linux systems. You may try to adapt it to other systems.
-In this guide it is assumed that you can't install the required go, nodejs and firefox versions from your distribution's repositories.In case this shouldn't be correct, you should try to install go, nodejs and firefox using the package manager of your distribution.
+In this guide it is assumed that you can't install the required go, nodejs and firefox versions from your distribution's repositories. In case this shouldn't be correct, you should try to install go, nodejs and firefox using the package manager of your distribution.
 
 ## Installing golang
 
@@ -131,7 +131,7 @@ Run this in `GOPATH/src`:
 In `REPO_ROOT/webext`:
 > webpack --watch
 
-This will continuously watch changes made to the web extension and rebuild it.
+This will continuously watch for changes made to the web extension and rebuild it.
 
 ## Run firefox and the webextension
 In `REPO_ROOT/webext/dist`:
@@ -142,4 +142,3 @@ In `REPO_ROOT/webext/dist`:
 
 Or after building:
 > ./browsh --firefox.use-existing --debug
-
