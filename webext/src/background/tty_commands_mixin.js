@@ -78,11 +78,13 @@ export default MixinBase =>
     _handleUICommand(parts) {
       const input = JSON.parse(utils.rebuildArgsToSingleArg(parts));
       // CTRL mappings
+      /*
       if (input.mod === 2) {
         switch (input.char) {
           default:
         }
       }
+      */
       // ALT mappings
       if (input.mod === 4) {
         switch (input.char) {
@@ -176,7 +178,9 @@ export default MixinBase =>
     // We use the `browser` object here rather than going into the actual content script
     // because the content script may have crashed, even never loaded.
     screenshotActiveTab() {
-      const capturing = browser.tabs.captureVisibleTab({ format: "jpeg" });
+      const capturing = browser.tabs.captureVisibleTab({
+        format: "jpeg"
+      });
       capturing.then(this._saveScreenshot.bind(this), error => this.log(error));
     }
 
@@ -221,10 +225,14 @@ export default MixinBase =>
                 header.value = this.config.mobile_user_agent;
               }
             });
-            return { requestHeaders: e.requestHeaders };
+            return {
+              requestHeaders: e.requestHeaders
+            };
           }
         },
-        { urls: ["*://*/*"] },
+        {
+          urls: ["*://*/*"]
+        },
         ["blocking", "requestHeaders"]
       );
     }

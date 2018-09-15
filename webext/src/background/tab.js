@@ -28,11 +28,9 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
   }
 
   _calculateMode() {
-    let mode;
-    mode = !this._is_raw_text_mode
+    return !this._is_raw_text_mode
       ? "interactive"
       : "raw_text_" + this.raw_text_mode_type;
-    return mode;
   }
 
   isConnected() {

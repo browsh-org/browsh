@@ -27,13 +27,10 @@ export default class {
 
   _isNewCellAtHighestLayer(new_cell) {
     let existing_cell = this.cells[new_cell.index];
-    if (
-      existing_cell !== undefined &&
-      !new_cell.isHighestLayer(existing_cell)
-    ) {
-      return false;
-    }
-    return true;
+
+    return !(
+      existing_cell !== undefined && !new_cell.isHighestLayer(existing_cell)
+    );
   }
 
   _handleCellVisibility(new_cell) {
