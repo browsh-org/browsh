@@ -64,6 +64,7 @@ Move the binary to `GOPATH/bin/dep` and make sure `GOPATH/bin` exists with `mkdi
 ## Installing webpack and webpack-cli
 (--no-audit is used to get around errors, may not be needed)
 > npm install -g --no-audit webpack
+
 > npm install -g webpack-cli
 
 ## Installing web-ext
