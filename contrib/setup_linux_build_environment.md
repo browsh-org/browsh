@@ -56,7 +56,7 @@ Make sure the path `GOPATH/bin` exists with:
 ## Installing dep (dependency manager for go)
 See script in `browsh/interfacer/contrib/setup_dep.sh` for reference.
 
-Get the latest amd64 linux binary of *dep* at [https://github.com/golang/dep/releases/]()
+Get the latest amd64 linux binary of *dep* at [https://github.com/golang/dep/releases/](https://github.com/golang/dep/releases/)
 
 Move the binary to `GOPATH/bin/dep` and make sure `GOPATH/bin` exists with `mkdir -p $GOPATH/bin`
 > chmod +x $GOPATH/bin/dep
