@@ -3,13 +3,13 @@ This guide is for those who want to set up the build environment on Windows Comm
 
 
 ## Setting up Go, NodeJs, and GOPATH
-Download and install Go at [Go download page](https://golang.org/dl/).
+Download and install Go for Windows at [Go download page](https://golang.org/dl/).
 
-Download and install NodeJs at [NodeJs download page](https://nodejs.org/en/download/)
+Download and install NodeJs for Windows at [NodeJs download page](https://nodejs.org/en/download/)
 
 Using Command Prompt or Powershell:
 
-Create a go directory:
+Create a go workspace:
 > mkdir go
 
 > cd go
@@ -21,6 +21,8 @@ Create subdirectories bin and src within your go directory:
 > mkdir bin
 
 > mkdir src
+
+Add %GOPATH%/bin to your PATH.
 
 ## Installing chocolatey and dep
 
@@ -45,22 +47,14 @@ Navigate to GOPATH/src and run:
 
 
 ## Setting up dependencies
-
 Navigate to browsh/webext and run:
-> npm run get-gobindata
-
 > npm install
 
-## Building Browsh with Git Bash
-
+## Building browsh with Git Bash
 Using Git Bash, navigate to browsh/interfacer/contrib and run:
-
 > ./build_browsh.sh
 
-> ./xpi2bin.sh
-
-## Running Browsh
-
+## Running browsh
 Using three Command Prompts or Powershells:
 
 Navigate to GOPATH/browsh and run:
