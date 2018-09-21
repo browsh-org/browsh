@@ -76,6 +76,8 @@ Then the ideal setup for development is:
 
 For generic Linux systems you can follow [this guide](https://github.com/browsh-org/browsh/blob/master/contrib/setup_linux_build_environment.md) on how to setup a build environment, that you may be able to adapt for other systems as well.
 
+Windows users can follow [this guide](https://github.com/browsh-org/browsh/blob/master/contrib/setup_windows_build_environment.md) in order to set up a build environment.
+
 ### Communication
 Questions about Brow.sh? Stuck trying to resolve a tricky issue? Connect with the Brow.sh community on [Gitter](https://gitter.im/browsh)!
 
