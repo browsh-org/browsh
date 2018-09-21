@@ -41,7 +41,7 @@ Note: **Version 57 or higher is required.**
 
 ## Cloning the browsh repository
 Navigate to GOPATH/src and run:
-git clone https://github.com/browsh-org/browsh.git
+> git clone https://github.com/browsh-org/browsh.git
 
 
 ## Setting up dependencies
@@ -51,7 +51,7 @@ Navigate to browsh/webext and run:
 
 > npm install
 
-## Building Browsh
+## Building Browsh with Git Bash
 
 Using Git Bash, navigate to browsh/interfacer/contrib and run:
 
@@ -64,13 +64,13 @@ Using Git Bash, navigate to browsh/interfacer/contrib and run:
 Using Command Prompt or Powershell:
 
 Navigate to GOPATH/browsh and run:
-go run ./interfacer/src/main.go --firefox.use-existing --debug
+> go run ./interfacer/src/main.go --firefox.use-existing --debug
 
 Navigate to browsh/webext and run:
-webpack --watch
+> webpack --watch
 
 Navigate to browsh/webext/dist and run:
-web-ext run --verbose
+> web-ext run --verbose
 
 
 
