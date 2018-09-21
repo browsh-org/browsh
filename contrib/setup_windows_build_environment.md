@@ -61,7 +61,7 @@ Using Git Bash, navigate to browsh/interfacer/contrib and run:
 
 ## Running Browsh
 
-Using Command Prompt or Powershell:
+Using three Command Prompts or Powershells:
 
 Navigate to GOPATH/browsh and run:
 > go run ./interfacer/src/main.go --firefox.use-existing --debug
