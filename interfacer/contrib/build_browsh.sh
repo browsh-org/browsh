@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This is for building a production version of Browsh.
 # To build Browsh during development see:
