@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if ! type "nvm" > /dev/null; then
   rm -rf ~/.nvm

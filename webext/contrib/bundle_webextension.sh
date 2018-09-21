@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Convert the Browsh webextension into embedable binary data so that we can
 # distribute Browsh as a single static binary.
 
