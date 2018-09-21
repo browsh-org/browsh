@@ -12,7 +12,7 @@
 
 set -e
 
-INTERFACER_ROOT=$(readlink -m "$( cd "$(dirname "$0")" ; pwd -P )"/../)
+INTERFACER_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && cd ../ && pwd )"
 cd $INTERFACER_ROOT
 
 # Install `dep` the current defacto dependency manager for Golang
