@@ -16,6 +16,7 @@ var (
 	uiHeight = 2
 	// IsMonochromeMode decides whether to render the TTY in full colour or monochrome
 	IsMonochromeMode = false
+	color_mode = "true_color"
 )
 
 func setupTcell() {
@@ -24,6 +25,7 @@ func setupTcell() {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
+	IsMonochromeMode = viper.GetBool("monochrome")
 	screen.EnableMouse()
 	screen.Clear()
 }
