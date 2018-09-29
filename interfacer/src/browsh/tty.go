@@ -16,7 +16,6 @@ var (
 	uiHeight = 2
 	// IsMonochromeMode decides whether to render the TTY in full colour or monochrome
 	IsMonochromeMode = false
-	color_mode = "true_color"
 )
 
 func setupTcell() {
