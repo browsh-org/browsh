@@ -24,6 +24,7 @@ func setupTcell() {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
+	IsMonochromeMode = viper.GetBool("monochrome")
 	screen.EnableMouse()
 	screen.Clear()
 }
