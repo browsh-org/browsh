@@ -191,6 +191,10 @@ func ttyEntry() {
 // MainEntry decides between running Browsh as a CLI app or as an HTTP web server
 func MainEntry() {
 	pflag.Parse()
+	if pflag.NArg() == 0 {
+		pflag.Usage()
+		os.Exit(1)
+	}
 	Initialise()
 	if viper.GetBool("version") {
 		println(browshVersion)
