@@ -78,6 +78,8 @@ For generic Linux systems you can follow [this guide](https://github.com/browsh-
 
 Windows users can follow [this guide](https://github.com/browsh-org/browsh/blob/master/contrib/setup_windows_build_environment.md) in order to set up a build environment.
 
+Mac users may follow [this guide](https://github.com/browsh-org/browsh/blob/master/contrib/setup_mac_build_environment.md) that goes through the steps of setting up a build environment.
+
 ### Communication
 Questions about Brow.sh? Stuck trying to resolve a tricky issue? Connect with the Brow.sh community on [Gitter](https://gitter.im/browsh)!
 
