@@ -202,6 +202,7 @@ func MainEntry() {
 			}
 		}
 	}
+	viper.SetDefault("validURL", validURL)
 	Initialise()
 	if viper.GetBool("version") {
 		println(browshVersion)
@@ -212,4 +213,5 @@ func MainEntry() {
 	} else {
 		ttyEntry()
 	}
+
 }
