@@ -155,7 +155,6 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 			sendMessageToWebExtension("/new_tab," + validURL[i])
 		}
 	}
-
 }
 
 func sendConfigToWebExtension() {

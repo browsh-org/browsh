@@ -213,5 +213,4 @@ func MainEntry() {
 	} else {
 		ttyEntry()
 	}
-
 }
