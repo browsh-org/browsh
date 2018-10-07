@@ -108,6 +108,41 @@ func urlBarFocus(on bool) {
 	}
 }
 
+func overlayVimMode() {
+  _, height := screen.Size()
+  switch vimMode {
+    case InsertMode:
+      writeString(0, height-1, "ins", tcell.StyleDefault)
+    case LinkMode:
+      writeString(0, height-1, "lnk", tcell.StyleDefault)
+    case LinkModeNewTab:
+      writeString(0, height-1, "LNK", tcell.StyleDefault)
+    case LinkModeCopy:
+      writeString(0, height-1, "cp", tcell.StyleDefault)
+    case VisualMode:
+      writeString(0, height-1, "vis", tcell.StyleDefault)
+    case CaretMode:
+      writeString(0, height-1, "car", tcell.StyleDefault)
+      writeString(caretPos.X, caretPos.Y, "#", tcell.StyleDefault)
+    case FindMode:
+      writeString(0, height-1, "/" + findText, tcell.StyleDefault)
+    case MakeMarkMode:
+      writeString(0, height-1, "mark", tcell.StyleDefault)
+    case GotoMarkMode:
+      writeString(0, height-1, "goto", tcell.StyleDefault)
+  }
+
+  switch vimMode {
+    case LinkMode, LinkModeNewTab, LinkModeCopy:
+      if !linkModeWithHints {
+        findAndHighlightTextOnScreen(linkText) }
+
+    if linkHintWriteStringCalls != nil {
+      (*linkHintWriteStringCalls)()
+    }
+  }
+}
+
 func overlayPageStatusMessage() {
 	_, height := screen.Size()
 	writeString(0, height-1, CurrentTab.StatusMessage, tcell.StyleDefault)
