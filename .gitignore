@@ -10,5 +10,6 @@ interfacer/browsh
 webextension.go
 webext/node_modules
 webext/dist/*
+webext/manifest.json~
 dist
 *.xpi
