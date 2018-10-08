@@ -225,5 +225,5 @@ var _ = ginkgo.BeforeSuite(func() {
 })
 
 var _ = ginkgo.AfterSuite(func() {
-	browsh.Shell(rootDir + "/webext/contrib/firefoxheadless.sh kill")
+	browsh.HTTPServerStop()
 })

@@ -8,7 +8,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -21,6 +20,7 @@ import (
 var (
 	marionette     net.Conn
 	ffCommandCount = 0
+	pid = -1
 	defaultFFPrefs = map[string]string{
 		"startup.homepage_welcome_url.additional": "''",
 		"devtools.errorconsole.enabled":           "true",
@@ -52,7 +52,9 @@ var (
 )
 
 func startHeadlessFirefox() {
-	checkIfFirefoxIsAlreadyRunning()
+	if pid != -1 {
+		Shutdown(errors.New("A headless Firefox is already running"))
+	}
 	Log("Starting Firefox in headless mode")
 	firefoxPath := ensureFirefoxBinary()
 	ensureFirefoxVersion(firefoxPath)
@@ -78,20 +80,10 @@ func startHeadlessFirefox() {
 	if err := firefoxProcess.Start(); err != nil {
 		Shutdown(err)
 	}
+	pid = firefoxProcess.Process.Pid
 	in := bufio.NewScanner(stdout)
 	for in.Scan() {
 		Log("FF-CONSOLE: " + in.Text())
-	}
-}
-
-func checkIfFirefoxIsAlreadyRunning() {
-	if runtime.GOOS == "windows" {
-		return
-	}
-	processes := Shell("ps aux")
-	r, _ := regexp.Compile("firefox.*--headless")
-	if r.MatchString(processes) {
-		Shutdown(errors.New("A headless Firefox is already running"))
 	}
 }
 
@@ -150,9 +142,13 @@ func versionOrdinal(version string) string {
 func startWERFirefox() {
 	Log("Attempting to start headless Firefox with `web-ext`")
 	var rootDir = Shell("git rev-parse --show-toplevel")
+	firefoxBinary, isSet := os.LookupEnv("FIREFOX")
+	if !isSet {
+		firefoxBinary = "firefox"
+	}
 	args := []string{
 		"run",
-		"--firefox=" + rootDir + "/webext/contrib/firefoxheadless.sh",
+		"--firefox=" + firefoxBinary,
 		"--verbose",
 		"--no-reload",
 	}
@@ -166,6 +162,7 @@ func startWERFirefox() {
 	if err := firefoxProcess.Start(); err != nil {
 		Shutdown(err)
 	}
+	pid = firefoxProcess.Process.Pid
 	in := bufio.NewScanner(stdout)
 	for in.Scan() {
 		if strings.Contains(in.Text(), "JavaScript strict") ||
