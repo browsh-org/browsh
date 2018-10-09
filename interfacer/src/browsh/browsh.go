@@ -189,9 +189,7 @@ func ttyEntry() {
 	TTYStart(realScreen)
 }
 
-// MainEntry decides between running Browsh as a CLI app or as an HTTP web server
-func MainEntry() {
-	pflag.Parse()
+func noFlagParse() {
 	// validURI contains array of valid user inputted links.
 	var validURI []string
 	if pflag.NArg() != 0 {
@@ -203,6 +201,12 @@ func MainEntry() {
 		}
 	}
 	viper.SetDefault("validURI", validURI)
+}
+
+// MainEntry decides between running Browsh as a CLI app or as an HTTP web server
+func MainEntry() {
+	pflag.Parse()
+	noFlagParse()
 	Initialise()
 	if viper.GetBool("version") {
 		println(browshVersion)
