@@ -147,12 +147,12 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	}
 	// For some reason, using Firefox's CLI arg `--url https://google.com` doesn't consistently
 	// work. So we do it here instead.
-	validURL := viper.GetStringSlice("validURL")
-	if len(validURL) == 0 {
+	validURI := viper.GetStringSlice("validURI")
+	if len(validURI) == 0 {
 		sendMessageToWebExtension("/new_tab," + viper.GetString("startup-url"))
 	} else {
-		for i := 0; i < len(validURL); i++ {
-			sendMessageToWebExtension("/new_tab," + validURL[i])
+		for i := 0; i < len(validURI); i++ {
+			sendMessageToWebExtension("/new_tab," + validURI[i])
 		}
 	}
 }
