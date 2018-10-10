@@ -142,13 +142,9 @@ func versionOrdinal(version string) string {
 func startWERFirefox() {
 	Log("Attempting to start headless Firefox with `web-ext`")
 	var rootDir = Shell("git rev-parse --show-toplevel")
-	firefoxBinary, isSet := os.LookupEnv("FIREFOX")
-	if !isSet {
-		firefoxBinary = "firefox"
-	}
 	args := []string{
 		"run",
-		"--firefox=" + firefoxBinary,
+		"--firefox=" + rootDir + "/webext/contrib/firefoxheadless.sh",
 		"--verbose",
 		"--no-reload",
 	}
