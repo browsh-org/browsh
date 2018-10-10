@@ -20,7 +20,7 @@ import (
 var (
 	marionette     net.Conn
 	ffCommandCount = 0
-	pid = -1
+	pid            = -1
 	defaultFFPrefs = map[string]string{
 		"startup.homepage_welcome_url.additional": "''",
 		"devtools.errorconsole.enabled":           "true",
@@ -306,5 +306,8 @@ func startFirefox() {
 }
 
 func quitFirefox() {
-	sendFirefoxCommand("quitApplication", map[string]interface{}{})
+	process, err := os.FindProcess(pid)
+	if err == nil {
+		process.Kill()
+	}
 }
