@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -194,10 +193,7 @@ func noFlagParse() {
 	var validURI []string
 	if pflag.NArg() != 0 {
 		for i := 0; i < len(pflag.Args()); i++ {
-			u, _ := url.ParseRequestURI(pflag.Args()[i])
-			if u != nil {
-				validURI = append(validURI, pflag.Args()[i])
-			}
+			validURI = append(validURI, pflag.Args()[i])
 		}
 	}
 	viper.SetDefault("validURI", validURI)
