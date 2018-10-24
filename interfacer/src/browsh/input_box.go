@@ -12,7 +12,7 @@ var activeInputBox *inputBox
 // A box into which you can enter text. Generally will be forwarded to a standard
 // HTML input box in the real browser.
 //
-// Note that tcell alreay has some ready-made code in its 'views' concept for
+// Note that tcell already has some ready-made code in its 'views' concept for
 // dealing with input areas. However, at the time of writing it wasn't well documented,
 // so it was unclear how easy it would be to integrate the requirements of Browsh's
 // input boxes - namely overlaying them onto the existing graphics and having them
