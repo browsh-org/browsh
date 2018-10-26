@@ -26,7 +26,7 @@ dep ensure
 
 # Get the current Browsh version, in order to find the corresponding web extension release
 version_file=$INTERFACER_ROOT/src/browsh/version.go
-line=$(cat $version_file | grep 'browshVersion')
+line=$(grep 'browshVersion' < $version_file)
 version=$(echo $line | grep -o '".*"' | sed 's/"//g')
 
 # Build the URI for the webextension file
