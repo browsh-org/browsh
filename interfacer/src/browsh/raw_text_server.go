@@ -80,6 +80,10 @@ func HTTPServerStart() {
 	}
 }
 
+func HTTPServerStop() {
+	quitFirefox()
+}
+
 func setupRateLimiter() *stdlib.Middleware {
 	rate, err := limiter.NewRateFromFormatted(viper.GetString("http-server.rate-limit"))
 	if err != nil {
