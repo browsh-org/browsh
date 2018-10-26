@@ -8,7 +8,7 @@ else
   PROJECT_ROOT=.
 fi
 
-line=$(cat $PROJECT_ROOT/.travis.yml | grep 'firefox: "')
+line=$(grep 'firefox: "' < $PROJECT_ROOT/.travis.yml)
 version=$(echo $line | grep -o '".*"' | cut -d " " -f 1 | sed 's/"//g')
 
 # Firefox is needed both for testing in Travis and embedding in the Docker
