@@ -160,9 +160,9 @@ func (f *frame) updateInputBoxes(incoming incomingFrameText) {
 		inputBox := f.inputBoxes[incomingInputBox.ID]
 		inputBox.X = incomingInputBox.X
 		// TODO: Why do we have to add the 1 to the y coord??
-		inputBox.Y = (incomingInputBox.Y + 1) / 2
+		inputBox.Y = (incomingInputBox.Y + 0) / 2
 		inputBox.Width = incomingInputBox.Width
-		inputBox.Height = incomingInputBox.Height / 2
+		inputBox.Height = (incomingInputBox.Height / 2) + 1
 		inputBox.FgColour = incomingInputBox.FgColour
 		inputBox.TagName = incomingInputBox.TagName
 		inputBox.Type = incomingInputBox.Type
