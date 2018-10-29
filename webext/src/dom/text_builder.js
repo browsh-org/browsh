@@ -91,14 +91,11 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
     // outside the larger buffered TTY view.
     // Or ignore nodes with only whitespace
     const dom_rect = node.parentElement.getBoundingClientRect();
-    if (
+
+    return !(
       !this._isDOMRectInSubFrame(dom_rect) ||
       node.textContent.trim().length === 0
-    ) {
-      return false;
-    }
-
-    return true;
+    );
   }
 
   // In order to decide if a particular DOM rect is inside the current sub frame then we need

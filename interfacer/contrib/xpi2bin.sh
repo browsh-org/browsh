@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
-INTERFACER_ROOT=$(readlink -m "$( cd "$(dirname "$0")" ; pwd -P )"/../)
+INTERFACER_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && cd ../ && pwd )"
 
 go-bindata -version
 go-bindata \

@@ -283,14 +283,11 @@ export default MixinBase =>
     }
 
     _isUnwantedInboxBox(input_box, styles) {
-      if (
+      return (
         styles.display === "none" ||
         styles.visibility === "hidden" ||
         input_box.getAttribute("aria-hidden") == "true"
-      ) {
-        return true;
-      }
-      return false;
+      );
     }
 
     _sendRawText() {

@@ -5,9 +5,11 @@ export default {
     }, class {});
   },
 
-  ttyCell: function(fg_colour, bg_colour, character) {
-    fg_colour = fg_colour || [255, 255, 255];
-    bg_colour = bg_colour || [0, 0, 0];
+  ttyCell: function(
+    fg_colour = [255, 255, 255],
+    bg_colour = [0, 0, 0],
+    character
+  ) {
     let cell = fg_colour.concat(bg_colour);
     cell.push(character);
     return cell;

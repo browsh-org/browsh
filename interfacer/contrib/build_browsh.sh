@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This is for building a production version of Browsh.
 # To build Browsh during development see:
@@ -12,7 +12,7 @@
 
 set -e
 
-INTERFACER_ROOT=$(readlink -m "$( cd "$(dirname "$0")" ; pwd -P )"/../)
+INTERFACER_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && cd ../ && pwd )"
 cd $INTERFACER_ROOT
 
 # Install `dep` the current defacto dependency manager for Golang
@@ -26,7 +26,7 @@ dep ensure
 
 # Get the current Browsh version, in order to find the corresponding web extension release
 version_file=$INTERFACER_ROOT/src/browsh/version.go
-line=$(cat $version_file | grep 'browshVersion')
+line=$(grep 'browshVersion' < $version_file)
 version=$(echo $line | grep -o '".*"' | sed 's/"//g')
 
 # Build the URI for the webextension file

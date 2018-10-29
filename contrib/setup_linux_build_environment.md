@@ -61,9 +61,11 @@ Get the latest amd64 linux binary of *dep* at [https://github.com/golang/dep/rel
 Move the binary to `GOPATH/bin/dep` and make sure `GOPATH/bin` exists with `mkdir -p $GOPATH/bin`
 > chmod +x $GOPATH/bin/dep
 
-## Installing webpack
+## Installing webpack and webpack-cli
 (--no-audit is used to get around errors, may not be needed)
 > npm install -g --no-audit webpack
+
+> npm install -g webpack-cli
 
 ## Installing web-ext
 (--ignore-scripts is used to get around errors, may not be needed)
