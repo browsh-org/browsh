@@ -186,16 +186,16 @@ export default MixinBase =>
     }
 
     restoreTab() {
-      var sessionsInfo = browser.sessions.getRecentlyClosed({maxResults: 1 });
+      var sessionsInfo = browser.sessions.getRecentlyClosed({ maxResults: 1 });
       sessionsInfo.then(this._restoreTab);
     }
-    
+
     _restoreTab(sessionsInfo) {
       var mySessionInfo = sessionsInfo[0];
       if (mySessionInfo.tab) {
-          browser.sessions.restore(mySessionInfo.tab.sessionId);
-        } else {
-          browser.sessions.restore(mySessionInfo.window.sessionId);
+        browser.sessions.restore(mySessionInfo.tab.sessionId);
+      } else {
+        browser.sessions.restore(mySessionInfo.window.sessionId);
       }
     }
 
