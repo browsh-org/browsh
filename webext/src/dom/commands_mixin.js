@@ -1,4 +1,10 @@
 import utils from "utils";
+import { Rect } from "vimium";
+import { DomUtils } from "vimium";
+import { LocalHints } from "vimium";
+import { VimiumNormal } from "vimium";
+import { MiscVimium } from "vimium";
+MiscVimium();
 
 export default MixinBase =>
   class extends MixinBase {
@@ -35,17 +41,146 @@ export default MixinBase =>
           break;
         case "/url":
           url = utils.rebuildArgsToSingleArg(parts);
-          document.location.href = url;
+          window.location.href = url;
+          break;
+        case "/url_up":
+          this.urlUp();
+          break;
+        case "/url_root":
+          window.location.href = window.location.origin;
           break;
         case "/history_back":
           history.go(-1);
           break;
+        case "/history_forward":
+          history.go(1);
+          break;
+        case "/reload":
+          window.location.reload();
+          break;
         case "/window_stop":
           window.stop();
+          break;
+        case "/find_next":
+          this.findNext(parts[1]);
+          break;
+        case "/find_previous":
+          window.find(parts[1], false, true, false, false, true, true);
+          break;
+        case "/get_link_hints":
+          this.getLinkHints(false);
+          break;
+        case "/get_clickable_hints":
+          this.getLinkHints(true);
+          break;
+        case "/focus_first_text_input":
+          this.focusFirstTextInput();
+          break;
+        case "/follow_link_labeled_next":
+          this._followLinkLabeledNext();
+          break;
+        case "/follow_link_labeled_previous":
+          this._followLinkLabeledPrevious();
           break;
         default:
           this.log("Unknown command sent to tab", message);
       }
+    }
+
+    focusFirstTextInput() {
+      VimiumNormal.focusInput(1);
+    }
+
+    //adapted vimium code
+    followLinkLabeledNext() {
+      var nextPatterns = "next,more,newer,>,›,→,»,≫,>>,weiter" || "";
+      var nextStrings = nextPatterns.split(",").filter(function(s) {
+        return s.trim().length;
+      });
+      return (
+        VimiumNormal.findAndFollowRel("next") ||
+        VimiumNormal.findAndFollowLink(nextStrings)
+      );
+    }
+
+    _followLinkLabeledNext() {
+      this.followLinkLabeledNext();
+    }
+
+    //adapted vimium code
+    followLinkLabeledPrevious() {
+      var previousPatterns =
+        "prev,previous,back,older,<,‹,←,«,≪,<<,zurück" || "";
+      var previousStrings = previousPatterns.split(",").filter(function(s) {
+        return s.trim().length;
+      });
+      return (
+        VimiumNormal.findAndFollowRel("prev") ||
+        VimiumNormal.findAndFollowLink(previousStrings)
+      );
+    }
+
+    _followLinkLabeledPrevious() {
+      this.followLinkLabeledPrevious();
+    }
+
+    urlUp() {
+      // this is taken from vimium's code
+      var url = window.location.href;
+      if (url[url.length - 1] === "/") {
+        url = url.substring(0, url.length - 1);
+      }
+      var urlsplit = url.split("/");
+      // make sure we haven't hit the base domain yet
+      if (urlsplit.length > 3) {
+        urlsplit = urlsplit.slice(0, Math.max(3, urlsplit.length - 1));
+        window.location.href = urlsplit.join("/");
+      }
+    }
+
+    getLinkHints(clickable) {
+      var hints = LocalHints.getLocalHints(!clickable);
+      var rect, bottom, top, left, right, width, height, results, result, href;
+      results = [];
+      for (let idx in hints) {
+        if (!hints[idx].hasOwnProperty("rect")) {
+          continue;
+        }
+        href = hints[idx]["href"];
+        rect = hints[idx]["rect"];
+        bottom = Math.round(
+          ((rect["bottom"] - window.scrollY) *
+            this.dimensions.scale_factor.height) /
+            2
+        );
+        top = Math.round(
+          ((rect["top"] - window.scrollY) *
+            this.dimensions.scale_factor.height) /
+            2
+        );
+        left = Math.round(rect["left"] * this.dimensions.scale_factor.width);
+        right = Math.round(rect["right"] * this.dimensions.scale_factor.width);
+        result = Rect.create(left, top, right, bottom);
+        result.href = href;
+        results.push(result);
+      }
+      this.sendMessage(`/link_hints,${JSON.stringify(results)}`);
+    }
+
+    findNext(text) {
+      window.find(text, false, false, false, false, true, true);
+      //var s = window.getSelection();
+      //var oRange = s.getRangeAt(0); //get the text range
+      //var oRect = oRange.getBoundingClientRect();
+      //window.scrollTo(400, 20000);
+      this.dimensions.y_scroll = Math.round(
+        window.scrollY * this.dimensions.scale_factor.height
+      );
+      this.dimensions.x_scroll = Math.round(
+        window.scrollX * this.dimensions.scale_factor.width
+      );
+      this.dimensions.update();
+      this._mightSendBigFrames();
     }
 
     _launch() {
@@ -108,9 +243,25 @@ export default MixinBase =>
     _handleMouse(input) {
       switch (input.button) {
         case 1:
-          this._mouseAction("mousemove", input.mouse_x, input.mouse_y);
+          var y_hack = false;
+          if (input.hasOwnProperty("y_hack")) {
+            y_hack = true;
+          }
+          this._mouseAction(
+            "mousemove",
+            input.mouse_x,
+            input.mouse_y,
+            0,
+            y_hack
+          );
           if (!this._mousedown) {
-            this._mouseAction("mousedown", input.mouse_x, input.mouse_y);
+            this._mouseAction(
+              "mousedown",
+              input.mouse_x,
+              input.mouse_y,
+              0,
+              y_hack
+            );
             setTimeout(() => {
               this.sendSmallTextFrame();
             }, 500);
@@ -118,10 +269,26 @@ export default MixinBase =>
           this._mousedown = true;
           break;
         case 0:
-          this._mouseAction("mousemove", input.mouse_x, input.mouse_y);
+          var y_hack = false;
+          if (input.hasOwnProperty("y_hack")) {
+            y_hack = true;
+          }
+          this._mouseAction(
+            "mousemove",
+            input.mouse_x,
+            input.mouse_y,
+            0,
+            y_hack
+          );
           if (this._mousedown) {
-            this._mouseAction("click", input.mouse_x, input.mouse_y);
-            this._mouseAction("mouseup", input.mouse_x, input.mouse_y);
+            this._mouseAction("click", input.mouse_x, input.mouse_y, 0, y_hack);
+            this._mouseAction(
+              "mouseup",
+              input.mouse_x,
+              input.mouse_y,
+              0,
+              y_hack
+            );
           }
           this._mousedown = false;
           break;
@@ -169,8 +336,12 @@ export default MixinBase =>
       }
     }
 
-    _mouseAction(type, x, y) {
-      const [dom_x, dom_y] = this._getDOMCoordsFromMouseCoords(x, y);
+    _mouseAction(type, x, y, button, y_hack = false) {
+      let [dom_x, dom_y] = this._getDOMCoordsFromMouseCoords(x, y);
+      if (y_hack) {
+        const [dom_x2, dom_y2] = this._getDOMCoordsFromMouseCoords(x, y + 1);
+        dom_y = (dom_y + dom_y2) / 2;
+      }
       const element = document.elementFromPoint(
         dom_x - window.scrollX,
         dom_y - window.scrollY
@@ -191,7 +362,7 @@ export default MixinBase =>
         false,
         false,
         false,
-        0,
+        button,
         null
       );
       element.dispatchEvent(clickEvent);
