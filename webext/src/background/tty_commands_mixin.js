@@ -29,8 +29,14 @@ export default MixinBase =>
         case "/switch_to_tab":
           this.switchToTab(parts.slice(1).join(","));
           break;
+        case "/duplicate_tab":
+          this.duplicateTab(parts.slice(1).join(","));
+          break;
         case "/remove_tab":
           this.removeTab(parts.slice(1).join(","));
+          break;
+        case "/restore_tab":
+          this.restoreTab();
           break;
         case "/raw_text_request":
           this._rawTextRequest(parts[1], parts[2], parts.slice(3).join(","));
@@ -171,6 +177,24 @@ export default MixinBase =>
     removeTab(id) {
       this.tabs[id].remove();
       this.tabs[id] = null;
+    }
+
+    duplicateTab(id) {
+      browser.tabs.duplicate(parseInt(id));
+    }
+
+    restoreTab() {
+      var sessionsInfo = browser.sessions.getRecentlyClosed({maxResults: 1 });
+      sessionsInfo.then(this._restoreTab);
+    }
+    
+    _restoreTab(sessionsInfo) {
+      var mySessionInfo = sessionsInfo[0];
+      if (mySessionInfo.tab) {
+          browser.sessions.restore(mySessionInfo.tab.sessionId);
+        } else {
+          browser.sessions.restore(mySessionInfo.window.sessionId);
+      }
     }
 
     // We use the `browser` object here rather than going into the actual content script
