@@ -2,7 +2,7 @@
 set -e
 
 # Install `dep` the current defacto dependency for Golang
-GOLANG_DEP_VERSION=0.3.2
+GOLANG_DEP_VERSION=0.5.0
 dep_url=https://github.com/golang/dep/releases/download/v$GOLANG_DEP_VERSION/dep-linux-amd64
 
 if [ -z $GOPATH ]; then
