@@ -5,7 +5,7 @@ go:
 
 addons:
   # Use the full version number with ".0" if needed. This value is scraped by setup scripts.
-  firefox: "60.0"
+  firefox: "63.0"
   apt:
     packages:
       - rpm
