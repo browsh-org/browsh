@@ -214,7 +214,7 @@ func firefoxMarionette() {
 	}
 	marionette = conn
 	readMarionette()
-	sendFirefoxCommand("newSession", map[string]interface{}{})
+	sendFirefoxCommand("WebDriver:NewSession", map[string]interface{}{})
 }
 
 // Install the Browsh extension that was bundled with `go-bindata` under
@@ -228,20 +228,20 @@ func installWebextension() {
 	defer os.Remove(file.Name())
 	ioutil.WriteFile(file.Name(), []byte(data), 0644)
 	args := map[string]interface{}{"path": file.Name()}
-	sendFirefoxCommand("addon:install", args)
+	sendFirefoxCommand("Addon:Install", args)
 }
 
 // Set a Firefox preference as you would in `about:config`
 // `value` needs to be supplied with quotes if it's to be used as a JS string
 func setFFPreference(key string, value string) {
-	sendFirefoxCommand("setContext", map[string]interface{}{"value": "chrome"})
+	sendFirefoxCommand("Marionette:SetContext", map[string]interface{}{"value": "chrome"})
 	script := fmt.Sprintf(`
 		Components.utils.import("resource://gre/modules/Preferences.jsm");
 		prefs = new Preferences({defaultBranch: false});
 		prefs.set("%s", %s);`, key, value)
 	args := map[string]interface{}{"script": script}
-	sendFirefoxCommand("executeScript", args)
-	sendFirefoxCommand("setContext", map[string]interface{}{"value": "content"})
+	sendFirefoxCommand("WebDriver:ExecuteScript", args)
+	sendFirefoxCommand("Marionette:SetContext", map[string]interface{}{"value": "content"})
 }
 
 // Consume output from Marionette, we don't do anything with it. It"s just
@@ -309,5 +309,5 @@ func startFirefox() {
 }
 
 func quitFirefox() {
-	sendFirefoxCommand("quitApplication", map[string]interface{}{})
+	sendFirefoxCommand("Marionette:Quit", map[string]interface{}{})
 }
