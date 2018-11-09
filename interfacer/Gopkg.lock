@@ -10,6 +10,14 @@
   version = "v1.0.1"
 
 [[projects]]
+  digest = "1:1ca95505ec8a6d69762d2b5d9ab7e66ae619365b2e26031e220b675ff6fb010b"
+  name = "github.com/atotto/clipboard"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "aa9549103943c05f3e8951009cdb6a0bec2c8949"
+  version = "v0.1.1"
+
+[[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
@@ -255,11 +263,11 @@
     "html/charset",
   ]
   pruneopts = "UT"
-  revision = "10aee181995363b41f712a55844a0dd52ea04646"
+  revision = "03003ca0c849e57b6ea29a4bab8d3cb6e4d568fe"
 
 [[projects]]
   branch = "master"
-  digest = "1:98f84f98eb433d0c9e5d3475a6c4fceaa619c989f04880cb683d34012f76dab8"
+  digest = "1:8999bf106679c454ab912263f73efc15ed9ff18504572497a00ac04cc1ac2bcb"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -267,7 +275,7 @@
     "windows/registry",
   ]
   pruneopts = "UT"
-  revision = "7155702f2d47d94b134229da97195d0130cab001"
+  revision = "66b7b1311ac80bbafcd2daeef9a5e6e2cd1e2399"
 
 [[projects]]
   digest = "1:4392fcf42d5cf0e3ff78c96b2acf8223d49e4fdc53eb77c99d2f8dfe4680e006"
@@ -326,6 +334,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/NYTimes/gziphandler",
+    "github.com/atotto/clipboard",
     "github.com/gdamore/tcell",
     "github.com/gdamore/tcell/terminfo",
     "github.com/go-errors/errors",
