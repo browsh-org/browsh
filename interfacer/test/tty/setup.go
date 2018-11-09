@@ -12,6 +12,7 @@ import (
 	gomega "github.com/onsi/gomega"
 
 	"browsh/interfacer/src/browsh"
+
 	"github.com/spf13/viper"
 )
 
@@ -125,7 +126,7 @@ func sleepUntilPageLoad(maxTime time.Duration) {
 
 // GotoURL sends the browsh browser to the specified URL
 func GotoURL(url string) {
-	SpecialKey(tcell.KeyCtrlL)
+	browsh.UrlBarFocus(true)
 	Keyboard(url)
 	SpecialKey(tcell.KeyEnter)
 	WaitForPageLoad()

@@ -312,7 +312,7 @@ func (f *frame) maybeFocusInputBox(x, y int) {
 		left := inputBox.X
 		right := inputBox.X + inputBox.Width
 		if x >= left && x < right && y >= top && y < bottom {
-			urlBarFocus(false)
+			UrlBarFocus(false)
 			inputBox.isActive = true
 			activeInputBox = inputBox
 		}
