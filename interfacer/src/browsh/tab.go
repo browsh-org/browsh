@@ -141,7 +141,7 @@ func createNewEmptyTab() {
 	CurrentTab = tab
 	CurrentTab.frame.resetCells()
 	renderUI()
-	urlBarFocus(true)
+	UrlBarFocus(true)
 	renderCurrentTabWindow()
 }
 
