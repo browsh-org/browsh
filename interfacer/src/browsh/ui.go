@@ -110,30 +110,30 @@ func UrlBarFocus(on bool) {
 
 func overlayVimMode() {
 	_, height := screen.Size()
-	switch vimMode {
-	case InsertMode:
+	switch currentVimMode {
+	case insertMode:
 		writeString(0, height-1, "ins", tcell.StyleDefault)
-	case LinkMode:
+	case linkMode:
 		writeString(0, height-1, "lnk", tcell.StyleDefault)
-	case LinkModeNewTab:
+	case linkModeNewTab:
 		writeString(0, height-1, "LNK", tcell.StyleDefault)
-	case LinkModeCopy:
+	case linkModeCopy:
 		writeString(0, height-1, "cp", tcell.StyleDefault)
-	case VisualMode:
+	case visualMode:
 		writeString(0, height-1, "vis", tcell.StyleDefault)
-	case CaretMode:
+	case caretMode:
 		writeString(0, height-1, "car", tcell.StyleDefault)
 		writeString(caretPos.X, caretPos.Y, "#", tcell.StyleDefault)
-	case FindMode:
+	case findMode:
 		writeString(0, height-1, "/"+findText, tcell.StyleDefault)
-	case MakeMarkMode:
+	case makeMarkMode:
 		writeString(0, height-1, "mark", tcell.StyleDefault)
-	case GotoMarkMode:
+	case gotoMarkMode:
 		writeString(0, height-1, "goto", tcell.StyleDefault)
 	}
 
-	switch vimMode {
-	case LinkMode, LinkModeNewTab, LinkModeCopy:
+	switch currentVimMode {
+	case linkMode, linkModeNewTab, linkModeCopy:
 		if !linkModeWithHints {
 			findAndHighlightTextOnScreen(linkText)
 		}

@@ -14,22 +14,20 @@ import (
 // TODO: A little description as to the respective responsibilties of this code versus the
 // vimium.js code.
 
-// TODO: Capitalised variables mean that developers can expect them to be publically availably
-// as part of the API of the package. I don't think that is the intended case here.
-type VimMode int
+type vimMode int
 
 const (
-	NormalMode VimMode = iota + 1
-	InsertMode
-	FindMode
-	LinkMode
-	LinkModeNewTab
-	LinkModeCopy
-	WaitMode
-	VisualMode
-	CaretMode
-	MakeMarkMode
-	GotoMarkMode
+	normalMode vimMode = iota + 1
+	insertMode
+	findMode
+	linkMode
+	linkModeNewTab
+	linkModeCopy
+	waitMode
+	visualMode
+	caretMode
+	makeMarkMode
+	gotoMarkMode
 )
 
 // TODO: What's a mark?
@@ -40,7 +38,7 @@ type mark struct {
 	yScroll int
 }
 
-type HintRect struct {
+type hintRect struct {
 	Bottom int    `json:"bottom"`
 	Top    int    `json:"top"`
 	Left   int    `json:"left"`
@@ -51,33 +49,25 @@ type HintRect struct {
 }
 
 var (
-	// vimMode
-	vimMode             = NormalMode
+	currentVimMode      = normalMode
 	vimCommandsBindings = make(map[string]string)
 	keyEvents           = make([]*tcell.EventKey, 11)
-	//runeTime            = make(map[rune]time.Time)
-	//lastRune            rune
-	waitModeStartTime time.Time
-	findText          string
+	waitModeStartTime   time.Time
+	findText            string
 	// marks
 	globalMarkMap = make(map[rune]*mark)
 	localMarkMap  = make(map[int]map[rune]*mark)
-	// position coordinate for caret mode
+	// Position coordinate for caret mode
 	caretPos Coordinate
-	// for link modes
+	// For link modes
 	linkText                 string
-	linkHintRects            []HintRect
+	linkHintRects            []hintRect
 	linkHintKeys             = "asdfwerxcv"
 	linkHints                []string
-	linkHintsToRects         = make(map[string]*HintRect)
+	linkHintsToRects         = make(map[string]*hintRect)
 	linkModeWithHints        = true
 	linkHintWriteStringCalls *func()
 )
-
-// TODO: What's this for?
-func init() {
-	setupLinkHints()
-}
 
 func setupLinkHints() {
 	lowerAlpha := "abcdefghijklmnopqrstuvwxyz"
@@ -166,12 +156,12 @@ func makeMark() *mark {
 }
 
 func goIntoWaitMode() {
-	vimMode = WaitMode
+	currentVimMode = waitMode
 	waitModeStartTime = time.Now()
 }
 
 func updateLinkHintDisplay() {
-	linkHintsToRects = make(map[string]*HintRect)
+	linkHintsToRects = make(map[string]*hintRect)
 	lh := len(linkHintRects)
 	var ht string
 	// List of closures
@@ -203,7 +193,7 @@ func updateLinkHintDisplay() {
 		rLeftCopy, rTopCopy, htCopy := r.Left, r.Top, ht
 
 		// Link hints are in upper case in new tab mode
-		if vimMode == LinkModeNewTab {
+		if currentVimMode == linkModeNewTab {
 			htCopy = strings.ToUpper(htCopy)
 		}
 
@@ -225,7 +215,7 @@ func updateLinkHintDisplay() {
 func eraseLinkHints() {
 	linkText = ""
 	linkHintWriteStringCalls = nil
-	linkHintsToRects = make(map[string]*HintRect)
+	linkHintsToRects = make(map[string]*hintRect)
 	linkHintRects = nil
 }
 
@@ -251,24 +241,24 @@ func handleVimControl(ev *tcell.EventKey) {
 
 	keyCombination := string(lastRune) + string(ev.Rune())
 
-	switch vimMode {
-	case WaitMode:
+	switch currentVimMode {
+	case waitMode:
 		if time.Since(waitModeStartTime) < time.Millisecond*1000 {
 			return
 		}
-		vimMode = NormalMode
+		currentVimMode = normalMode
 		fallthrough
-	case NormalMode:
+	case normalMode:
 		command = vimCommandsBindings[keyCombination]
 		if len(command) == 0 {
 			keyCombination := string(ev.Rune())
 			command = vimCommandsBindings[keyCombination]
 		}
-	case InsertMode:
+	case insertMode:
 		if isNormalModeKey(ev) {
 			command = "normalMode"
 		}
-	case VisualMode:
+	case visualMode:
 		if isNormalModeKey(ev) {
 			command = "normalMode"
 		} else {
@@ -282,7 +272,7 @@ func handleVimControl(ev *tcell.EventKey) {
 				//clipboard
 			}
 		}
-	case CaretMode:
+	case caretMode:
 		if isNormalModeKey(ev) {
 			command = "normalMode"
 		} else {
@@ -318,7 +308,7 @@ func handleVimControl(ev *tcell.EventKey) {
 				}
 			}
 		}
-	case MakeMarkMode:
+	case makeMarkMode:
 		if unicode.IsLower(ev.Rune()) {
 			if localMarkMap[CurrentTab.ID] == nil {
 				localMarkMap[CurrentTab.ID] = make(map[rune]*mark)
@@ -329,7 +319,7 @@ func handleVimControl(ev *tcell.EventKey) {
 		}
 
 		command = "normalMode"
-	case GotoMarkMode:
+	case gotoMarkMode:
 		if mark, ok := globalMarkMap[ev.Rune()]; ok {
 			gotoMark(mark)
 		} else if m, ok := localMarkMap[CurrentTab.ID]; unicode.IsLower(ev.Rune()) && ok {
@@ -339,13 +329,13 @@ func handleVimControl(ev *tcell.EventKey) {
 		}
 
 		command = "normalMode"
-	case FindMode:
+	case findMode:
 		if isNormalModeKey(ev) {
 			command = "normalMode"
 			findText = ""
 		} else {
 			if ev.Key() == tcell.KeyEnter {
-				vimMode = NormalMode
+				currentVimMode = normalMode
 				command = "findText"
 				break
 			}
@@ -357,7 +347,7 @@ func handleVimControl(ev *tcell.EventKey) {
 				findText += string(ev.Rune())
 			}
 		}
-	case LinkMode, LinkModeNewTab, LinkModeCopy:
+	case linkMode, linkModeNewTab, linkModeCopy:
 		if isNormalModeKey(ev) {
 			command = "normalMode"
 			eraseLinkHints()
@@ -367,17 +357,16 @@ func handleVimControl(ev *tcell.EventKey) {
 			if linkModeWithHints {
 				if r, ok := linkHintsToRects[linkText]; ok {
 					if r != nil {
-						switch vimMode {
-						case LinkMode:
+						switch currentVimMode {
+						case linkMode:
 							if (*r).Height == 2 {
 								generateLeftClickYHack((*r).Left, (*r).Top, true)
 							} else {
 								generateLeftClick((*r).Left, (*r).Top)
 							}
-						case LinkModeNewTab:
-							//generateMiddleClick(r.Left, r.Top)
+						case linkModeNewTab:
 							sendMessageToWebExtension("/new_tab," + r.Href)
-						case LinkModeCopy:
+						case linkModeCopy:
 							clipboard.WriteAll(r.Href)
 						}
 						goIntoWaitMode()
@@ -389,7 +378,7 @@ func handleVimControl(ev *tcell.EventKey) {
 				if len(coords) == 1 {
 					goIntoWaitMode()
 
-					if vimMode == LinkModeNewTab {
+					if currentVimMode == linkModeNewTab {
 						generateMiddleClick(coords[0].X, coords[0].Y)
 					} else {
 						generateLeftClick(coords[0].X, coords[0].Y)
@@ -397,7 +386,7 @@ func handleVimControl(ev *tcell.EventKey) {
 					linkText = ""
 					return
 				} else if len(coords) == 0 {
-					vimMode = NormalMode
+					currentVimMode = normalMode
 					linkText = ""
 					return
 				}
@@ -481,15 +470,15 @@ func executeVimCommand(command string) {
 	case "viewHelp":
 		sendMessageToWebExtension("/new_tab,https://www.brow.sh/docs/keybindings/")
 	case "openLinkInCurrentTab":
-		vimMode = LinkMode
+		currentVimMode = linkMode
 		sendMessageToWebExtension("/tab_command,/get_clickable_hints")
 		eraseLinkHints()
 	case "openLinkInNewTab":
-		vimMode = LinkModeNewTab
+		currentVimMode = linkModeNewTab
 		sendMessageToWebExtension("/tab_command,/get_link_hints")
 		eraseLinkHints()
 	case "copyLinkURL":
-		vimMode = LinkModeCopy
+		currentVimMode = linkModeCopy
 		sendMessageToWebExtension("/tab_command,/get_link_hints")
 		eraseLinkHints()
 	case "findText":
@@ -499,19 +488,19 @@ func executeVimCommand(command string) {
 	case "findPrevious":
 		sendMessageToWebExtension("/tab_command,/find_previous," + findText)
 	case "makeMark":
-		vimMode = MakeMarkMode
+		currentVimMode = makeMarkMode
 	case "gotoMark":
-		vimMode = GotoMarkMode
+		currentVimMode = gotoMarkMode
 	case "insertMode":
-		vimMode = InsertMode
+		currentVimMode = insertMode
 	case "findMode":
-		vimMode = FindMode
+		currentVimMode = findMode
 	case "normalMode":
-		vimMode = NormalMode
+		currentVimMode = normalMode
 	case "visualMode":
-		vimMode = VisualMode
+		currentVimMode = visualMode
 	case "caretMode":
-		vimMode = CaretMode
+		currentVimMode = caretMode
 		width, height := screen.Size()
 		caretPos.X, caretPos.Y = width/2, height/2
 	}
