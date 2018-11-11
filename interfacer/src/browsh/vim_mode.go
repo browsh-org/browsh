@@ -11,6 +11,9 @@ import (
 	"github.com/gdamore/tcell"
 )
 
+// TODO: A little description as to the respective responsibilties of this code versus the
+// vimium.js code.
+
 // TODO: Capitalised variables mean that developers can expect them to be publically availably
 // as part of the API of the package. I don't think that is the intended case here.
 type VimMode int
@@ -71,6 +74,7 @@ var (
 	linkHintWriteStringCalls *func()
 )
 
+// TODO: What's this for?
 func init() {
 	setupLinkHints()
 }
