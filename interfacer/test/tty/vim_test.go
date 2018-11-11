@@ -41,9 +41,10 @@ var _ = Describe("Vim tests", func() {
 		})
 
 		It("should cycle to the next tab", func() {
+			GotoURL(testSiteURL + "/smorgasbord/")
 			Keyboard("t")
 			GotoURL(testSiteURL + "/smorgasbord/another.html")
-			Keyboard("gt")
+			Keyboard("J")
 			URL := testSiteURL + "/smorgasbord/             "
 			Expect(URL).To(BeInFrameAt(0, 1))
 		})
