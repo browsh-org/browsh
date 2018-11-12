@@ -54,7 +54,7 @@ var (
 	keyEvents           = make([]*tcell.EventKey, 11)
 	waitModeStartTime   time.Time
 	findText            string
-	// marks
+	// Marks
 	globalMarkMap = make(map[rune]*mark)
 	localMarkMap  = make(map[int]map[rune]*mark)
 	// Position coordinate for caret mode
@@ -81,9 +81,9 @@ func setupLinkHints() {
 		missingAlpha = strings.Replace(missingAlpha, string(linkHintKeys[i]), "", -1)
 	}
 
-	// missingAlpha contains all keys that aren't in linkHintKeys
+	// `missingAlpha` contains all keys that aren't in `linkHintKeys`
 	// we use this to generate the last link hint key combinations,
-	// so this will only be used when we run out of linkHintKeys based
+	// so this will only be used when we run out of `linkHintKeys` based
 	// link hint key combinations.
 	for i := 0; i < len(missingAlpha); i++ {
 		for j := 0; j < len(lowerAlpha); j++ {
@@ -93,8 +93,8 @@ func setupLinkHints() {
 }
 
 // Moves the caret in CaretMode.
-// isCaretAtBoundary is a function that tests for the reaching of the boundaries of the given axis.
-// The axis of motion is decided by giving a reference to caretPos.X or caretPos.Y as valRef.
+// `isCaretAtBoundary` is a function that tests for the reaching of the boundaries of the given axis.
+// The axis of motion is decided by giving a reference to `caretPos.X` or `caretPos.Y` as `valRef`.
 // The step size and direction is given by the value of step.
 func moveVimCaret(isCaretAtBoundary func() bool, valRef *int, step int) {
 	var prevCell, nextCell, nextNextCell cell
@@ -506,7 +506,7 @@ func executeVimCommand(command string) {
 	}
 }
 
-func searchScreenForText(text string) []Coordinate {
+func searchVisibleScreenForText(text string) []Coordinate {
 	var offsets = make([]Coordinate, 0)
 	var splitString []string
 	var r rune
@@ -544,7 +544,7 @@ func findAndHighlightTextOnScreen(text string) []Coordinate {
 	var x, y int
 	var styling = tcell.StyleDefault
 
-	offsets := searchScreenForText(text)
+	offsets := searchVisibleScreenForText(text)
 	for _, offset := range offsets {
 		y = offset.Y
 		x = offset.X

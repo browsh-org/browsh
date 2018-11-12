@@ -124,6 +124,7 @@ export default MixinBase =>
       this.followLinkLabeledPrevious();
     }
 
+    // Eg; This goes from www.domain.com/topic/suptopic/ to www.domain.com/topic/
     urlUp() {
       // this is taken from vimium's code
       var url = window.location.href;

@@ -155,6 +155,7 @@ func TTYStart(injectedScreen tcell.Screen) {
 	Log("Starting Browsh CLI client")
 	go readStdin()
 	startWebSocketServer()
+	setupLinkHints()
 }
 
 func toInt(char string) int {
