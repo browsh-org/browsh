@@ -51,7 +51,7 @@ type hintRect struct {
 var (
 	currentVimMode      = normalMode
 	vimCommandsBindings = make(map[string]string)
-	keyEvents           = make([]*tcell.EventKey, 11)
+	keyEvents           = make([]*tcell.EventKey, 0, 11)
 	waitModeStartTime   time.Time
 	findText            string
 	// Marks
