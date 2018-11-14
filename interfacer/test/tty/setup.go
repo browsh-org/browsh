@@ -126,7 +126,7 @@ func sleepUntilPageLoad(maxTime time.Duration) {
 
 // GotoURL sends the browsh browser to the specified URL
 func GotoURL(url string) {
-	browsh.UrlBarFocus(true)
+	browsh.URLBarFocus(true)
 	Keyboard(url)
 	SpecialKey(tcell.KeyEnter)
 	WaitForPageLoad()
