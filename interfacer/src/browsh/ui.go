@@ -93,7 +93,9 @@ func urlBarFocusToggle() {
 	}
 }
 
-func UrlBarFocus(on bool) {
+// Set the focus of the URL bar. Also used in tests to ensure the URL bar is in fact focussed as
+// toggling doesn't guarantee that you will gain focus.
+func URLBarFocus(on bool) {
 	if !on {
 		activeInputBox = nil
 		urlInputBox.isActive = false
