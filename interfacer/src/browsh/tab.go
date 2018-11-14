@@ -98,8 +98,8 @@ func moveTabLeft(id int) {
 		return
 	}
 
-	for i, tabId := range tabsOrder {
-		if tabId == id {
+	for i, tabID := range tabsOrder {
+		if tabID == id {
 			tabsOrder[i-1], tabsOrder[i] = tabsOrder[i], tabsOrder[i-1]
 			break
 		}
@@ -113,8 +113,8 @@ func moveTabRight(id int) {
 		return
 	}
 
-	for i, tabId := range tabsOrder {
-		if tabId == id {
+	for i, tabID := range tabsOrder {
+		if tabID == id {
 			tabsOrder[i+1], tabsOrder[i] = tabsOrder[i], tabsOrder[i+1]
 			break
 		}
@@ -141,7 +141,7 @@ func createNewEmptyTab() {
 	CurrentTab = tab
 	CurrentTab.frame.resetCells()
 	renderUI()
-	UrlBarFocus(true)
+	URLBarFocus(true)
 	renderCurrentTabWindow()
 }
 
