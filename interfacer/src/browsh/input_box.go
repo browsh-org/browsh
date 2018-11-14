@@ -181,7 +181,7 @@ func (i *inputBox) handleEnterKey(modifier tcell.ModMask) {
 		} else {
 			sendMessageToWebExtension("/url_bar," + string(i.text))
 		}
-		UrlBarFocus(false)
+		URLBarFocus(false)
 	}
 	if i.isMultiLine() && modifier != tcell.ModAlt {
 		i.cursorInsertRune([]rune("\n")[0])

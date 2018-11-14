@@ -87,9 +87,9 @@ func renderURLBar() {
 
 func urlBarFocusToggle() {
 	if urlInputBox.isActive {
-		UrlBarFocus(false)
+		URLBarFocus(false)
 	} else {
-		UrlBarFocus(true)
+		URLBarFocus(true)
 	}
 }
 
