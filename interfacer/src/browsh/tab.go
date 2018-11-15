@@ -130,18 +130,24 @@ func duplicateTab(id int) {
 // tab then we can't talk to it to tell it navigate. So we need to only create a real new
 // tab when we actually have a URL.
 func createNewEmptyTab() {
+	createNewEmptyTabWithURI("")
+}
+
+func createNewEmptyTabWithURI(URI string) {
 	if isNewEmptyTabActive() {
 		return
 	}
 	newTab(-1)
 	tab := Tabs[-1]
 	tab.Title = "New Tab"
-	tab.URI = ""
+	tab.URI = URI
 	tab.Active = true
 	CurrentTab = tab
 	CurrentTab.frame.resetCells()
 	renderUI()
 	URLBarFocus(true)
+	// Allows for typing directly at the end of URI
+	urlInputBox.selectionOff()
 	renderCurrentTabWindow()
 }
 

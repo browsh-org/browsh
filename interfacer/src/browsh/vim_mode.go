@@ -419,6 +419,8 @@ func executeVimCommand(command string) {
 		doScroll(1, 0)
 	case "editURL":
 		urlBarFocusToggle()
+	case "editURLInNewTab":
+		createNewEmptyTabWithURI(CurrentTab.URI)
 	case "firstTab":
 		switchToTab(tabsOrder[0])
 	case "lastTab":

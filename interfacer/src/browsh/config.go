@@ -85,6 +85,7 @@ func setDefaults() {
 	vimCommandsBindings["u"] = "scrollHalfPageUp"
 	vimCommandsBindings["e"] = "editURL"
 	vimCommandsBindings["ge"] = "editURL"
+	vimCommandsBindings["gE"] = "editURLInNewTab"
 	vimCommandsBindings["H"] = "historyBack"
 	vimCommandsBindings["L"] = "historyForward"
 	vimCommandsBindings["J"] = "prevTab"
