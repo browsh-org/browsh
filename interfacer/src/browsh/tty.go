@@ -57,7 +57,7 @@ func readStdin() {
 	}
 }
 
-func handleUserKeyPress(ev *tcell.EventKey) {
+func handleShortcuts(ev *tcell.EventKey) {
 	if CurrentTab == nil {
 		if ev.Key() == tcell.KeyCtrlQ {
 			quitBrowsh()
@@ -87,6 +87,12 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 	}
 	if isKey("tty.keys.next-tab", ev) {
 		nextTab()
+	}
+}
+
+func handleUserKeyPress(ev *tcell.EventKey) {
+	if currentVimMode != insertModeHard {
+		handleShortcuts(ev)
 	}
 	if !urlInputBox.isActive {
 		forwardKeyPress(ev)

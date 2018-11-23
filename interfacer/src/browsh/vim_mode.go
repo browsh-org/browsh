@@ -19,15 +19,17 @@ type vimMode int
 const (
 	normalMode vimMode = iota + 1
 	insertMode
+	insertModeHard
 	findMode
 	linkMode
 	linkModeNewTab
+	linkModeMultipleNewTab
 	linkModeCopy
 	waitMode
 	visualMode
 	caretMode
-	makeMarkMode
-	gotoMarkMode
+	markModeMake
+	markModeGoto
 )
 
 // TODO: What's a mark?
@@ -49,11 +51,13 @@ type hintRect struct {
 }
 
 var (
-	currentVimMode      = normalMode
-	vimCommandsBindings = make(map[string]string)
-	keyEvents           = make([]*tcell.EventKey, 0, 11)
-	waitModeStartTime   time.Time
-	findText            string
+	currentVimMode          = normalMode
+	vimKeyMap               = make(map[string]string)
+	keyEvents               = make([]*tcell.EventKey, 0, 11)
+	waitModeStartTime       time.Time
+	waitModeMaxMilliseconds = 1000
+	findText                string
+	latestKeyCombination    string
 	// Marks
 	globalMarkMap = make(map[rune]*mark)
 	localMarkMap  = make(map[int]map[rune]*mark)
@@ -156,7 +160,7 @@ func makeMark() *mark {
 }
 
 func goIntoWaitMode() {
-	currentVimMode = waitMode
+	changeVimMode(waitMode)
 	waitModeStartTime = time.Now()
 }
 
@@ -219,96 +223,111 @@ func eraseLinkHints() {
 	linkHintRects = nil
 }
 
+func resetLinkHints() {
+	linkText = ""
+	updateLinkHintDisplay()
+}
+
 func isNormalModeKey(ev *tcell.EventKey) bool {
-	if ev.Key() == tcell.KeyESC {
+	if ev != nil && ev.Key() == tcell.KeyESC {
 		return true
 	}
 	return false
 }
 
-func handleVimControl(ev *tcell.EventKey) {
-	var lastRune rune
-	command := ""
-
-	if len(keyEvents) > 0 && keyEvents[0] != nil {
-		lastRune = keyEvents[len(keyEvents)-1].Rune()
+func keyEventToString(ev *tcell.EventKey) string {
+	if ev == nil {
+		return ""
 	}
+
+	r := string(ev.Rune())
+	if ev.Modifiers()&tcell.ModAlt != 0 && ev.Modifiers()&tcell.ModCtrl != 0 {
+		return "<C-M-" + r + ">"
+	} else if ev.Modifiers()&tcell.ModAlt != 0 {
+		return "<M-" + r + ">"
+	} else if ev.Modifiers()&tcell.ModCtrl != 0 {
+		return "<C-" + strings.ToLower(ev.Name()[5:]) + ">"
+	}
+
+	switch ev.Key() {
+	case tcell.KeyEnter:
+		return "<Enter>"
+	}
+
+	return r
+}
+
+
+func getNLastKeyEvent(n int) *tcell.EventKey {
+	if n < 0 || keyEvents == nil {
+		return nil
+	}
+	if len(keyEvents) > n {
+		return keyEvents[len(keyEvents)-n-1]
+	}
+	return nil
+}
+
+func mapVimKeyEvents(ev *tcell.EventKey, mapMode string) string {
+	var lastEvent *tcell.EventKey
+	command := ""
 
 	keyEvents = append(keyEvents, ev)
 	if len(keyEvents) > 10 {
 		keyEvents = keyEvents[1:]
 	}
 
-	keyCombination := string(lastRune) + string(ev.Rune())
+	lastEvent = getNLastKeyEvent(1)
 
+	latestKeyCombination = keyEventToString(lastEvent) + keyEventToString(ev)
+
+	command = vimKeyMap[mapMode+" "+latestKeyCombination]
+	if len(command) == 0 {
+		latestKeyCombination = keyEventToString(ev)
+		command = vimKeyMap[mapMode+" "+latestKeyCombination]
+	}
+	if len(command) <= 0 {
+		latestKeyCombination = ""
+	} else {
+		// Since len(command) must be greather than 0 here,
+		// a key mapping did match, therefore we reset keyEvents
+		keyEvents = nil
+	}
+	return command
+}
+
+func handleVimMode(ev *tcell.EventKey, mode string) string {
+	if isNormalModeKey(ev) {
+		return "normalMode"
+	} else {
+		return mapVimKeyEvents(ev, mode)
+	}
+}
+
+func handleVimControl(ev *tcell.EventKey) {
+	var command string
 	switch currentVimMode {
 	case waitMode:
-		if time.Since(waitModeStartTime) < time.Millisecond*1000 {
+		if time.Since(waitModeStartTime) < time.Millisecond*time.Duration(waitModeMaxMilliseconds) {
 			return
 		}
-		currentVimMode = normalMode
+		changeVimMode(normalMode)
 		fallthrough
 	case normalMode:
-		command = vimCommandsBindings[keyCombination]
-		if len(command) == 0 {
-			keyCombination := string(ev.Rune())
-			command = vimCommandsBindings[keyCombination]
-		}
+		command = mapVimKeyEvents(ev, "normal")
 	case insertMode:
-		if isNormalModeKey(ev) {
+		command = handleVimMode(ev, "insert")
+	case insertModeHard:
+		if isNormalModeKey(ev) && isNormalModeKey(getNLastKeyEvent(0)) && isNormalModeKey(getNLastKeyEvent(1)) && isNormalModeKey(getNLastKeyEvent(2)) {
 			command = "normalMode"
+		} else {
+			command = mapVimKeyEvents(ev, "insertHard")
 		}
 	case visualMode:
-		if isNormalModeKey(ev) {
-			command = "normalMode"
-		} else {
-			if ev.Rune() == 'c' {
-				command = "caretMode"
-			}
-			if ev.Rune() == 'o' {
-				//swap cursor position begin->end or end->begin
-			}
-			if ev.Rune() == 'y' {
-				//clipboard
-			}
-		}
+		command = handleVimMode(ev, "visual")
 	case caretMode:
-		if isNormalModeKey(ev) {
-			command = "normalMode"
-		} else {
-			switch ev.Key() {
-			case tcell.KeyEnter:
-				generateLeftClick(caretPos.X, caretPos.Y-uiHeight)
-			}
-			switch ev.Rune() {
-			case 'v':
-				command = "visualMode"
-			case 'h':
-				moveVimCaret(func() bool { return caretPos.X > 0 }, &caretPos.X, -1)
-			case 'l':
-				width, _ := screen.Size()
-				moveVimCaret(func() bool { return caretPos.X < width }, &caretPos.X, 1)
-			case 'k':
-				_, height := screen.Size()
-				moveVimCaret(func() bool { return caretPos.Y >= uiHeight }, &caretPos.Y, -1)
-				if caretPos.Y < uiHeight {
-					command = "scrollHalfPageUp"
-					if CurrentTab.frame.yScroll == 0 {
-						caretPos.Y = uiHeight
-					} else {
-						caretPos.Y += (height - uiHeight) / 2
-					}
-				}
-			case 'j':
-				_, height := screen.Size()
-				moveVimCaret(func() bool { return caretPos.Y <= height-uiHeight }, &caretPos.Y, 1)
-				if caretPos.Y > height-uiHeight {
-					command = "scrollHalfPageDown"
-					caretPos.Y -= (height - uiHeight) / 2
-				}
-			}
-		}
-	case makeMarkMode:
+		command = handleVimMode(ev, "caret")
+	case markModeMake:
 		if unicode.IsLower(ev.Rune()) {
 			if localMarkMap[CurrentTab.ID] == nil {
 				localMarkMap[CurrentTab.ID] = make(map[rune]*mark)
@@ -319,7 +338,7 @@ func handleVimControl(ev *tcell.EventKey) {
 		}
 
 		command = "normalMode"
-	case gotoMarkMode:
+	case markModeGoto:
 		if mark, ok := globalMarkMap[ev.Rune()]; ok {
 			gotoMark(mark)
 		} else if m, ok := localMarkMap[CurrentTab.ID]; unicode.IsLower(ev.Rune()) && ok {
@@ -335,7 +354,7 @@ func handleVimControl(ev *tcell.EventKey) {
 			findText = ""
 		} else {
 			if ev.Key() == tcell.KeyEnter {
-				currentVimMode = normalMode
+				changeVimMode(normalMode)
 				command = "findText"
 				break
 			}
@@ -347,7 +366,7 @@ func handleVimControl(ev *tcell.EventKey) {
 				findText += string(ev.Rune())
 			}
 		}
-	case linkMode, linkModeNewTab, linkModeCopy:
+	case linkMode, linkModeNewTab, linkModeMultipleNewTab, linkModeCopy:
 		if isNormalModeKey(ev) {
 			command = "normalMode"
 			eraseLinkHints()
@@ -366,6 +385,9 @@ func handleVimControl(ev *tcell.EventKey) {
 							}
 						case linkModeNewTab:
 							sendMessageToWebExtension("/new_tab," + r.Href)
+						case linkModeMultipleNewTab:
+							resetLinkHints()
+							return
 						case linkModeCopy:
 							clipboard.WriteAll(r.Href)
 						}
@@ -386,7 +408,7 @@ func handleVimControl(ev *tcell.EventKey) {
 					linkText = ""
 					return
 				} else if len(coords) == 0 {
-					currentVimMode = normalMode
+					changeVimMode(normalMode)
 					linkText = ""
 					return
 				}
@@ -394,13 +416,17 @@ func handleVimControl(ev *tcell.EventKey) {
 		}
 	}
 
-	if len(command) > 0 {
-		executeVimCommand(command)
-	}
+	executeVimCommand(command)
 }
 
 func executeVimCommand(command string) {
-	switch command {
+	if len(command) == 0 {
+		return
+	}
+
+	currentCommand := command
+	command = ""
+	switch currentCommand {
 	case "urlUp":
 		sendMessageToWebExtension("/tab_command,/url_up")
 	case "urlRoot":
@@ -472,15 +498,19 @@ func executeVimCommand(command string) {
 	case "viewHelp":
 		sendMessageToWebExtension("/new_tab,https://www.brow.sh/docs/keybindings/")
 	case "openLinkInCurrentTab":
-		currentVimMode = linkMode
+		changeVimMode(linkMode)
 		sendMessageToWebExtension("/tab_command,/get_clickable_hints")
 		eraseLinkHints()
 	case "openLinkInNewTab":
-		currentVimMode = linkModeNewTab
+		changeVimMode(linkModeNewTab)
+		sendMessageToWebExtension("/tab_command,/get_link_hints")
+		eraseLinkHints()
+	case "openMultipleLinksInNewTab":
+		changeVimMode(linkModeMultipleNewTab)
 		sendMessageToWebExtension("/tab_command,/get_link_hints")
 		eraseLinkHints()
 	case "copyLinkURL":
-		currentVimMode = linkModeCopy
+		changeVimMode(linkModeCopy)
 		sendMessageToWebExtension("/tab_command,/get_link_hints")
 		eraseLinkHints()
 	case "findText":
@@ -490,22 +520,68 @@ func executeVimCommand(command string) {
 	case "findPrevious":
 		sendMessageToWebExtension("/tab_command,/find_previous," + findText)
 	case "makeMark":
-		currentVimMode = makeMarkMode
+		changeVimMode(markModeMake)
 	case "gotoMark":
-		currentVimMode = gotoMarkMode
+		changeVimMode(markModeGoto)
 	case "insertMode":
-		currentVimMode = insertMode
+		changeVimMode(insertMode)
+	case "insertModeHard":
+		changeVimMode(insertModeHard)
 	case "findMode":
-		currentVimMode = findMode
+		changeVimMode(findMode)
 	case "normalMode":
-		currentVimMode = normalMode
+		changeVimMode(normalMode)
+	// Visual mode
 	case "visualMode":
-		currentVimMode = visualMode
+		changeVimMode(visualMode)
+	case "swapVisualModeCursorPosition":
+		// Stub
+	case "copyVisualModeSelection":
+	// Caret mode
 	case "caretMode":
-		currentVimMode = caretMode
+		changeVimMode(caretMode)
 		width, height := screen.Size()
 		caretPos.X, caretPos.Y = width/2, height/2
+	case "clickAtCaretPosition":
+		generateLeftClick(caretPos.X, caretPos.Y-uiHeight)
+	case "moveCaretLeft":
+		moveVimCaret(func() bool { return caretPos.X > 0 }, &caretPos.X, -1)
+	case "moveCaretRight":
+		width, _ := screen.Size()
+		moveVimCaret(func() bool { return caretPos.X < width }, &caretPos.X, 1)
+	case "moveCaretUp":
+		_, height := screen.Size()
+		moveVimCaret(func() bool { return caretPos.Y >= uiHeight }, &caretPos.Y, -1)
+		if caretPos.Y < uiHeight {
+			command = "scrollHalfPageUp"
+			if CurrentTab.frame.yScroll == 0 {
+				caretPos.Y = uiHeight
+			} else {
+				caretPos.Y += (height - uiHeight) / 2
+			}
+		}
+	case "moveCaretDown":
+		_, height := screen.Size()
+		moveVimCaret(func() bool { return caretPos.Y <= height-uiHeight }, &caretPos.Y, 1)
+		if caretPos.Y > height-uiHeight {
+			command = "scrollHalfPageDown"
+			caretPos.Y -= (height - uiHeight) / 2
+		}
 	}
+
+	// A command can spawn another
+	executeVimCommand(command)
+}
+
+func changeVimMode(mode vimMode) {
+	if currentVimMode == mode {
+		// No change
+		return
+	}
+
+	currentVimMode = mode
+	// Reset keyEvents
+	keyEvents = nil
 }
 
 func searchVisibleScreenForText(text string) []Coordinate {
