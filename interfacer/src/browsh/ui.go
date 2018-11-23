@@ -115,10 +115,14 @@ func overlayVimMode() {
 	switch currentVimMode {
 	case insertMode:
 		writeString(0, height-1, "ins", tcell.StyleDefault)
+	case insertModeHard:
+		writeString(0, height-1, "INS", tcell.StyleDefault)
 	case linkMode:
 		writeString(0, height-1, "lnk", tcell.StyleDefault)
 	case linkModeNewTab:
 		writeString(0, height-1, "LNK", tcell.StyleDefault)
+	case linkModeMultipleNewTab:
+		writeString(0, height-1, "*LNK", tcell.StyleDefault)
 	case linkModeCopy:
 		writeString(0, height-1, "cp", tcell.StyleDefault)
 	case visualMode:
@@ -128,14 +132,14 @@ func overlayVimMode() {
 		writeString(caretPos.X, caretPos.Y, "#", tcell.StyleDefault)
 	case findMode:
 		writeString(0, height-1, "/"+findText, tcell.StyleDefault)
-	case makeMarkMode:
+	case markModeMake:
 		writeString(0, height-1, "mark", tcell.StyleDefault)
-	case gotoMarkMode:
+	case markModeGoto:
 		writeString(0, height-1, "goto", tcell.StyleDefault)
 	}
 
 	switch currentVimMode {
-	case linkMode, linkModeNewTab, linkModeCopy:
+	case linkMode, linkModeNewTab, linkModeMultipleNewTab, linkModeCopy:
 		if !linkModeWithHints {
 			findAndHighlightTextOnScreen(linkText)
 		}
