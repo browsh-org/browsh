@@ -17,17 +17,26 @@ var _ = Describe("Vim tests", func() {
 		GotoURL(testSiteURL + "/smorgasbord/")
 	})
 
-	It("should navigate to a new page by using a link hint", func() {
-		Expect("Another▄page").To(BeInFrameAt(12, 18))
-		Keyboard("f")
-		Keyboard("a")
-		Expect("Another").To(BeInFrameAt(0, 0))
-	})
-
 	It("should scroll the page by one line", func() {
 		Expect("[ˈsmœrɡɔsˌbuːɖ])▄is▄a").To(BeInFrameAt(12, 11))
 		Keyboard("j")
 		Expect("type▄of▄Scandinavian▄").To(BeInFrameAt(12, 11))
+	})
+
+	Describe("Links", func() {
+		BeforeEach(func() {
+			GotoURL(testSiteURL + "/smorgasbord/links.html")
+		})
+
+		FIt("should navigate to a new page by using a link hint", func() {
+			Expect("Links").To(BeInFrameAt(0, 0))
+			Keyboard("f")
+			Keyboard("a")
+			// I've noticed we sometimes haven't loaded the page successfully at this point.
+			// Maybe we should have a custom matcher that handles loading webpages?
+			// Expect("localhost:3000/smorgasbord/another.html").To(BeActivePage()) or something?
+			Expect("Another").To(BeInFrameAt(0, 0))
+		})
 	})
 
 	Describe("Tabs", func() {
