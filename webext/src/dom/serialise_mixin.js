@@ -142,25 +142,22 @@ export default MixinBase =>
          font-family: monospace;
         }
         body {
-          font-size: 15px;
+          font-size: 16.5px;
         }
         pre {
           background-image: url(${img_src});
-          background-size: contain;
           background-repeat: no-repeat;
           background-size: ${width}px ${height}px;
-          // Pixelate the background image
-          image-rendering: optimizeSpeed;             /* STOP SMOOTHING, GIVE ME SPEED  */
+          /* Pixelate the background image */
           image-rendering: -moz-crisp-edges;          /* Firefox                        */
           image-rendering: -o-crisp-edges;            /* Opera                          */
           image-rendering: -webkit-optimize-contrast; /* Chrome (and eventually Safari) */
-          image-rendering: pixelated; /* Chrome */
-          image-rendering: optimize-contrast;         /* CSS3 Proposed                  */
+          image-rendering: pixelated;                 /* Chrome                         */
           -ms-interpolation-mode: nearest-neighbor;   /* IE8+                           */
           width: ${width}px;
           height: ${height}px;
-          // These styles need to exactly follow Browsh's rendering styles
-          font-size: 15px !important;
+          /* These styles need to exactly follow Browsh's rendering styles */
+          font-size: 16.5px !important;
           line-height: 20px !important;
           letter-spacing: 0px !important;
           font-style: normal !important;
