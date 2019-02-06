@@ -139,10 +139,10 @@ export default MixinBase =>
        <title>${document.title}</title>
        <style>
         html * {
-         font-family: monospace;
+         font-family: 'Courier New', monospace;
         }
         body {
-          font-size: 16.5px;
+          font-size: 15px;
         }
         pre {
           background-image: url(${img_src});
@@ -157,7 +157,7 @@ export default MixinBase =>
           width: ${width}px;
           height: ${height}px;
           /* These styles need to exactly follow Browsh's rendering styles */
-          font-size: 16.5px !important;
+          font-size: 15px !important;
           line-height: 20px !important;
           letter-spacing: 0px !important;
           font-style: normal !important;
