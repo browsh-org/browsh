@@ -23,7 +23,7 @@ import (
 
 var (
 	logo = `
- ////  ////
+////  ////
  / /   / /
  //    //
  //    //    ,,,,,,,,
@@ -138,9 +138,9 @@ func Shell(command string) string {
 	parts = parts[1:]
 	out, err := exec.Command(head, parts...).CombinedOutput()
 	if err != nil {
-		Log(fmt.Sprintf(
-			"Browsh tried to run `%s` but failed with: %s", command, string(out)))
-		Shutdown(err)
+		errorMessge := fmt.Sprintf(
+			"Browsh tried to run `%s` but failed with: %s", command, string(out))
+		Shutdown(errors.New(errorMessge))
 	}
 	return strings.TrimSpace(string(out))
 }
@@ -151,7 +151,7 @@ func TTYStart(injectedScreen tcell.Screen) {
 	setupTcell()
 	writeString(1, 0, logo, tcell.StyleDefault)
 	writeString(0, 15, "Starting Browsh v"+browshVersion+", the modern text-based web browser.", tcell.StyleDefault)
-	startFirefox()
+	StartFirefox()
 	Log("Starting Browsh CLI client")
 	go readStdin()
 	startWebSocketServer()

@@ -21,11 +21,21 @@ func startStaticFileServer() {
 	http.ListenAndServe(":"+staticFileServerPort, serverMux)
 }
 
-func startBrowsh() {
+func initBrowsh() {
 	browsh.IsTesting = true
 	browsh.Initialise()
 	viper.Set("http-server-mode", true)
-	browsh.HTTPServerStart()
+}
+
+func waitUntilConnectedToWebExtension(maxTime time.Duration) {
+	start := time.Now()
+	for time.Since(start) < maxTime {
+		if browsh.IsConnectedToWebExtension {
+			return
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	panic("Didn't connect to webextension in time")
 }
 
 func getBrowshServiceBase() string {
@@ -55,7 +65,17 @@ func getPath(path string, mode string) string {
 	}
 }
 
+func stopFirefox() {
+	browsh.IsConnectedToWebExtension = false
+	browsh.Shell(rootDir + "/webext/contrib/firefoxheadless.sh kill")
+	time.Sleep(500 * time.Millisecond)
+}
+
 var _ = ginkgo.BeforeEach(func() {
+	stopFirefox()
+	browsh.ResetTabs()
+	browsh.StartFirefox()
+	waitUntilConnectedToWebExtension(15 * time.Second)
 	browsh.IsMonochromeMode = false
 	browsh.Log("\n---------")
 	browsh.Log(ginkgo.CurrentGinkgoTestDescription().FullTestText)
@@ -63,14 +83,13 @@ var _ = ginkgo.BeforeEach(func() {
 })
 
 var _ = ginkgo.BeforeSuite(func() {
+	initBrowsh()
+	stopFirefox()
 	go startStaticFileServer()
-	go startBrowsh()
-	time.Sleep(15 * time.Second)
-	// Allow the browser to sort its sizing out, because sometimes the first test catches the
-	// browser before it's completed its resizing.
-	getPath("/smorgasbord", "plain")
+	go browsh.HTTPServerStart()
+	time.Sleep(1 * time.Second)
 })
 
 var _ = ginkgo.AfterSuite(func() {
-	browsh.Shell(rootDir + "/webext/contrib/firefoxheadless.sh kill")
+	stopFirefox()
 })

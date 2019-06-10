@@ -37,7 +37,7 @@ func writeString(x, y int, str string, style tcell.Style) {
 			x = xOriginal
 			continue
 		}
-		screen.SetContent(x, y, c, nil, style)
+		screen.SetCell(x, y, style, c)
 		x++
 	}
 }

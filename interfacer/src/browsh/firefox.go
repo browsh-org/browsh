@@ -52,8 +52,8 @@ var (
 )
 
 func startHeadlessFirefox() {
-	checkIfFirefoxIsAlreadyRunning()
 	Log("Starting Firefox in headless mode")
+	checkIfFirefoxIsAlreadyRunning()
 	firefoxPath := ensureFirefoxBinary()
 	ensureFirefoxVersion(firefoxPath)
 	args := []string{"--marionette"}
@@ -149,6 +149,10 @@ func versionOrdinal(version string) string {
 // extension.
 func startWERFirefox() {
 	Log("Attempting to start headless Firefox with `web-ext`")
+	if IsConnectedToWebExtension {
+		Shutdown(errors.New("There appears to already be an existing Web Extension connection"))
+	}
+	checkIfFirefoxIsAlreadyRunning()
 	var rootDir = Shell("git rev-parse --show-toplevel")
 	args := []string{
 		"run",
@@ -158,7 +162,6 @@ func startWERFirefox() {
 	}
 	firefoxProcess := exec.Command(rootDir+"/webext/node_modules/.bin/web-ext", args...)
 	firefoxProcess.Dir = rootDir + "/webext/dist/"
-	defer firefoxProcess.Process.Kill()
 	stdout, err := firefoxProcess.StdoutPipe()
 	if err != nil {
 		Shutdown(err)
@@ -168,6 +171,8 @@ func startWERFirefox() {
 	}
 	in := bufio.NewScanner(stdout)
 	for in.Scan() {
+		if strings.Contains(in.Text(), "Connected to the remote Firefox debugger") {
+		}
 		if strings.Contains(in.Text(), "JavaScript strict") ||
 			strings.Contains(in.Text(), "D-BUS") ||
 			strings.Contains(in.Text(), "dbus") {
@@ -175,6 +180,7 @@ func startWERFirefox() {
 		}
 		Log("FF-CONSOLE: " + in.Text())
 	}
+	Log("WER Firefox unexpectedly closed")
 }
 
 // Connect to Firefox's Marionette service.
@@ -294,7 +300,7 @@ func setupFirefox() {
 	installWebextension()
 }
 
-func startFirefox() {
+func StartFirefox() {
 	if !viper.GetBool("firefox.use-existing") {
 		writeString(0, 16, "Waiting for Firefox to connect...", tcell.StyleDefault)
 		if IsTesting {
