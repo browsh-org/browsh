@@ -66,7 +66,7 @@ type rawTextResponse struct {
 // it will return:
 // `Something                                                                    `
 func HTTPServerStart() {
-	startFirefox()
+	StartFirefox()
 	go startWebSocketServer()
 	Log("Starting Browsh HTTP server")
 	bind := viper.GetString("http-server.bind")

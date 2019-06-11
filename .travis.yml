@@ -5,7 +5,7 @@ go:
 
 addons:
   # Use the full version number with ".0" if needed. This value is scraped by setup scripts.
-  firefox: "63.0"
+  firefox: "67.0.1"
   apt:
     packages:
       - rpm
@@ -37,8 +37,8 @@ install:
 script:
   - cd $REPO_ROOT/webext && npm test
   - cd $REPO_ROOT/interfacer && go test $(find src/browsh -name *.go | grep -v windows)
-  - cd $REPO_ROOT/interfacer && go test test/tty/*.go -v -ginkgo.flakeAttempts=3
-  - cd $REPO_ROOT/interfacer && go test test/http-server/*.go -v
+  - cd $REPO_ROOT/interfacer && go test test/tty/*.go -v -ginkgo.slowSpecThreshold=30 -ginkgo.flakeAttempts=3
+  - cd $REPO_ROOT/interfacer && go test test/http-server/*.go -v -ginkgo.slowSpecThreshold=30 -ginkgo.flakeAttempts=3
 after_failure:
   - cat $REPO_ROOT/interfacer/test/tty/debug.log
   - cat $REPO_ROOT/interfacer/test/http-server/debug.log
