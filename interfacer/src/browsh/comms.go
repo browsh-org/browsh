@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-errors/errors"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/viper"
 )
@@ -17,7 +18,7 @@ var (
 		WriteBufferSize: 1024,
 	}
 	stdinChannel              = make(chan string)
-	isConnectedToWebExtension = false
+	IsConnectedToWebExtension = false
 )
 
 type incomingRawText struct {
@@ -29,13 +30,14 @@ func startWebSocketServer() {
 	serverMux := http.NewServeMux()
 	serverMux.HandleFunc("/", webSocketServer)
 	port := viper.GetString("browsh.websocket-port")
-	if err := http.ListenAndServe(":"+port, serverMux); err != nil {
-		Shutdown(err)
+	Log("Starting websocket server...")
+	if netErr := http.ListenAndServe(":"+port, serverMux); netErr != nil {
+		Shutdown(errors.New(fmt.Errorf("Error starting websocket server: %v", netErr)))
 	}
 }
 
 func sendMessageToWebExtension(message string) {
-	if !isConnectedToWebExtension {
+	if !IsConnectedToWebExtension {
 		Log("Webextension not connected. Message not sent: " + message)
 		return
 	}
@@ -52,6 +54,11 @@ func webSocketReader(ws *websocket.Conn) {
 		if err != nil {
 			if websocket.IsCloseError(err, websocket.CloseGoingAway) {
 				Log("Socket reader detected that the browser closed the websocket")
+				triggerSocketWriterClose()
+				return
+			}
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
+				Log("Socket reader detected that the connection unexpectedly dissapeared")
 				triggerSocketWriterClose()
 				return
 			}
@@ -125,9 +132,10 @@ func webSocketWriter(ws *websocket.Conn) {
 		if err := ws.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 			if err == websocket.ErrCloseSent {
 				Log("Socket writer detected that the browser closed the websocket")
-				return
+			} else {
+				Log("Socket writer detected unexpected closure of websocket")
 			}
-			Shutdown(err)
+			return
 		}
 	}
 }
@@ -138,7 +146,7 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		Shutdown(err)
 	}
-	isConnectedToWebExtension = true
+	IsConnectedToWebExtension = true
 	go webSocketWriter(ws)
 	go webSocketReader(ws)
 	sendConfigToWebExtension()

@@ -29,6 +29,13 @@ type tab struct {
 	frame         frame
 }
 
+func ResetTabs() {
+	Tabs = make(map[int]*tab)
+	CurrentTab = nil
+	tabsOrder = nil
+	tabsDeleted = nil
+}
+
 func ensureTabExists(id int) {
 	if _, ok := Tabs[id]; !ok {
 		newTab(id)

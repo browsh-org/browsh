@@ -1,7 +1,10 @@
 package test
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 	"unicode/utf8"
@@ -22,6 +25,8 @@ var perTestTimeout = 2000 * time.Millisecond
 var rootDir = browsh.Shell("git rev-parse --show-toplevel")
 var testSiteURL = "http://localhost:" + staticFileServerPort
 var ti *terminfo.Terminfo
+var dir, _ = os.Getwd()
+var framesLogFile = fmt.Sprintf(filepath.Join(dir, "frames.log"))
 
 func initTerm() {
 	// The tests check for true colour RGB values. The only downside to forcing true colour
@@ -48,9 +53,23 @@ func GetFrame() string {
 			line = 0
 		}
 	}
+	writeFrameLog("================================================")
+	writeFrameLog(ginkgo.CurrentGinkgoTestDescription().FullTestText)
+	writeFrameLog("================================================\n")
 	log = "\n" + log + styleDefault
-	ginkgo.GinkgoWriter.Write([]byte(log))
+	writeFrameLog(log)
 	return frame
+}
+
+func writeFrameLog(log string) {
+	f, err := os.OpenFile(framesLogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if _, err = f.WriteString(log); err != nil {
+		panic(err)
+	}
 }
 
 // Trigger the key definition specified by name
@@ -110,7 +129,7 @@ func WaitForPageLoad() {
 
 func sleepUntilPageLoad(maxTime time.Duration) {
 	start := time.Now()
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 	for time.Since(start) < maxTime {
 		if browsh.CurrentTab != nil {
 			if browsh.CurrentTab.PageState == "parsing_complete" {
@@ -132,6 +151,12 @@ func GotoURL(url string) {
 	// TODO: Looking for the URL isn't optimal because it could be the same URL
 	// as the previous test.
 	gomega.Expect(url).To(BeInFrameAt(0, 1))
+	// TODO: hack to work around bug where text sometimes doesn't render on page load.
+	// Clicking with the mouse triggers a reparse by the web extension
+	mouseClick(3, 6)
+	time.Sleep(100 * time.Millisecond)
+	mouseClick(3, 6)
+	time.Sleep(500 * time.Millisecond)
 }
 
 func mouseClick(x, y int) {
@@ -199,11 +224,18 @@ func startStaticFileServer() {
 	http.ListenAndServe(":"+staticFileServerPort, serverMux)
 }
 
-func startBrowsh() {
+func initBrowsh() {
 	browsh.IsTesting = true
 	simScreen = tcell.NewSimulationScreen("UTF-8")
 	browsh.Initialise()
-	browsh.TTYStart(simScreen)
+
+}
+
+func stopFirefox() {
+	browsh.Log("Attempting to kill all firefox processes")
+	browsh.IsConnectedToWebExtension = false
+	browsh.Shell(rootDir + "/webext/contrib/firefoxheadless.sh kill")
+	time.Sleep(500 * time.Millisecond)
 }
 
 func runeCount(text string) int {
@@ -211,6 +243,11 @@ func runeCount(text string) int {
 }
 
 var _ = ginkgo.BeforeEach(func() {
+	browsh.Log("Attempting to restart WER Firefox...")
+	stopFirefox()
+	browsh.ResetTabs()
+	browsh.StartFirefox()
+	sleepUntilPageLoad(startupWait)
 	browsh.IsMonochromeMode = false
 	browsh.Log("\n---------")
 	browsh.Log(ginkgo.CurrentGinkgoTestDescription().FullTestText)
@@ -218,12 +255,18 @@ var _ = ginkgo.BeforeEach(func() {
 })
 
 var _ = ginkgo.BeforeSuite(func() {
+	os.Truncate(framesLogFile, 0)
 	initTerm()
+	initBrowsh()
+	stopFirefox()
 	go startStaticFileServer()
-	go startBrowsh()
-	sleepUntilPageLoad(startupWait)
+	go browsh.TTYStart(simScreen)
+	// Firefox seems to take longer to die after its first run
+	time.Sleep(500 * time.Millisecond)
+	stopFirefox()
+	time.Sleep(5000 * time.Millisecond)
 })
 
 var _ = ginkgo.AfterSuite(func() {
-	browsh.Shell(rootDir + "/webext/contrib/firefoxheadless.sh kill")
+	stopFirefox()
 })

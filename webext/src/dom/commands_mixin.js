@@ -150,6 +150,12 @@ export default MixinBase =>
 
     _triggerKeyPress(key) {
       let el = document.activeElement;
+      if (el == null) {
+        this.log(
+          `Not pressing '${key.char}(${key.key})' as there is no active element`
+        );
+        return;
+      }
       const key_object = {
         key: key.char,
         keyCode: key.key
