@@ -128,7 +128,7 @@ func webSocketWriter(ws *websocket.Conn) {
 	defer ws.Close()
 	for {
 		message = <-stdinChannel
-		Log(fmt.Sprintf("TTY sending: %s", message))
+		//Log(fmt.Sprintf("TTY sending: %s", message))
 		if err := ws.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 			if err == websocket.ErrCloseSent {
 				Log("Socket writer detected that the browser closed the websocket")
