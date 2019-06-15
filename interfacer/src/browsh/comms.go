@@ -88,6 +88,8 @@ func handleWebextensionCommand(message []byte) {
 		}
 	case "/screenshot":
 		saveScreenshot(parts[1])
+	case "/link_hints":
+		parseJSONLinkHints(strings.Join(parts[1:], ","))
 	default:
 		Log("WEBEXT: " + string(message))
 	}

@@ -87,13 +87,15 @@ func renderURLBar() {
 
 func urlBarFocusToggle() {
 	if urlInputBox.isActive {
-		urlBarFocus(false)
+		URLBarFocus(false)
 	} else {
-		urlBarFocus(true)
+		URLBarFocus(true)
 	}
 }
 
-func urlBarFocus(on bool) {
+// Set the focus of the URL bar. Also used in tests to ensure the URL bar is in fact focussed as
+// toggling doesn't guarantee that you will gain focus.
+func URLBarFocus(on bool) {
 	if !on {
 		activeInputBox = nil
 		urlInputBox.isActive = false
@@ -105,6 +107,46 @@ func urlBarFocus(on bool) {
 		urlInputBox.text = []rune(CurrentTab.URI)
 		urlInputBox.putCursorAtEnd()
 		urlInputBox.selectAll()
+	}
+}
+
+func overlayVimMode() {
+	_, height := screen.Size()
+	switch currentVimMode {
+	case insertMode:
+		writeString(0, height-1, "ins", tcell.StyleDefault)
+	case insertModeHard:
+		writeString(0, height-1, "INS", tcell.StyleDefault)
+	case linkMode:
+		writeString(0, height-1, "lnk", tcell.StyleDefault)
+	case linkModeNewTab:
+		writeString(0, height-1, "LNK", tcell.StyleDefault)
+	case linkModeMultipleNewTab:
+		writeString(0, height-1, "*LNK", tcell.StyleDefault)
+	case linkModeCopy:
+		writeString(0, height-1, "cp", tcell.StyleDefault)
+	case visualMode:
+		writeString(0, height-1, "vis", tcell.StyleDefault)
+	case caretMode:
+		writeString(0, height-1, "car", tcell.StyleDefault)
+		writeString(caretPos.X, caretPos.Y, "#", tcell.StyleDefault)
+	case findMode:
+		writeString(0, height-1, "/"+findText, tcell.StyleDefault)
+	case markModeMake:
+		writeString(0, height-1, "mark", tcell.StyleDefault)
+	case markModeGoto:
+		writeString(0, height-1, "goto", tcell.StyleDefault)
+	}
+
+	switch currentVimMode {
+	case linkMode, linkModeNewTab, linkModeMultipleNewTab, linkModeCopy:
+		if !linkModeWithHints {
+			findAndHighlightTextOnScreen(linkText)
+		}
+
+		if linkHintWriteStringCalls != nil {
+			(*linkHintWriteStringCalls)()
+		}
 	}
 }
 

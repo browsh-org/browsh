@@ -18,6 +18,9 @@ var tabsOrder []int
 // the tab being deleted, so we need to keep track of all deleted IDs
 var tabsDeleted []int
 
+// ID of the tab that was active before the current one
+var previouslyVisitedTabID int
+
 // A single tab synced from the browser
 type tab struct {
 	ID            int    `json:"id"`
@@ -61,6 +64,10 @@ func newTab(id int) {
 	}
 }
 
+func restoreTab() {
+	sendMessageToWebExtension("/restore_tab")
+}
+
 func removeTab(id int) {
 	if len(Tabs) == 1 {
 		quitBrowsh()
@@ -84,23 +91,63 @@ func removeTabIDfromTabsOrder(id int) {
 	}
 }
 
+func moveTabLeft(id int) {
+	// If the tab ID is already completely to the left in the tab order
+	// there's nothing to do
+	if tabsOrder[0] == id {
+		return
+	}
+
+	for i, tabID := range tabsOrder {
+		if tabID == id {
+			tabsOrder[i-1], tabsOrder[i] = tabsOrder[i], tabsOrder[i-1]
+			break
+		}
+	}
+}
+
+func moveTabRight(id int) {
+	// If the tab ID is already completely to the right in the tab order
+	// there's nothing to do
+	if tabsOrder[len(tabsOrder)-1] == id {
+		return
+	}
+
+	for i, tabID := range tabsOrder {
+		if tabID == id {
+			tabsOrder[i+1], tabsOrder[i] = tabsOrder[i], tabsOrder[i+1]
+			break
+		}
+	}
+}
+
+func duplicateTab(id int) {
+	sendMessageToWebExtension(fmt.Sprintf("/duplicate_tab,%d", id))
+}
+
 // Creating a new tab in the browser without a URI means it won't register with the
 // web extension, which means that, come the moment when we actually have a URI for the new
 // tab then we can't talk to it to tell it navigate. So we need to only create a real new
 // tab when we actually have a URL.
 func createNewEmptyTab() {
+	createNewEmptyTabWithURI("")
+}
+
+func createNewEmptyTabWithURI(URI string) {
 	if isNewEmptyTabActive() {
 		return
 	}
 	newTab(-1)
 	tab := Tabs[-1]
 	tab.Title = "New Tab"
-	tab.URI = ""
+	tab.URI = URI
 	tab.Active = true
 	CurrentTab = tab
 	CurrentTab.frame.resetCells()
 	renderUI()
-	urlBarFocus(true)
+	URLBarFocus(true)
+	// Allows for typing directly at the end of URI
+	urlInputBox.selectionOff()
 	renderCurrentTabWindow()
 }
 
@@ -116,13 +163,39 @@ func nextTab() {
 			} else {
 				i++
 			}
-			sendMessageToWebExtension(fmt.Sprintf("/switch_to_tab,%d", tabsOrder[i]))
-			CurrentTab = Tabs[tabsOrder[i]]
-			renderUI()
-			renderCurrentTabWindow()
+			switchToTab(tabsOrder[i])
 			break
 		}
 	}
+}
+
+func prevTab() {
+	for i := 0; i < len(tabsOrder); i++ {
+		if tabsOrder[i] == CurrentTab.ID {
+			if i-1 < 0 {
+				i = len(tabsOrder) - 1
+			} else {
+				i--
+			}
+			switchToTab(tabsOrder[i])
+			break
+		}
+	}
+}
+
+func previouslyVisitedTab() {
+	if previouslyVisitedTabID == 0 {
+		return
+	}
+	switchToTab(previouslyVisitedTabID)
+}
+
+func switchToTab(num int) {
+	sendMessageToWebExtension(fmt.Sprintf("/switch_to_tab,%d", num))
+	previouslyVisitedTabID = CurrentTab.ID
+	CurrentTab = Tabs[num]
+	renderUI()
+	renderCurrentTabWindow()
 }
 
 func isTabPreviouslyDeleted(id int) bool {
