@@ -27,6 +27,19 @@ var _ = Describe("Core functionality", func() {
 		})
 
 		Describe("Interaction", func() {
+			It("should navigate to a new page by using a link hint", func() {
+				Expect("Another▄page").To(BeInFrameAt(12, 18))
+				Keyboard("f")
+				Keyboard("a")
+				Expect("Another").To(BeInFrameAt(0, 0))
+			})
+
+			It("should scroll the page by one line", func() {
+				Expect("[ˈsmœrɡɔsˌbuːɖ])▄is▄a").To(BeInFrameAt(12, 11))
+				Keyboard("j")
+				Expect("type▄of▄Scandinavian▄").To(BeInFrameAt(12, 11))
+			})
+
 			It("should navigate to a new page by using the URL bar", func() {
 				SpecialKey(tcell.KeyCtrlL)
 				Keyboard(testSiteURL + "/smorgasbord/another.html")
@@ -148,6 +161,20 @@ var _ = Describe("Core functionality", func() {
 					GotoURL(testSiteURL + "/smorgasbord/another.html")
 					triggerUserKeyFor("tty.keys.next-tab")
 					Expect("Smörgåsbord").To(BeInFrameAt(0, 0))
+				})
+
+				It("should create a new tab", func() {
+					Keyboard("t")
+					Expect("New Tab").To(BeInFrameAt(21, 0))
+				})
+
+				It("should cycle to the next tab", func() {
+					GotoURL(testSiteURL + "/smorgasbord/")
+					Keyboard("t")
+					GotoURL(testSiteURL + "/smorgasbord/another.html")
+					Keyboard("J")
+					URL := testSiteURL + "/smorgasbord/             "
+					Expect(URL).To(BeInFrameAt(0, 1))
 				})
 			})
 		})

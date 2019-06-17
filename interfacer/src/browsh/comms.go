@@ -62,7 +62,7 @@ func webSocketReader(ws *websocket.Conn) {
 				triggerSocketWriterClose()
 				return
 			}
-			Shutdown(err)
+			Shutdown(errors.New(err.Error()))
 		}
 	}
 }
