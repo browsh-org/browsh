@@ -40,6 +40,11 @@ global.dimensions = {
 
 global.document = {
   addEventListener: () => {},
+  body: {
+    contains: () => {
+      return true;
+    }
+  },
   getElementById: () => {},
   getElementsByTagName: () => {
     return [
@@ -135,7 +140,12 @@ let functions = {
     let text_builder = new TextBuilder(
       channel,
       graphics_builder.dimensions,
-      graphics_builder
+      graphics_builder,
+      {
+        browsh: {
+          use_experimental_text_visibility: true
+        }
+      }
     );
     graphics_builder._getScreenshotWithText(() => {
       graphics_builder._getScreenshotWithoutText();
