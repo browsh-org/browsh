@@ -36,6 +36,7 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   buildFormattedText(callback) {
     this._updateState();
     this.graphics_builder.getOnOffScreenshots(() => {
+      this.dimensions.update();
       this._getTextNodes();
       this._positionTextNodes();
       callback();

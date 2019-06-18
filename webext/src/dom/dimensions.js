@@ -175,9 +175,7 @@ export default class extends utils.mixins(CommonMixin) {
         dom_rect.height != this._pre_calculated_char.height
       ) {
         this.log(
-          `Using char dims ${this._pre_calculated_char.width}x${
-            this._pre_calculated_char.height
-          }`
+          `Using char dims ${this._pre_calculated_char.width}x${this._pre_calculated_char.height}`
         );
         this.log(`Actual char dims ${dom_rect.width}x${dom_rect.height}`);
       }
