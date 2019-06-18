@@ -85,8 +85,10 @@ export default MixinBase =>
           state = this.config.browsh.use_experimental_text_visibility;
           state = !state;
           this.config.browsh.use_experimental_text_visibility = state;
-          message = state ? 'on' : 'off'
-          this.sendMessage(`/status,info,Experimental text visibility: ${message}`);
+          message = state ? "on" : "off";
+          this.sendMessage(
+            `/status,info,Experimental text visibility: ${message}`
+          );
           this.sendSmallTextFrame();
           break;
       }

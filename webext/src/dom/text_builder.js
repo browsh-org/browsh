@@ -248,11 +248,11 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   // Although do note that, unlike selection ranges, sub-selections can appear seemingly
   // inside other selections for things like italics or anchor tags.
   _getNodeDOMBoxes() {
-    let rects = []
+    let rects = [];
     // TODO: selectNode() hangs if it can't find a node in the DOM
     // Node.isConnected() might be faster
     // It's possible that the node has dissapeared since nodes were collected.
-    if (document.body.contains(this._node)){
+    if (document.body.contains(this._node)) {
       this._range.selectNode(this._node);
       rects = this._range.getClientRects();
     }

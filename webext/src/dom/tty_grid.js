@@ -100,7 +100,7 @@ export default class {
   // the TTY grid.
   _isCharObscured(colours) {
     if (!this.config.browsh.use_experimental_text_visibility) {
-      return false
+      return false;
     }
     return (
       colours[0][0] === colours[1][0] &&

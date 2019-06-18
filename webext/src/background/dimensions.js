@@ -30,7 +30,9 @@ export default class extends utils.mixins(CommonMixin) {
     ) {
       this.log(
         `Requesting browser resize for new char dimensions: ` +
-        `${incoming.width}x${incoming.height} (old: ${this.char.width}x${this.char.height})`
+          `${incoming.width}x${incoming.height} (old: ${this.char.width}x${
+            this.char.height
+          })`
       );
       this.char = _.clone(incoming);
       this.resizeBrowserWindow();
