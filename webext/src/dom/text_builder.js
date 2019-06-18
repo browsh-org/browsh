@@ -15,7 +15,7 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
     this.dimensions = dimensions;
     this.graphics_builder = graphics_builder;
     this.config = config;
-    this.tty_grid = new TTYGrid(dimensions, graphics_builder);
+    this.tty_grid = new TTYGrid(dimensions, graphics_builder, config);
     this._parse_started_elements = [];
     // A `range` is the DOM's representation of elements and nodes as they are rendered in
     // the DOM. Think of the 'range' that is created when you select/highlight text for
@@ -35,8 +35,8 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
 
   buildFormattedText(callback) {
     this._updateState();
-    this._getTextNodes();
     this.graphics_builder.getOnOffScreenshots(() => {
+      this._getTextNodes();
       this._positionTextNodes();
       callback();
     });
@@ -162,7 +162,9 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   //   * Yet another thing, the style change doesn't actually get picked up until the
   //     next frame. Thus why the loop is independent of the `positionTextNodes()` loop.
   _fixJustifiedText() {
-    this._node.parentElement.style.textAlign = "left";
+    if (this._node.parentElement) {
+      this._node.parentElement.style.textAlign = "left";
+    }
   }
 
   // The need for this wasn't immediately obvious to me. The fact is that the DOM stores
@@ -246,8 +248,15 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   // Although do note that, unlike selection ranges, sub-selections can appear seemingly
   // inside other selections for things like italics or anchor tags.
   _getNodeDOMBoxes() {
-    this._range.selectNode(this._node);
-    return this._range.getClientRects();
+    let rects = []
+    // TODO: selectNode() hangs if it can't find a node in the DOM
+    // Node.isConnected() might be faster
+    // It's possible that the node has dissapeared since nodes were collected.
+    if (document.body.contains(this._node)){
+      this._range.selectNode(this._node);
+      rects = this._range.getClientRects();
+    }
+    return rects;
   }
 
   // A single box is always a valid rectangle. Therefore a single box will, for example,

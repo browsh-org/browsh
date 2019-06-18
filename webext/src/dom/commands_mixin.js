@@ -76,9 +76,18 @@ export default MixinBase =>
     }
 
     _handleSpecialKeys(input) {
+      let state, message;
       switch (input.key) {
         case 18: // CTRL+r
           window.location.reload();
+          break;
+        case 284: // F6
+          state = this.config.browsh.use_experimental_text_visibility;
+          state = !state;
+          this.config.browsh.use_experimental_text_visibility = state;
+          message = state ? 'on' : 'off'
+          this.sendMessage(`/status,info,Experimental text visibility: ${message}`);
+          this.sendSmallTextFrame();
           break;
       }
     }
