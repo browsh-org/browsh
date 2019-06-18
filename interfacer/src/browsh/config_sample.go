@@ -42,8 +42,15 @@ use-existing = false
 with-gui = false
 
 # Config that you might usually set through Firefox's 'about:config' page
-[firefox-config]
-# "privacy.resistFingerprinting" = true
+# Note that string must be wrapped in quotes
+# preferences = [
+#   "privacy.resistFingerprinting=true",
+#   "network.proxy.http='localhost'",
+#   "network.proxy.ssl='localhost'",
+#   "network.proxy.http_port=8118",
+#   "network.proxy.ssl_port=8118",
+#   "network.proxy.type=1"
+# ]
 
 [tty]
 # The time in milliseconds between requesting a new TTY-sized pixel frame.

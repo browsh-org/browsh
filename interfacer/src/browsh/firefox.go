@@ -219,7 +219,7 @@ func firefoxMarionette() {
 		Shutdown(errors.New("Failed to connect to Firefox's Marionette within 30 seconds"))
 	}
 	marionette = conn
-	readMarionette()
+	go readMarionette()
 	sendFirefoxCommand("WebDriver:NewSession", map[string]interface{}{})
 }
 
@@ -258,7 +258,8 @@ func readMarionette() {
 	buffer := make([]byte, 4096)
 	count, err := marionette.Read(buffer)
 	if err != nil {
-		Shutdown(err)
+		Log("Error reading from Marionette connection")
+		return
 	}
 	Log("FF-MRNT: " + string(buffer[:count]))
 }
@@ -270,15 +271,16 @@ func sendFirefoxCommand(command string, args map[string]interface{}) {
 	message := fmt.Sprintf("%d:%s", len(marshalled), marshalled)
 	fmt.Fprintf(marionette, message)
 	ffCommandCount++
-	readMarionette()
+	go readMarionette()
 }
 
 func setDefaultFirefoxPreferences() {
 	for key, value := range defaultFFPrefs {
 		setFFPreference(key, value)
 	}
-	for key, value := range viper.GetStringMapString("firefox-config") {
-		setFFPreference(key, value)
+	for _, pref := range viper.GetStringSlice("firefox.preferences") {
+		parts := strings.SplitN(pref, "=", 2)
+		setFFPreference(parts[0], parts[1])
 	}
 }
 
