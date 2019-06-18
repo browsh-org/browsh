@@ -258,7 +258,8 @@ func readMarionette() {
 	buffer := make([]byte, 4096)
 	count, err := marionette.Read(buffer)
 	if err != nil {
-		Shutdown(err)
+		Log("Error reading from Marionette connection")
+		return
 	}
 	Log("FF-MRNT: " + string(buffer[:count]))
 }
@@ -277,8 +278,9 @@ func setDefaultFirefoxPreferences() {
 	for key, value := range defaultFFPrefs {
 		setFFPreference(key, value)
 	}
-	for key, value := range viper.GetStringMapString("firefox-config") {
-		setFFPreference(key, value)
+	for _, pref := range viper.GetStringSlice("firefox.preferences") {
+		parts := strings.SplitN(pref, "=", 2)
+		setFFPreference(parts[0], parts[1])
 	}
 }
 
