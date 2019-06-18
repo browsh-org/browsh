@@ -22,6 +22,14 @@ websocket-port = 3334
 # then this experimental feature should help. It can also be toggled in-browser with F6.
 use_experimental_text_visibility = false
 
+# Custom CSS to apply to all loaded tabs, eg;
+#   custom_css = """
+#   body {
+#     background-colour: black;
+#   }
+#   """
+custom_css = ""
+
 [firefox]
 # The path to your Firefox binary
 path = "firefox"

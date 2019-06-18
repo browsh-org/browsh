@@ -191,6 +191,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
       this.is_dom_loaded = true;
       this.log("DOM LOADED");
       this._fixStickyElements();
+      this._injectCustomCSS();
       this._willHideText();
     });
     window.addEventListener("load", () => {
@@ -250,5 +251,11 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
         elements[i].style.setProperty("position", "absolute", "important");
       }
     }
+  }
+
+  _injectCustomCSS() {
+    var node = document.createElement("style");
+    node.innerHTML = this.config.browsh.custom_css;
+    document.body.appendChild(node);
   }
 }
