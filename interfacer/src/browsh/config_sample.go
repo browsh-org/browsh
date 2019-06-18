@@ -41,6 +41,10 @@ use-existing = false
 # Launch Firefox in with its visible GUI window. Useful for setting up the Browsh profile.
 with-gui = false
 
+# Config that you might usually set through Firefox's 'about:config' page
+[firefox-config]
+# "privacy.resistFingerprinting" = true
+
 [tty]
 # The time in milliseconds between requesting a new TTY-sized pixel frame.
 # This is essentially the frame rate for graphics. Lower values make for smoother

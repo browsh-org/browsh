@@ -10,5 +10,5 @@ if [[ "$1" = "kill" ]]; then
   fi
 else
   FIREFOX_BIN=${FIREFOX:-firefox}
-  $FIREFOX_BIN --headless "$@"
+  $FIREFOX_BIN --headless --marionette "$@"
 fi

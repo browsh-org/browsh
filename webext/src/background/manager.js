@@ -142,9 +142,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   // until it knows its internally represented ID.
   _newTabHandler(_request, sender, sendResponse) {
     this.log(
-      `Tab ${sender.tab.id} (${
-        sender.tab.title
-      }) registered with background process`
+      `Tab ${sender.tab.id} (${sender.tab.title}) registered with background process`
     );
     // Send the tab back to itself, such that it can be enlightened unto its own nature
     sendResponse(sender.tab);
@@ -276,9 +274,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     }
     if (this.currentTab().channel === undefined) {
       this.log(
-        `Active tab ${
-          this.active_tab_id
-        } does not have a channel, so not requesting a frame`
+        `Active tab ${this.active_tab_id} does not have a channel, so not requesting a frame`
       );
       return false;
     }
