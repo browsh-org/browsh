@@ -67,6 +67,9 @@ bind = "0.0.0.0"
 # parsed, too long and you wait unecessarily.
 render_delay = 100
 
+# The length of time in seconds to wait before aborting the page load
+timeout = 30
+
 # The dimensions of a char-based window onto a webpage.
 # The columns are ultimately the width of the final text. Whereas the rows
 # represent the height of the original web page made visible to the original

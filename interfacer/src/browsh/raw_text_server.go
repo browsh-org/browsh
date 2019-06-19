@@ -242,25 +242,36 @@ func getRawTextMode(r *http.Request) string {
 
 func waitForResponse(rawTextRequestID string, w http.ResponseWriter) {
 	var rawTextRequestResponse string
-	var jsonResponse rawTextResponse
-	var totalTime, pageLoad, parsing string
 	var ok bool
-	for {
+	isSent := false
+	maxTime := time.Duration(viper.GetInt("http-server.timeout")) * time.Second
+	start := time.Now()
+	for time.Since(start) < maxTime {
 		if rawTextRequestResponse, ok = rawTextRequests.load(rawTextRequestID); ok {
-			jsonResponse = unpackResponse(rawTextRequestResponse)
-			requestStart, _ := rawTextRequests.load(rawTextRequestID + "-start")
-			totalTime = getTotalTiming(requestStart)
-			pageLoad = fmt.Sprintf("%d", jsonResponse.PageloadDuration)
-			parsing = fmt.Sprintf("%d", jsonResponse.ParsingDuration)
-			w.Header().Set("X-Browsh-Duration-Total", totalTime)
-			w.Header().Set("X-Browsh-Duration-Pageload", pageLoad)
-			w.Header().Set("X-Browsh-Duration-Parsing", parsing)
-			io.WriteString(w, jsonResponse.Text)
-			rawTextRequests.remove(rawTextRequestID)
+			sendResponse(rawTextRequestResponse, rawTextRequestID, w)
+			isSent = true
 			break
 		}
 		time.Sleep(1 * time.Millisecond)
 	}
+	rawTextRequests.remove(rawTextRequestID)
+	if !isSent {
+		timeout := viper.GetInt("http-server.timeout")
+		message := fmt.Sprintf("Browsh rendering aborted after %ds timeout.", timeout)
+		io.WriteString(w, message)
+	}
+}
+
+func sendResponse(response, rawTextRequestID string, w http.ResponseWriter) {
+	jsonResponse := unpackResponse(response)
+	requestStart, _ := rawTextRequests.load(rawTextRequestID + "-start")
+	totalTime := getTotalTiming(requestStart)
+	pageLoad := fmt.Sprintf("%d", jsonResponse.PageloadDuration)
+	parsing := fmt.Sprintf("%d", jsonResponse.ParsingDuration)
+	w.Header().Set("X-Browsh-Duration-Total", totalTime)
+	w.Header().Set("X-Browsh-Duration-Pageload", pageLoad)
+	w.Header().Set("X-Browsh-Duration-Parsing", parsing)
+	io.WriteString(w, jsonResponse.Text)
 }
 
 func unpackResponse(jsonString string) rawTextResponse {
