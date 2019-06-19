@@ -25,6 +25,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   }
 
   _postSetupConstructor() {
+    this._injectCustomCSS();
     this.dimensions.channel = this.channel;
     this.graphics_builder = new GraphicsBuilder(
       this.channel,
@@ -191,7 +192,6 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
       this.is_dom_loaded = true;
       this.log("DOM LOADED");
       this._fixStickyElements();
-      this._injectCustomCSS();
       this._willHideText();
     });
     window.addEventListener("load", () => {
