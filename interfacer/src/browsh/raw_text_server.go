@@ -225,6 +225,7 @@ func isProductionHTTP(r *http.Request) bool {
 
 // 'PLAIN' mode returns raw text without any HTML whatsoever.
 // 'HTML' mode returns some basic HTML tags for things like anchor links.
+// 'DOM' mode returns a simple dump of the DOM.
 func getRawTextMode(r *http.Request) string {
 	var mode = "HTML"
 	if strings.Contains(r.Host, "text.") {
@@ -232,6 +233,9 @@ func getRawTextMode(r *http.Request) string {
 	}
 	if r.Header.Get("X-Browsh-Raw-Mode") == "PLAIN" {
 		mode = "PLAIN"
+	}
+	if r.Header.Get("X-Browsh-Raw-Mode") == "DOM" {
+		mode = "DOM"
 	}
 	return mode
 }

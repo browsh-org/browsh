@@ -51,6 +51,9 @@ func getPath(path string, mode string) string {
 	if mode == "plain" {
 		request.Header.Add("X-Browsh-Raw-Mode", "PLAIN")
 	}
+	if mode == "dom" {
+		request.Header.Add("X-Browsh-Raw-Mode", "DOM")
+	}
 	response, err := client.Do(request)
 	if err != nil {
 		panic(fmt.Sprintf("%s", err))

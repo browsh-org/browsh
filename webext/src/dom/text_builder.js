@@ -30,7 +30,13 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   sendRawText(type) {
     this._raw_mode_type = type;
     this._parse_start_time = performance.now();
-    this.buildFormattedText(this._sendRawText.bind(this));
+    if (type == "raw_text_dom") {
+      setTimeout(() => {
+        this._sendRawText();
+      }, this.config["http-server"].render_delay);
+    } else {
+      this.buildFormattedText(this._sendRawText.bind(this));
+    }
   }
 
   buildFormattedText(callback) {

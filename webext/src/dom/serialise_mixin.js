@@ -289,8 +289,14 @@ export default MixinBase =>
     }
 
     _sendRawText() {
+      let body;
+      if (this._raw_mode_type == "raw_text_dom") {
+        body = document.getElementsByTagName("body")[0].innerHTML;
+      } else {
+        body = this._serialiseRawText();
+      }
       let payload = {
-        body: this._serialiseRawText(),
+        body: body,
         page_load_duration: this.config.page_load_duration,
         parsing_duration: this._parsing_duration
       };

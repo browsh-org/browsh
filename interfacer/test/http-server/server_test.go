@@ -29,6 +29,12 @@ var _ = Describe("HTTP Server", func() {
 			"<a href=\"/http://localhost:4444/smorgasbord/another.html\">Another page</a>"))
 	})
 
+	It("should return the DOM", func() {
+		response := getPath("/smorgasbord", "dom")
+		Expect(response).To(ContainSubstring(
+			"<div class=\"big_middle\">"))
+	})
+
 	It("should return a background image", func() {
 		response := getPath("/smorgasbord", "html")
 		Expect(response).To(ContainSubstring("background-image: url(data:image/jpeg"))

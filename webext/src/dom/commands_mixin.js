@@ -50,7 +50,7 @@ export default MixinBase =>
 
     _launch() {
       const mode = this.config.http_server_mode_type;
-      if (mode === "raw_text_plain" || mode === "raw_text_html") {
+      if (mode.includes("raw_text_")) {
         this._is_raw_text_mode = true;
         this._is_interactive_mode = false;
         this._raw_mode_type = mode;
