@@ -211,15 +211,32 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     let target = document.querySelector("body");
     let observer = new MutationObserver(mutations => {
       mutations.forEach(mutation => {
+        if (!target) {
+          const nodes = Array.from(mutation.addedNodes);
+          for(let node of nodes) {
+            if(node.matches && node.matches("body")) {
+              target = node;
+              observer.observe(target, {
+                subtree: true,
+                characterData: true,
+                childList: true,
+              });              
+              break;
+            }
+          }          
+        }
         this.log("!!MUTATION!!", mutation);
         this._debouncedSmallTextFrame();
       });
     });
-    observer.observe(target, {
-      subtree: true,
-      characterData: true,
-      childList: true
-    });
+
+    if (target) {
+      observer.observe(target, {
+        subtree: true,
+        characterData: true,
+        childList: true
+      });
+    }
   }
 
   _listenForBackgroundMessages() {

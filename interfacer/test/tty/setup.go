@@ -232,14 +232,13 @@ func initBrowsh() {
 	browsh.IsTesting = true
 	simScreen = tcell.NewSimulationScreen("UTF-8")
 	browsh.Initialise()
-
 }
 
 func stopFirefox() {
 	browsh.Log("Attempting to kill all firefox processes")
 	browsh.IsConnectedToWebExtension = false
 	browsh.Shell(rootDir + "/webext/contrib/firefoxheadless.sh kill")
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(1500 * time.Millisecond)
 }
 
 func runeCount(text string) int {
