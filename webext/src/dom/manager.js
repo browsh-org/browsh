@@ -256,6 +256,8 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   _injectCustomCSS() {
     var node = document.createElement("style");
     node.innerHTML = this.config.browsh.custom_css;
-    document.body.appendChild(node);
+    if (document.body) {
+      document.body.appendChild(node);
+    }
   }
 }
