@@ -152,6 +152,7 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	go webSocketWriter(ws)
 	go webSocketReader(ws)
 	sendConfigToWebExtension()
+	setDefaultFirefoxPreferences()
 	if !viper.GetBool("http-server-mode") {
 		sendTtySize()
 	}

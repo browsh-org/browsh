@@ -2,9 +2,10 @@ import utils from "utils";
 
 // The TTY grid
 export default class {
-  constructor(dimensions, graphics_builder) {
+  constructor(dimensions, graphics_builder, config) {
     this.dimensions = dimensions;
     this.graphics_builder = graphics_builder;
+    this.config = config;
     this._setMiddleOfEm();
   }
 
@@ -98,6 +99,9 @@ export default class {
   // case we can work with `z-index` so that characters justifiably overwrite each other in
   // the TTY grid.
   _isCharObscured(colours) {
+    if (!this.config.browsh.use_experimental_text_visibility) {
+      return false;
+    }
     return (
       colours[0][0] === colours[1][0] &&
       colours[0][1] === colours[1][1] &&

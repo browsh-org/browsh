@@ -240,12 +240,14 @@ func installWebextension() {
 // Set a Firefox preference as you would in `about:config`
 // `value` needs to be supplied with quotes if it's to be used as a JS string
 func setFFPreference(key string, value string) {
+	var args map[string]interface{}
+	var script string
 	sendFirefoxCommand("Marionette:SetContext", map[string]interface{}{"value": "chrome"})
-	script := fmt.Sprintf(`
+	script = fmt.Sprintf(`
 		Components.utils.import("resource://gre/modules/Preferences.jsm");
-		prefs = new Preferences({defaultBranch: false});
-		prefs.set("%s", %s);`, key, value)
-	args := map[string]interface{}{"script": script}
+		prefs = new Preferences({defaultBranch: "root"});
+    prefs.set("%s", %s);`, key, value)
+	args = map[string]interface{}{"script": script}
 	sendFirefoxCommand("WebDriver:ExecuteScript", args)
 	sendFirefoxCommand("Marionette:SetContext", map[string]interface{}{"value": "content"})
 }
@@ -256,7 +258,8 @@ func readMarionette() {
 	buffer := make([]byte, 4096)
 	count, err := marionette.Read(buffer)
 	if err != nil {
-		Shutdown(err)
+		Log("Error reading from Marionette connection")
+		return
 	}
 	Log("FF-MRNT: " + string(buffer[:count]))
 }
@@ -271,9 +274,13 @@ func sendFirefoxCommand(command string, args map[string]interface{}) {
 	readMarionette()
 }
 
-func setDefaultPreferences() {
+func setDefaultFirefoxPreferences() {
 	for key, value := range defaultFFPrefs {
 		setFFPreference(key, value)
+	}
+	for _, pref := range viper.GetStringSlice("firefox.preferences") {
+		parts := strings.SplitN(pref, "=", 2)
+		setFFPreference(parts[0], parts[1])
 	}
 }
 
@@ -287,16 +294,13 @@ func beginTimeLimit() {
 	quitBrowsh()
 }
 
-// Note that everything executed in and from this function is not covered by the integration
-// tests, because it uses the officially signed webextension, of which there can be only one.
-// We can't bump the version and create a new signed webextension for every commit.
+// Careful what you change here as it isn't tested during CI
 func setupFirefox() {
 	go startHeadlessFirefox()
 	if *timeLimit > 0 {
 		go beginTimeLimit()
 	}
 	firefoxMarionette()
-	setDefaultPreferences()
 	installWebextension()
 }
 
@@ -306,10 +310,12 @@ func StartFirefox() {
 		if IsTesting {
 			writeString(0, 17, "TEST MODE", tcell.StyleDefault)
 			go startWERFirefox()
+			firefoxMarionette()
 		} else {
 			setupFirefox()
 		}
 	} else {
+		firefoxMarionette()
 		writeString(0, 16, "Waiting for a user-initiated Firefox instance to connect...", tcell.StyleDefault)
 	}
 }

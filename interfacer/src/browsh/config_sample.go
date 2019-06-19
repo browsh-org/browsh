@@ -17,6 +17,19 @@ mobile_user_agent = "Mozilla/5.0 (Android 7.0; Mobile; rv:54.0) Gecko/58.0 Firef
 [browsh] # Browsh internals
 websocket-port = 3334
 
+# Possibly better handling of overlapping text in web pages. If a page seems to have
+# text that shouldn't be visible, if it should be behind another element for example,
+# then this experimental feature should help. It can also be toggled in-browser with F6.
+use_experimental_text_visibility = false
+
+# Custom CSS to apply to all loaded tabs, eg;
+#   custom_css = """
+#   body {
+#     background-colour: black;
+#   }
+#   """
+custom_css = ""
+
 [firefox]
 # The path to your Firefox binary
 path = "firefox"
@@ -27,6 +40,17 @@ profile = "browsh-default"
 use-existing = false
 # Launch Firefox in with its visible GUI window. Useful for setting up the Browsh profile.
 with-gui = false
+
+# Config that you might usually set through Firefox's 'about:config' page
+# Note that string must be wrapped in quotes
+# preferences = [
+#   "privacy.resistFingerprinting=true",
+#   "network.proxy.http='localhost'",
+#   "network.proxy.ssl='localhost'",
+#   "network.proxy.http_port=8118",
+#   "network.proxy.ssl_port=8118",
+#   "network.proxy.type=1"
+# ]
 
 [tty]
 # The time in milliseconds between requesting a new TTY-sized pixel frame.
