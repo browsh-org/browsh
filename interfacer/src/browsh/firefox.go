@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path"
 	"regexp"
 	"runtime"
 	"strings"
@@ -230,12 +231,10 @@ func installWebextension() {
 	if err != nil {
 		Shutdown(err)
 	}
-	file, err := ioutil.TempFile(os.TempDir(), "browsh-webext-addon")
-	ioutil.WriteFile(file.Name(), []byte(data), 0644)
-	args := map[string]interface{}{"path": file.Name()}
+	path := path.Join(os.TempDir(), "browsh-webext-addon")
+	ioutil.WriteFile(path, []byte(data), 0644)
+	args := map[string]interface{}{"path": path}
 	sendFirefoxCommand("Addon:Install", args)
-	time.Sleep(100 * time.Millisecond)
-	defer os.Remove(file.Name())
 }
 
 // Set a Firefox preference as you would in `about:config`
