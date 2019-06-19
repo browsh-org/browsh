@@ -291,7 +291,10 @@ export default MixinBase =>
     _sendRawText() {
       let body;
       if (this._raw_mode_type == "raw_text_dom") {
-        body = document.getElementsByTagName("body")[0].innerHTML;
+        body =
+          "<html>" +
+          document.getElementsByTagName("html")[0].innerHTML +
+          "</html>";
       } else {
         body = this._serialiseRawText();
       }
