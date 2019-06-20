@@ -192,6 +192,9 @@ export default MixinBase =>
         dom_x - window.scrollX,
         dom_y - window.scrollY
       );
+      if (!element) {
+        return;
+      }
       element.focus();
       var clickEvent = document.createEvent("MouseEvents");
       clickEvent.initMouseEvent(

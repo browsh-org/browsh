@@ -3,6 +3,7 @@ package browsh
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 	"net/http"
 	"strings"
 
@@ -89,7 +90,7 @@ func handleWebextensionCommand(message []byte) {
 	case "/screenshot":
 		saveScreenshot(parts[1])
 	default:
-		Log("WEBEXT: " + string(message))
+		Log(time.Now().Format("2006-01-02T15:04:05.999Z") + " WEBEXT: " + string(message))
 	}
 }
 
