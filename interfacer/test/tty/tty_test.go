@@ -2,6 +2,7 @@ package test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gdamore/tcell"
 	. "github.com/onsi/ginkgo"
@@ -128,6 +129,7 @@ var _ = Describe("Showing a basic webpage", func() {
 			Describe("Tabs", func() {
 				BeforeEach(func() {
 					SpecialKey(tcell.KeyCtrlT)
+					time.Sleep(1000 * time.Millisecond)
 				})
 
 				AfterEach(func() {
