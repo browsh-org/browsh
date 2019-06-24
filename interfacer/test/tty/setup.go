@@ -15,6 +15,7 @@ import (
 	gomega "github.com/onsi/gomega"
 
 	"browsh/interfacer/src/browsh"
+
 	"github.com/spf13/viper"
 )
 
@@ -151,6 +152,9 @@ func GotoURL(url string) {
 	Keyboard(url)
 	SpecialKey(tcell.KeyEnter)
 	WaitForPageLoad()
+	// Hack to force text to be rerendered. Because there's a bug where text sometimes doesn't get
+	// rendered.
+	mouseClick(3, 3)
 	// TODO: Looking for the URL isn't optimal because it could be the same URL
 	// as the previous test.
 	gomega.Expect(url).To(BeInFrameAt(0, 1))
@@ -216,7 +220,7 @@ func GetBgColour(x, y int) [3]int32 {
 }
 
 func ensureOnlyOneTab() {
-	if len(browsh.Tabs) > 1 {
+	for len(browsh.Tabs) > 1 {
 		SpecialKey(tcell.KeyCtrlW)
 	}
 }
@@ -231,14 +235,13 @@ func initBrowsh() {
 	browsh.IsTesting = true
 	simScreen = tcell.NewSimulationScreen("UTF-8")
 	browsh.Initialise()
-
 }
 
 func stopFirefox() {
 	browsh.Log("Attempting to kill all firefox processes")
 	browsh.IsConnectedToWebExtension = false
 	browsh.Shell(rootDir + "/webext/contrib/firefoxheadless.sh kill")
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(1500 * time.Millisecond)
 }
 
 func runeCount(text string) int {

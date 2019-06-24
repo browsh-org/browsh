@@ -1,6 +1,7 @@
 package test
 
 import (
+	"browsh/interfacer/src/browsh"
 	"testing"
 
 	"github.com/gdamore/tcell"
@@ -8,12 +9,12 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestIntegration(t *testing.T) {
+func TestMain(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Integration tests")
 }
 
-var _ = Describe("Showing a basic webpage", func() {
+var _ = Describe("Core functionality", func() {
 	BeforeEach(func() {
 		GotoURL(testSiteURL + "/smorgasbord/")
 	})
@@ -26,6 +27,19 @@ var _ = Describe("Showing a basic webpage", func() {
 		})
 
 		Describe("Interaction", func() {
+			It("should navigate to a new page by using a link hint", func() {
+				Expect("Another▄page").To(BeInFrameAt(12, 18))
+				Keyboard("f")
+				Keyboard("a")
+				Expect("Another").To(BeInFrameAt(0, 0))
+			})
+
+			It("should scroll the page by one line", func() {
+				Expect("[ˈsmœrɡɔsˌbuːɖ])▄is▄a").To(BeInFrameAt(12, 11))
+				Keyboard("j")
+				Expect("type▄of▄Scandinavian▄").To(BeInFrameAt(12, 11))
+			})
+
 			It("should navigate to a new page by using the URL bar", func() {
 				SpecialKey(tcell.KeyCtrlL)
 				Keyboard(testSiteURL + "/smorgasbord/another.html")
@@ -106,10 +120,10 @@ var _ = Describe("Showing a basic webpage", func() {
 
 					It("should enter multiple lines of text", func() {
 						Keyboard(`So here is a lot of text that will hopefully split across lines`)
-						Expect("So here is a lot of").To(BeInFrameAt(1, 3))
-						Expect("text that will").To(BeInFrameAt(1, 4))
-						Expect("hopefully split across").To(BeInFrameAt(1, 5))
-						Expect("lines").To(BeInFrameAt(1, 6))
+						Expect("So here is a lot of").To(BeInFrameAt(1, 2))
+						Expect("text that will").To(BeInFrameAt(1, 3))
+						Expect("hopefully split across").To(BeInFrameAt(1, 4))
+						Expect("lines").To(BeInFrameAt(1, 5))
 					})
 
 					It("should scroll multiple lines of text", func() {
@@ -120,37 +134,48 @@ var _ = Describe("Showing a basic webpage", func() {
 						for i := 1; i <= 6; i++ {
 							SpecialKey(tcell.KeyUp)
 						}
-						Expect("lines").To(BeInFrameAt(1, 6))
+						Expect("lines").To(BeInFrameAt(1, 5))
 					})
 				})
 			})
 
 			Describe("Tabs", func() {
 				BeforeEach(func() {
-					SpecialKey(tcell.KeyCtrlT)
-				})
-
-				AfterEach(func() {
 					ensureOnlyOneTab()
 				})
 
 				It("should create a new tab", func() {
 					Expect("New Tab").To(BeInFrameAt(21, 0))
+					SpecialKey(tcell.KeyCtrlT)
+					Expect(len(browsh.Tabs)).To(Equal(2))
 					// need this to make tcell to work for the next round
 					SpecialKey(tcell.KeyCtrlL)
 				})
 
 				It("should be able to goto a new URL", func() {
-					Keyboard(testSiteURL + "/smorgasbord/another.html")
-					SpecialKey(tcell.KeyEnter)
-					Expect("Another").To(BeInFrameAt(21, 0))
+					SpecialKey(tcell.KeyCtrlT)
+					GotoURL(testSiteURL + "/smorgasbord/another.html")
+					Expect("Another▄webpage").To(BeInFrameAt(1, 3))
 				})
 
 				It("should cycle to the next tab", func() {
-					Expect("                   ").To(BeInFrameAt(0, 1))
-					SpecialKey(tcell.KeyCtrlL)
+					GotoURL(testSiteURL + "/smorgasbord/")
+					SpecialKey(tcell.KeyCtrlT)
 					GotoURL(testSiteURL + "/smorgasbord/another.html")
 					triggerUserKeyFor("tty.keys.next-tab")
+					Expect("Smörgåsbord").To(BeInFrameAt(0, 0))
+				})
+
+				It("should create a new tab", func() {
+					Keyboard("t")
+					Expect("New Tab").To(BeInFrameAt(21, 0))
+				})
+
+				It("should cycle to the next tab", func() {
+					GotoURL(testSiteURL + "/smorgasbord/")
+					Keyboard("t")
+					GotoURL(testSiteURL + "/smorgasbord/another.html")
+					Keyboard("J")
 					URL := testSiteURL + "/smorgasbord/             "
 					Expect(URL).To(BeInFrameAt(0, 1))
 				})
@@ -193,7 +218,7 @@ var _ = Describe("Showing a basic webpage", func() {
 		})
 
 		Describe("Text positioning", func() {
-			It("should position the left/right-aligned coloumns", func() {
+			It("should position the left/right-aligned columns", func() {
 				Expect("Smörgåsbord▄(Swedish:").To(BeInFrameAt(12, 10))
 				Expect("The▄Swedish▄word").To(BeInFrameAt(42, 10))
 			})

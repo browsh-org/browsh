@@ -225,11 +225,12 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
               break;
             }
           }          
-        }                 
+        }
         this.log("!!MUTATION!!", mutation);
         this._debouncedSmallTextFrame();
       });
     });
+
     if (target) {
       observer.observe(target, {
         subtree: true,

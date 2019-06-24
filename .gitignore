@@ -7,8 +7,10 @@ interfacer/vendor
 interfacer/dist
 interfacer/interfacer
 interfacer/browsh
+interfacer/debug
 webextension.go
 webext/node_modules
 webext/dist/*
+webext/manifest.json~
 dist
 *.xpi

@@ -17,6 +17,9 @@ export default MixinBase =>
         case "/frame_pixels":
           this.sendToTerminal(`/frame_pixels,${message.slice(14)}`);
           break;
+        case "/link_hints":
+          this.sendToTerminal(`/link_hints,${message.slice(12)}`);
+          break;
         case "/tab_info":
           incoming = JSON.parse(utils.rebuildArgsToSingleArg(parts));
           this._updateTabInfo(incoming);
