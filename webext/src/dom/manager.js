@@ -214,17 +214,17 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
       mutations.forEach(mutation => {
         if (!target) {
           const nodes = Array.from(mutation.addedNodes);
-          for(let node of nodes) {
-            if(node.matches && node.matches("body")) {
+          for (let node of nodes) {
+            if (node.matches && node.matches("body")) {
               target = node;
               observer.observe(target, {
                 subtree: true,
                 characterData: true,
-                childList: true,
-              });              
+                childList: true
+              });
               break;
             }
-          }          
+          }
         }
         this.log("!!MUTATION!!", mutation);
         this._debouncedSmallTextFrame();
