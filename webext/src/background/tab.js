@@ -105,9 +105,8 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     }
     if (native_status === "complete" && !this._isConnected()) {
       this.log(
-        `Automatically reloading tab ${
-          this.id
-        } that has loaded but not connected ` + "to the webextension"
+        `Automatically reloading tab ${this.id} that has loaded but not connected ` +
+          "to the webextension"
       );
       this.reload();
       this._reload_count++;
