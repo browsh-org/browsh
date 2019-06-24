@@ -3,18 +3,19 @@ package test
 import (
 	"browsh/interfacer/src/browsh"
 	"testing"
+	"time"
 
 	"github.com/gdamore/tcell"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-func TestMain(t *testing.T) {
+func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Integration tests")
 }
 
-var _ = Describe("Core functionality", func() {
+var _ = Describe("Showing a basic webpage", func() {
 	BeforeEach(func() {
 		GotoURL(testSiteURL + "/smorgasbord/")
 	})
@@ -30,8 +31,20 @@ var _ = Describe("Core functionality", func() {
 			It("should navigate to a new page by using a link hint", func() {
 				Expect("Another▄page").To(BeInFrameAt(12, 18))
 				Keyboard("f")
+				time.Sleep(500 * time.Millisecond)
 				Keyboard("a")
+				time.Sleep(500 * time.Millisecond)
 				Expect("Another").To(BeInFrameAt(0, 0))
+				SpecialKey(tcell.KeyCtrlL)
+				Keyboard(testSiteURL + "/links.html")
+				SpecialKey(tcell.KeyEnter)
+				Expect("Links").To(BeInFrameAt(0, 0))
+				Keyboard("f")
+				time.Sleep(500 * time.Millisecond)
+				Keyboard("a")
+				time.Sleep(500 * time.Millisecond)
+				Expect("Another").To(BeInFrameAt(0, 0))
+				// TODO: test double keys
 			})
 
 			It("should scroll the page by one line", func() {
@@ -145,8 +158,8 @@ var _ = Describe("Core functionality", func() {
 				})
 
 				It("should create a new tab", func() {
-					Expect("New Tab").To(BeInFrameAt(21, 0))
 					SpecialKey(tcell.KeyCtrlT)
+					Expect("New Tab").To(BeInFrameAt(21, 0))
 					Expect(len(browsh.Tabs)).To(Equal(2))
 					// need this to make tcell to work for the next round
 					SpecialKey(tcell.KeyCtrlL)
@@ -154,27 +167,35 @@ var _ = Describe("Core functionality", func() {
 
 				It("should be able to goto a new URL", func() {
 					SpecialKey(tcell.KeyCtrlT)
-					GotoURL(testSiteURL + "/smorgasbord/another.html")
-					Expect("Another▄webpage").To(BeInFrameAt(1, 3))
+					Keyboard(testSiteURL + "/smorgasbord/another.html")
+					SpecialKey(tcell.KeyEnter)
+					Expect("Another").To(BeInFrameAt(21, 0))
 				})
 
 				It("should cycle to the next tab", func() {
-					GotoURL(testSiteURL + "/smorgasbord/")
 					SpecialKey(tcell.KeyCtrlT)
-					GotoURL(testSiteURL + "/smorgasbord/another.html")
+					Expect("                   ").To(BeInFrameAt(0, 1))
+					// SpecialKey(tcell.KeyCtrlL) stops working after ctrl-t
+					Keyboard(testSiteURL + "/smorgasbord/another.html")
+					SpecialKey(tcell.KeyEnter)
+					Expect("Another").To(BeInFrameAt(21, 0))
 					triggerUserKeyFor("tty.keys.next-tab")
-					Expect("Smörgåsbord").To(BeInFrameAt(0, 0))
+					URL := testSiteURL + "/smorgasbord/             "
+					Expect(URL).To(BeInFrameAt(0, 1))
 				})
 
 				It("should create a new tab", func() {
 					Keyboard("t")
 					Expect("New Tab").To(BeInFrameAt(21, 0))
+					// need this to make tcell to work for the next round
+					SpecialKey(tcell.KeyCtrlL)
 				})
 
 				It("should cycle to the next tab", func() {
-					GotoURL(testSiteURL + "/smorgasbord/")
 					Keyboard("t")
-					GotoURL(testSiteURL + "/smorgasbord/another.html")
+					Keyboard(testSiteURL + "/smorgasbord/another.html")
+					SpecialKey(tcell.KeyEnter)
+					Expect("Another").To(BeInFrameAt(21, 0))
 					Keyboard("J")
 					URL := testSiteURL + "/smorgasbord/             "
 					Expect(URL).To(BeInFrameAt(0, 1))

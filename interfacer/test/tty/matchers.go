@@ -31,8 +31,7 @@ func (matcher *textInFrameMatcher) Match(actual interface{}) (success bool, err 
 		if matcher.found == text {
 			return true, nil
 		}
-		fmt.Errorf("try...")
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 	return false, fmt.Errorf("Timeout. Expected\n\t%#v\nto be in the Browsh frame, but found\n\t%#v", text, matcher.found)
 }

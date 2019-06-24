@@ -121,7 +121,7 @@ func WaitForText(text string, x, y int) {
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
-	panic("Waiting for '" + text + "' to appear but it didn't")
+	browsh.Log("Waiting for '" + text + "' to appear but it didn't")
 }
 
 // WaitForPageLoad waits for the page to load
@@ -142,7 +142,7 @@ func sleepUntilPageLoad(maxTime time.Duration) {
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
-	panic("Page didn't load within timeout")
+	browsh.Log("Page didn't load within timeout")
 }
 
 // GotoURL sends the browsh browser to the specified URL
@@ -152,9 +152,6 @@ func GotoURL(url string) {
 	Keyboard(url)
 	SpecialKey(tcell.KeyEnter)
 	WaitForPageLoad()
-	// Hack to force text to be rerendered. Because there's a bug where text sometimes doesn't get
-	// rendered.
-	mouseClick(3, 3)
 	// TODO: Looking for the URL isn't optimal because it could be the same URL
 	// as the previous test.
 	gomega.Expect(url).To(BeInFrameAt(0, 1))
@@ -162,6 +159,16 @@ func GotoURL(url string) {
 	// Clicking with the mouse triggers a reparse by the web extension
 	mouseClick(3, 6)
 	time.Sleep(100 * time.Millisecond)
+	mouseClick(3, 6)
+	time.Sleep(500 * time.Millisecond)
+}
+
+func MouseClick() {
+	// TODO: hack to work around bug where text sometimes doesn't render on page load.
+	// Clicking with the mouse triggers a reparse by the web extension
+	time.Sleep(100 * time.Millisecond)
+	mouseClick(3, 6)
+	time.Sleep(500 * time.Millisecond)
 	mouseClick(3, 6)
 	time.Sleep(500 * time.Millisecond)
 }
@@ -220,7 +227,7 @@ func GetBgColour(x, y int) [3]int32 {
 }
 
 func ensureOnlyOneTab() {
-	for len(browsh.Tabs) > 1 {
+	if len(browsh.Tabs) > 1 {
 		SpecialKey(tcell.KeyCtrlW)
 	}
 }
@@ -241,7 +248,7 @@ func stopFirefox() {
 	browsh.Log("Attempting to kill all firefox processes")
 	browsh.IsConnectedToWebExtension = false
 	browsh.Shell(rootDir + "/webext/contrib/firefoxheadless.sh kill")
-	time.Sleep(1500 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 }
 
 func runeCount(text string) int {
