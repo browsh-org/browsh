@@ -112,6 +112,7 @@ func waitForNextFrame() {
 func WaitForText(text string, x, y int) {
 	var found string
 	start := time.Now()
+	browsh.Log("expect " + text)
 	for time.Since(start) < perTestTimeout {
 		found = GetText(x, y, runeCount(text))
 		if found == text {
@@ -132,6 +133,7 @@ func sleepUntilPageLoad(maxTime time.Duration) {
 	time.Sleep(1000 * time.Millisecond)
 	for time.Since(start) < maxTime {
 		if browsh.CurrentTab != nil {
+			browsh.Log("pageload " + browsh.CurrentTab.PageState)
 			if browsh.CurrentTab.PageState == "parsing_complete" {
 				time.Sleep(200 * time.Millisecond)
 				return
@@ -144,6 +146,7 @@ func sleepUntilPageLoad(maxTime time.Duration) {
 
 // GotoURL sends the browsh browser to the specified URL
 func GotoURL(url string) {
+	browsh.Log("gotourl " + url)
 	SpecialKey(tcell.KeyCtrlL)
 	Keyboard(url)
 	SpecialKey(tcell.KeyEnter)
@@ -243,18 +246,19 @@ func runeCount(text string) int {
 }
 
 var _ = ginkgo.BeforeEach(func() {
+	browsh.Log("\n---------")
+	browsh.Log(ginkgo.CurrentGinkgoTestDescription().FullTestText)
+	browsh.Log("---------")
 	browsh.Log("Attempting to restart WER Firefox...")
 	stopFirefox()
 	browsh.ResetTabs()
 	browsh.StartFirefox()
 	sleepUntilPageLoad(startupWait)
 	browsh.IsMonochromeMode = false
-	browsh.Log("\n---------")
-	browsh.Log(ginkgo.CurrentGinkgoTestDescription().FullTestText)
-	browsh.Log("---------")
 })
 
 var _ = ginkgo.BeforeSuite(func() {
+	browsh.Log("BeforeSuite---------")
 	os.Truncate(framesLogFile, 0)
 	initTerm()
 	initBrowsh()
@@ -269,4 +273,5 @@ var _ = ginkgo.BeforeSuite(func() {
 
 var _ = ginkgo.AfterSuite(func() {
 	stopFirefox()
+	browsh.Log("AfterSuite--------------")
 })

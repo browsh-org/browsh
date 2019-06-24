@@ -89,6 +89,14 @@ func (f *frame) buildFrameText(incoming incomingFrameText) {
 	if !f.isIncomingFrameTextValid(incoming) {
 		return
 	}
+
+	var s = "/frame_text ";
+	for _,c := range incoming.Text {
+		if c != "" {
+			s = s + c
+		}
+	}
+	Log(s)
 	f.updateInputBoxes(incoming)
 	f.populateFrameText(incoming)
 }

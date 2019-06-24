@@ -2,7 +2,6 @@ package test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/gdamore/tcell"
 	. "github.com/onsi/ginkgo"
@@ -129,7 +128,6 @@ var _ = Describe("Showing a basic webpage", func() {
 			Describe("Tabs", func() {
 				BeforeEach(func() {
 					SpecialKey(tcell.KeyCtrlT)
-					time.Sleep(1000 * time.Millisecond)
 				})
 
 				AfterEach(func() {
@@ -138,6 +136,8 @@ var _ = Describe("Showing a basic webpage", func() {
 
 				It("should create a new tab", func() {
 					Expect("New Tab").To(BeInFrameAt(21, 0))
+					// need this to make tcell to work for the next round
+					SpecialKey(tcell.KeyCtrlL)
 				})
 
 				It("should be able to goto a new URL", func() {

@@ -66,7 +66,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   _listenForTerminalMessages() {
     this.log("Starting to listen to TTY");
     this.terminal.addEventListener("message", event => {
-      //this.log("message from terminal: " + event.data);
+      // chatty this.log("message from terminal: " + event.data);
       this.handleTerminalMessage(event.data);
     });
   }

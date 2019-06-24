@@ -3,7 +3,6 @@ package browsh
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 	"net/http"
 	"strings"
 
@@ -63,7 +62,7 @@ func webSocketReader(ws *websocket.Conn) {
 				triggerSocketWriterClose()
 				return
 			}
-			Shutdown(err)
+			Shutdown(errors.New(err.Error()))
 		}
 	}
 }
@@ -90,7 +89,7 @@ func handleWebextensionCommand(message []byte) {
 	case "/screenshot":
 		saveScreenshot(parts[1])
 	default:
-		Log(time.Now().Format("2006-01-02T15:04:05.999Z") + " WEBEXT: " + string(message))
+		Log("IGNORE " + string(message))
 	}
 }
 
@@ -129,7 +128,7 @@ func webSocketWriter(ws *websocket.Conn) {
 	defer ws.Close()
 	for {
 		message = <-stdinChannel
-		//Log(fmt.Sprintf("TTY sending: %s", message))
+		// chatty Log(fmt.Sprintf("TTY sending: %s", message))
 		if err := ws.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 			if err == websocket.ErrCloseSent {
 				Log("Socket writer detected that the browser closed the websocket")
