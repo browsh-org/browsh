@@ -10,12 +10,12 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestMain(t *testing.T) {
+func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Integration tests")
 }
 
-var _ = Describe("Core functionality", func() {
+var _ = Describe("Showing a basic webpage", func() {
 	BeforeEach(func() {
 		GotoURL(testSiteURL + "/smorgasbord/")
 	})
@@ -180,7 +180,8 @@ var _ = Describe("Core functionality", func() {
 					SpecialKey(tcell.KeyEnter)
 					Expect("Another").To(BeInFrameAt(21, 0))
 					triggerUserKeyFor("tty.keys.next-tab")
-					Expect("Smörgåsbord").To(BeInFrameAt(0, 0))
+					URL := testSiteURL + "/smorgasbord/             "
+					Expect(URL).To(BeInFrameAt(0, 1))
 				})
 
 				It("should create a new tab", func() {

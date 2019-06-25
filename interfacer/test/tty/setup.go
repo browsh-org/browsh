@@ -152,9 +152,6 @@ func GotoURL(url string) {
 	Keyboard(url)
 	SpecialKey(tcell.KeyEnter)
 	WaitForPageLoad()
-	// Hack to force text to be rerendered. Because there's a bug where text sometimes doesn't get
-	// rendered.
-	mouseClick(3, 3)
 	// TODO: Looking for the URL isn't optimal because it could be the same URL
 	// as the previous test.
 	gomega.Expect(url).To(BeInFrameAt(0, 1))
@@ -230,7 +227,7 @@ func GetBgColour(x, y int) [3]int32 {
 }
 
 func ensureOnlyOneTab() {
-	for len(browsh.Tabs) > 1 {
+	if len(browsh.Tabs) > 1 {
 		SpecialKey(tcell.KeyCtrlW)
 	}
 }
