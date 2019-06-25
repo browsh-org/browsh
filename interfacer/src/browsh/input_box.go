@@ -237,6 +237,9 @@ func handleInputBoxInput(ev *tcell.EventKey) {
 	case tcell.KeyEnter:
 		activeInputBox.removeSelectedText()
 		activeInputBox.handleEnterKey(ev.Modifiers())
+	case tcell.KeyEscape:
+		activeInputBox.isActive = false
+		activeInputBox = nil
 	case tcell.KeyRune:
 		activeInputBox.removeSelectedText()
 		activeInputBox.cursorInsertRune(ev.Rune())

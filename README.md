@@ -67,12 +67,12 @@ with symlinks. Anyway, to install the dependencies use: `dep ensure` inside the
 
 Then the ideal setup for development is:
   * have Webpack watch the JS code so that it rebuilds automatically:
-    `webpack --watch`
+    `webext> webpack --watch`
   * run the CLI client without giving it the responsibility to launch Firefox:
     `go run ./interfacer/src/main.go --firefox.use-existing --debug`
   * have Mozilla's handy `web-ext` tool run Firefox and reinstall the
     webextension everytime webpack rebuilds it: (in `webext/dist`)
-    `web-ext run --verbose`
+    `webext/dist> web-ext run --verbose`
 
 For generic Linux systems you can follow [this guide](https://github.com/browsh-org/browsh/blob/master/contrib/setup_linux_build_environment.md) on how to setup a build environment, that you may be able to adapt for other systems as well.
 

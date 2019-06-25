@@ -3,6 +3,7 @@ package browsh
 import (
 	"encoding/base64"
 	"fmt"
+	"time"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -23,7 +24,7 @@ import (
 
 var (
 	logo = `
-////  ////
+ ////  ////
  / /   / /
  //    //
  //    //    ,,,,,,,,
@@ -72,7 +73,7 @@ func Log(msg string) {
 		}
 		defer f.Close()
 
-		msg = msg + "\n"
+		msg = time.Now().Format("01-02T15:04:05.999 ") + msg + "\n"
 		if _, wErr := f.WriteString(msg); wErr != nil {
 			Shutdown(wErr)
 		}

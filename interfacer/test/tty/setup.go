@@ -113,6 +113,7 @@ func waitForNextFrame() {
 func WaitForText(text string, x, y int) {
 	var found string
 	start := time.Now()
+	browsh.Log("expect " + text)
 	for time.Since(start) < perTestTimeout {
 		found = GetText(x, y, runeCount(text))
 		if found == text {
@@ -120,7 +121,7 @@ func WaitForText(text string, x, y int) {
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
-	panic("Waiting for '" + text + "' to appear but it didn't")
+	browsh.Log("Waiting for '" + text + "' to appear but it didn't")
 }
 
 // WaitForPageLoad waits for the page to load
@@ -133,6 +134,7 @@ func sleepUntilPageLoad(maxTime time.Duration) {
 	time.Sleep(1000 * time.Millisecond)
 	for time.Since(start) < maxTime {
 		if browsh.CurrentTab != nil {
+			browsh.Log("pageload " + browsh.CurrentTab.PageState)
 			if browsh.CurrentTab.PageState == "parsing_complete" {
 				time.Sleep(200 * time.Millisecond)
 				return
@@ -140,18 +142,16 @@ func sleepUntilPageLoad(maxTime time.Duration) {
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
-	panic("Page didn't load within timeout")
+	browsh.Log("Page didn't load within timeout")
 }
 
 // GotoURL sends the browsh browser to the specified URL
 func GotoURL(url string) {
-	browsh.URLBarFocus(true)
+	browsh.Log("gotourl " + url)
+	SpecialKey(tcell.KeyCtrlL)
 	Keyboard(url)
 	SpecialKey(tcell.KeyEnter)
 	WaitForPageLoad()
-	// Hack to force text to be rerendered. Because there's a bug where text sometimes doesn't get
-	// rendered.
-	mouseClick(3, 3)
 	// TODO: Looking for the URL isn't optimal because it could be the same URL
 	// as the previous test.
 	gomega.Expect(url).To(BeInFrameAt(0, 1))
@@ -159,6 +159,16 @@ func GotoURL(url string) {
 	// Clicking with the mouse triggers a reparse by the web extension
 	mouseClick(3, 6)
 	time.Sleep(100 * time.Millisecond)
+	mouseClick(3, 6)
+	time.Sleep(500 * time.Millisecond)
+}
+
+func MouseClick() {
+	// TODO: hack to work around bug where text sometimes doesn't render on page load.
+	// Clicking with the mouse triggers a reparse by the web extension
+	time.Sleep(100 * time.Millisecond)
+	mouseClick(3, 6)
+	time.Sleep(500 * time.Millisecond)
 	mouseClick(3, 6)
 	time.Sleep(500 * time.Millisecond)
 }
@@ -217,7 +227,7 @@ func GetBgColour(x, y int) [3]int32 {
 }
 
 func ensureOnlyOneTab() {
-	for len(browsh.Tabs) > 1 {
+	if len(browsh.Tabs) > 1 {
 		SpecialKey(tcell.KeyCtrlW)
 	}
 }
@@ -232,7 +242,6 @@ func initBrowsh() {
 	browsh.IsTesting = true
 	simScreen = tcell.NewSimulationScreen("UTF-8")
 	browsh.Initialise()
-
 }
 
 func stopFirefox() {
@@ -247,18 +256,19 @@ func runeCount(text string) int {
 }
 
 var _ = ginkgo.BeforeEach(func() {
+	browsh.Log("\n---------")
+	browsh.Log(ginkgo.CurrentGinkgoTestDescription().FullTestText)
+	browsh.Log("---------")
 	browsh.Log("Attempting to restart WER Firefox...")
 	stopFirefox()
 	browsh.ResetTabs()
 	browsh.StartFirefox()
 	sleepUntilPageLoad(startupWait)
 	browsh.IsMonochromeMode = false
-	browsh.Log("\n---------")
-	browsh.Log(ginkgo.CurrentGinkgoTestDescription().FullTestText)
-	browsh.Log("---------")
 })
 
 var _ = ginkgo.BeforeSuite(func() {
+	browsh.Log("BeforeSuite---------")
 	os.Truncate(framesLogFile, 0)
 	initTerm()
 	initBrowsh()
@@ -273,4 +283,5 @@ var _ = ginkgo.BeforeSuite(func() {
 
 var _ = ginkgo.AfterSuite(func() {
 	stopFirefox()
+	browsh.Log("AfterSuite--------------")
 })

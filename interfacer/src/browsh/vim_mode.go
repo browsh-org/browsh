@@ -166,20 +166,18 @@ func goIntoWaitMode() {
 
 func updateLinkHintDisplay() {
 	linkHintsToRects = make(map[string]*hintRect)
-	lh := len(linkHintRects)
 	var ht string
 	// List of closures
 	var fc []*func()
+
+	hintStrings := buildHintStrings(len(linkHintRects))
 
 	for i, r := range linkHintRects {
 		// When the number of link hints is small enough
 		// using just one key for individual link hints suffices.
 		// Otherwise use the prepared link hint key combinations.
-		if lh <= len(linkHintKeys) {
-			ht = string(linkHintKeys[i])
-		} else {
-			ht = linkHints[i]
-		}
+		ht = hintStrings[i]
+
 		// Add the key combination ht to the linkHintsToRects map.
 		// When the user presses it, we can easily lookup the
 		// link hint properties associated with it.
@@ -214,6 +212,27 @@ func updateLinkHintDisplay() {
 		}
 	}
 	linkHintWriteStringCalls = &ff
+}
+
+// Builds the provided number of hint links.
+// Based on https://github.com/philc/vimium/blob/881a6fdc3644f55fc02ad56454203f654cc76618/content_scripts/link_hints.coffee#L449
+func buildHintStrings(numHints int) []string {
+	if numHints == 0 {
+		return make([]string, 0)
+	}
+
+	hints := make([]string, 1)
+	hints[0] = ""
+	offset := 0
+	for len(hints)-offset <= numHints {
+		hint := hints[offset]
+		offset = offset + 1
+		for _, char := range linkHintKeys {
+			hints = append(hints, string(char)+hint)
+		}
+	}
+
+	return hints[1 : numHints+1]
 }
 
 func eraseLinkHints() {
@@ -256,7 +275,6 @@ func keyEventToString(ev *tcell.EventKey) string {
 
 	return r
 }
-
 
 func getNLastKeyEvent(n int) *tcell.EventKey {
 	if n < 0 || keyEvents == nil {

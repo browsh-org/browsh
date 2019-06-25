@@ -62,7 +62,7 @@ func webSocketReader(ws *websocket.Conn) {
 				triggerSocketWriterClose()
 				return
 			}
-			Shutdown(err)
+			Shutdown(errors.New(err.Error()))
 		}
 	}
 }
@@ -91,7 +91,7 @@ func handleWebextensionCommand(message []byte) {
 	case "/link_hints":
 		parseJSONLinkHints(strings.Join(parts[1:], ","))
 	default:
-		Log("WEBEXT: " + string(message))
+		Log("IGNORE " + string(message))
 	}
 }
 
@@ -130,7 +130,7 @@ func webSocketWriter(ws *websocket.Conn) {
 	defer ws.Close()
 	for {
 		message = <-stdinChannel
-		Log(fmt.Sprintf("TTY sending: %s", message))
+		// chatty Log(fmt.Sprintf("TTY sending: %s", message))
 		if err := ws.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 			if err == websocket.ErrCloseSent {
 				Log("Socket writer detected that the browser closed the websocket")
