@@ -10,6 +10,8 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
+const ERROR_RD_WIN_REG_MSG = "Error reading Windows registry: "
+
 func getFirefoxPath() string {
 	versionString := getWindowsFirefoxVersionString()
 
@@ -18,11 +20,11 @@ func getFirefoxPath() string {
 		`Software\Mozilla\Mozilla Firefox\`+versionString+`\Main`,
 		registry.QUERY_VALUE)
 	if err != nil {
-		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
+		Shutdown(errors.New(ERROR_RD_WIN_REG_MSG + fmt.Sprintf("%s", err)))
 	}
 	path, _, err := k.GetStringValue("PathToExe")
 	if err != nil {
-		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
+		Shutdown(errors.New(ERROR_RD_WIN_REG_MSG + fmt.Sprintf("%s", err)))
 	}
 
 	return path
@@ -34,13 +36,13 @@ func getWindowsFirefoxVersionString() string {
 		`Software\Mozilla\Mozilla Firefox`,
 		registry.QUERY_VALUE)
 	if err != nil {
-		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
+		Shutdown(errors.New(ERROR_RD_WIN_REG_MSG + fmt.Sprintf("%s", err)))
 	}
 	defer k.Close()
 
 	versionString, _, err := k.GetStringValue("CurrentVersion")
 	if err != nil {
-		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
+		Shutdown(errors.New(ERROR_RD_WIN_REG_MSG + fmt.Sprintf("%s", err)))
 	}
 
 	Log("Windows registry Firefox version: " + versionString)
