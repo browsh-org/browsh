@@ -6,9 +6,9 @@ export default {
   },
 
   ttyCell: function(
+    character,
     fg_colour = [255, 255, 255],
-    bg_colour = [0, 0, 0],
-    character
+    bg_colour = [0, 0, 0]
   ) {
     let cell = fg_colour.concat(bg_colour);
     cell.push(character);
@@ -16,7 +16,7 @@ export default {
   },
 
   ttyPlainCell: function(character) {
-    return this.ttyCell(null, null, character);
+    return this.ttyCell(character, null, null);
   },
 
   snap: function(number) {
