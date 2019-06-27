@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+const smorgasbordPath = "/smorgasbord"
+
 func TestHTTPServer(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "HTTP Server tests")
@@ -17,26 +19,26 @@ func TestHTTPServer(t *testing.T) {
 
 var _ = Describe("HTTP Server", func() {
 	It("should return plain text", func() {
-		response := getPath("/smorgasbord", "plain")
+		response := getPath(smorgasbordPath, "plain")
 		Expect(response).To(ContainSubstring("multiple hot       Smörgås"))
 		Expect(response).To(ContainSubstring("A special Swedish type of smörgåsbord"))
 		Expect(response).ToNot(ContainSubstring("<a href"))
 	})
 
 	It("should return HTML text", func() {
-		response := getPath("/smorgasbord", "html")
+		response := getPath(smorgasbordPath, "html")
 		Expect(response).To(ContainSubstring(
 			"<a href=\"/http://localhost:4444/smorgasbord/another.html\">Another page</a>"))
 	})
 
 	It("should return the DOM", func() {
-		response := getPath("/smorgasbord", "dom")
+		response := getPath(smorgasbordPath, "dom")
 		Expect(response).To(ContainSubstring(
 			"<div class=\"big_middle\">"))
 	})
 
 	It("should return a background image", func() {
-		response := getPath("/smorgasbord", "html")
+		response := getPath(smorgasbordPath, "html")
 		Expect(response).To(ContainSubstring("background-image: url(data:image/jpeg"))
 	})
 
