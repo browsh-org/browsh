@@ -250,7 +250,7 @@ export default MixinBase =>
         font_rgb = styles["color"]
           .replace(/[^\d,]/g, "")
           .split(",")
-          .map(i => parseInt(i));
+          .map(c => parseInt(c));
         const padding_top = parseInt(styles["padding-top"].replace("px", ""));
         const padding_left = parseInt(styles["padding-left"].replace("px", ""));
         if (this._isUnwantedInboxBox(i, styles)) {
