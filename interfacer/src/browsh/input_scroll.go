@@ -22,10 +22,8 @@ func (i *inputBox) handleSingleLineScroll(magnitude int) {
 		detectionBoxWidth -= 2
 	}
 	isOverflowing := detectionTextWidth >= i.Width
-	if isOverflowing {
-		if i.isCursorAtEdgeOfBox(detectionBoxWidth) || !i.isBestFit() {
-			i.xScroll += magnitude
-		}
+	if isOverflowing && (i.isCursorAtEdgeOfBox(detectionBoxWidth) || !i.isBestFit()) {
+		i.xScroll += magnitude
 	}
 }
 
