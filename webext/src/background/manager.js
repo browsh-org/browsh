@@ -171,6 +171,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
       if (tabish_object.hasOwnProperty(key)) {
         tab[key] = tabish_object[key];
       }
+      return key;
     });
     if (tabish_object.active) {
       this.active_tab_id = tab.id;
