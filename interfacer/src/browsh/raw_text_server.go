@@ -19,6 +19,9 @@ import (
 	"github.com/ulule/limiter/drivers/store/memory"
 )
 
+// userAgent HTTP header tag
+const userAgent = "User-Agent"
+
 // In order to communicate between the incoming HTTP request and the websocket request to the
 // real browser to render the webpage, we keep track of requests in a map.
 var rawTextRequests = newRequestsMap()
@@ -140,14 +143,12 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", 301)
 		return
 	}
-	if isDisallowedUserAgent(r.Header.Get("User-Agent")) {
-		if urlForBrowsh != "" {
-			http.Redirect(w, r, "/", 403)
-			return
-		}
+	if isDisallowedUserAgent(r.Header.Get(userAgent)) && urlForBrowsh != "" {
+		http.Redirect(w, r, "/", 403)
+		return
 	}
-	Log(r.Header.Get("User-Agent"))
-	if isKubeReadinessProbe(r.Header.Get("User-Agent")) {
+	Log(r.Header.Get(userAgent))
+	if isKubeReadinessProbe(r.Header.Get(userAgent)) {
 		io.WriteString(w, "healthy")
 		return
 	}
@@ -162,7 +163,7 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 		urlForBrowsh = "https://www.brow.sh/html-service-welcome"
 	}
 	if urlForBrowsh == "robots.txt" {
-		message = "User-agent: *\nAllow: /$\nDisallow: /\n"
+		message = userAgent + ": *\nAllow: /$\nDisallow: /\n"
 		io.WriteString(w, message)
 		return
 	}
