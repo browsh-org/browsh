@@ -37,22 +37,32 @@ func showWhitespace(textArray []string) string {
 	return visualiseWhitespace(text)
 }
 
+func compareMultilineText(message, text string, width int, textArray []string) {
+	It(message, func() {
+		actual := toMulti(text, width)
+		expected := showWhitespace(textArray)
+		Expect(actual).To(Equal(expected))
+	})
+}
+
 var _ = Describe("Multiline text", func() {
-	It("should wrap basic text", func() {
-		actual := toMulti("a ab 12 qw 34", 3)
-		expected := showWhitespace([]string{
+	compareMultilineText(
+		"should wrap basic text",
+		"a ab 12 qw 34",
+		3,
+		[]string{
 			"a ",
 			"ab ",
 			"12 ",
 			"qw ",
 			"34 ",
 		})
-		Expect(actual).To(Equal(expected))
-	})
 
-	It("should wrap text with a word longer than the width limit", func() {
-		actual := toMulti("a looooong 12 qw 34", 3)
-		expected := showWhitespace([]string{
+	compareMultilineText(
+		"should wrap text with a word longer than the width limit",
+		"a looooong 12 qw 34",
+		3,
+		[]string{
 			"a ",
 			"loo",
 			"ooo",
@@ -61,19 +71,17 @@ var _ = Describe("Multiline text", func() {
 			"qw ",
 			"34 ",
 		})
-		Expect(actual).To(Equal(expected))
-	})
 
-	It("should wrap text lines with multiple words", func() {
-		actual := toMulti("some words to make a long sentence with many words on each line", 20)
-		expected := showWhitespace([]string{
+	compareMultilineText(
+		"should wrap text lines with multiple words",
+		"some words to make a long sentence with many words on each line",
+		20,
+		[]string{
 			"some words to make ",
 			"a long sentence ",
 			"with many words on ",
 			"each line ",
 		})
-		Expect(actual).To(Equal(expected))
-	})
 
 	Describe("Moving the Y cursor", func() {
 		It("should move to a line of greater width", func() {
