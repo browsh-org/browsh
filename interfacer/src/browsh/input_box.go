@@ -79,12 +79,10 @@ func (i *inputBox) setCells() {
 			}
 			continue
 		}
-		if i.Type == "password" && index != len(i.text) {
-			c = '●'
-		}
+		c = i.hideIfPassword(index, c)
 		i.addCharacterToFrame(x, y, c)
 		x++
-		if i.isMultiLine() && isLineBreak(string(c)) {
+		if i.shouldIncreaseLine(c) {
 			x = i.X
 			y++
 			lineCount++
@@ -102,6 +100,17 @@ func (i *inputBox) resetCells() {
 			i.addCharacterToFrame(x, y, ' ')
 		}
 	}
+}
+
+func (i *inputBox) shouldIncreaseLine(char rune) bool {
+	return i.isMultiLine() && isLineBreak(string(char))
+}
+
+func (i *inputBox) hideIfPassword(index int, char rune) rune {
+	if i.Type == "password" && index != len(i.text) {
+		return '●'
+	}
+	return char
 }
 
 func (i *inputBox) addCharacterToFrame(x int, y int, c rune) {
