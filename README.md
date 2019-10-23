@@ -85,7 +85,7 @@ Questions about Brow.sh? Stuck trying to resolve a tricky issue? Connect with th
 
 ## Building a Browsh release
 If you'd like to build Browsh for a new package manager, or for any other reason,
-you can use the script at `interfacer/contrib/build_browsh.go` as a guide. Note
+you can use the script at `interfacer/contrib/build_browsh.sh` as a guide. Note
 you won't be able to build the web extension as Mozilla only allows one canonical
 version of web extensions per version number. So the build script downloads the
 official web extension `.xpi` file from the Mozilla archives.
