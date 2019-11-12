@@ -26,7 +26,7 @@
     "webpack-cli": "^3.3.4"
   },
   "dependencies": {
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.13",
     "string-width": "^2.1.1"
   }
 }
