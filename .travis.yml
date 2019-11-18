@@ -1,7 +1,7 @@
 if: tag IS blank
 language: go
 go:
-  - 1.10.x
+  - 1.13.x
 
 addons:
   # Use the full version number with ".0" if needed. This value is scraped by setup scripts.
