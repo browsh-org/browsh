@@ -8,7 +8,7 @@ Open your terminal of choice. Run `echo $GOPATH`.
 You should see something like `/usr/local/go`. Inside this folder, there will be a src folder. If there isn't one created yet, run `mkdir $GOPATH/src`.
 
 ## Clone Browsh
-Fork Browsh to your Github account. Clone this fork of Browsh to your $GOPATH/src folder you just created.
+Fork Browsh to your Github account. Clone this fork of Browsh to your `$GOPATH/src` folder you just created.
 
 ## Install Firefox
 Follow Firefox's [guide](https://support.mozilla.org/en-US/kb/how-download-and-install-firefox-mac) to installing Firefox on Mac.
@@ -27,7 +27,7 @@ Navigate to browsh/webext. Run `npm install`.
 Run `npm install -g web-ext`. This is Mozilla's handy tool for working with Firefox web extensions.
 
 ## Run the build script
-Navigate to the root of your Browsh project. This should be `$GOROOT/src/browsh`. Run `./interfacer/contrib/build_browsh.sh`. This will install several required packages.
+Navigate to the root of your Browsh project. This should be `$GOPATH/src/browsh`. Run `./interfacer/contrib/build_browsh.sh`. This will install several required packages.
 
 ## Running Browsh from source
 Now that you have all of the required dependencies installed, we can run Browsh. First, open 3 terminals.
@@ -39,4 +39,4 @@ This terminal will build the Javascript. From the `browsh/webext` folder, run `n
 This terminal will handle the Firefox web extension. From the `browsh/webext/dist` folder, run `web-ext run --verbose`.
 
 ### Terminal 3
-This terminal will display Browsh. From the project root, run `go run ./interfacer/src/main.go --firefox.use-existing --debug`. 
+This terminal will display Browsh. From the project root, run `go run ./interfacer/src/main.go --firefox.use-existing --debug`.
