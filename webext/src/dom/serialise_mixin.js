@@ -103,7 +103,7 @@ export default MixinBase =>
       donating =
         this._raw_mode_type === "raw_text_html"
           ? '<a href="https://www.brow.sh/donate">donating</a>'
-          : "brow.sh/donate";
+          : "https://brow.sh/donate";
       return (
         "\nPlease consider " +
         donating +
