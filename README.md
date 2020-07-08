@@ -2,9 +2,9 @@
 
 ![Browsh Logo](https://www.brow.sh/assets/images/browsh-header.jpg)
 
-**A fully interactive, realtime, and modern text-based browser rendered to TTYs and browsers**
+**A fully interactive, real-time, and modern text-based browser rendered to TTYs and browsers**
 
-![Browsh Gif](https://media.giphy.com/media/bbsmVkYjPdOKHhMXOO/giphy.gif)
+![Browsh GIF](https://media.giphy.com/media/bbsmVkYjPdOKHhMXOO/giphy.gif)
 
 ## Why use Browsh?
 
@@ -36,7 +36,7 @@ is running somewhere else on mains electricity.
 ## Installation
 
 Download a binary from the [releases](https://github.com/browsh-org/browsh/releases) (~7MB).
-You will need to have [Firefox 63](https://www.mozilla.org/en-US/firefox/new/) (or higher) aleady installed.
+You will need to have [Firefox 63](https://www.mozilla.org/en-US/firefox/new/) (or higher) already installed.
 
 Or download and run the Docker image (~230MB) with:
     `docker run --rm -it browsh/browsh`
@@ -48,9 +48,9 @@ browser.
 For full documentation click [here](https://www.brow.sh/docs/introduction/).
 
 ## Contributing
-To setup a dev env you will need NodeJS and Golang installed. If you get stuck
-setting up your env, take a look in `.travis.yml`, it has to setup everything
-from scratch for every push to Github.
+To setup a development environment you will need NodeJS and Golang installed. If you get stuck
+setting up your environment, take a look in `.travis.yml`, it has to setup everything
+from scratch for every push to GitHub.
 
 I'd recommend [nvm](https://github.com/creationix/nvm) for NodeJS - note that
 `nvm install` will automatically parse the `.nvmrc` version in this repo to get
@@ -71,7 +71,7 @@ Then the ideal setup for development is:
   * run the CLI client without giving it the responsibility to launch Firefox:
     `go run ./interfacer/src/main.go --firefox.use-existing --debug`
   * have Mozilla's handy `web-ext` tool run Firefox and reinstall the
-    webextension everytime webpack rebuilds it: (in `webext/dist`)
+    webextension every time webpack rebuilds it: (in `webext/dist`)
     `web-ext run --verbose`
 
 For generic Linux systems you can follow [this guide](https://github.com/browsh-org/browsh/blob/master/contrib/setup_linux_build_environment.md) on how to setup a build environment, that you may be able to adapt for other systems as well.
