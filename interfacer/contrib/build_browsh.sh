@@ -37,4 +37,4 @@ XPI_FILE=$xpi_file BIN_FILE=$destination \
   $INTERFACER_ROOT/contrib/xpi2bin.sh
 
 # The actual build iteself
-go build -o browsh src/main.go
+go build ./cmd/browsh
