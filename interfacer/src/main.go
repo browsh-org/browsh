@@ -1,6 +1,6 @@
 package main
 
-import "browsh/interfacer/src/browsh"
+import "github.com/browsh-org/browsh/interfacer/src/browsh"
 
 func main() {
 	browsh.MainEntry()

@@ -8,7 +8,7 @@ import (
 
 	ginkgo "github.com/onsi/ginkgo"
 
-	"browsh/interfacer/src/browsh"
+	"github.com/browsh-org/browsh/interfacer/src/browsh"
 	"github.com/spf13/viper"
 )
 
