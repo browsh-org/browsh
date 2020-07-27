@@ -4,25 +4,17 @@
 # To build Browsh during development see:
 #   https://github.com/browsh-org/browsh#contributing
 
-# This script depends on Golang, dep and go-bindata
-# See; ./setup_dep.sh for an example `dep` installation
+# This script depends on Golang, go-bindata and curl
 # `go-bindata` can be easily installed with:
 #   `go get -u gopkg.in/shuLhan/go-bindata.v3/...`
-# `dep esnure` must be run in `interfacer/`
 
 set -e
 
 INTERFACER_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && cd ../ && pwd )"
 cd $INTERFACER_ROOT
 
-# Install `dep` the current defacto dependency manager for Golang
-./contrib/setup_dep.sh
-
 # Install the tool to convert the web extenstion file into a Go-compatible binary
 go get -u gopkg.in/shuLhan/go-bindata.v3/...
-
-# Install Golang dependencies
-dep ensure
 
 # Get the current Browsh version, in order to find the corresponding web extension release
 version_file=$INTERFACER_ROOT/src/browsh/version.go
@@ -45,4 +37,4 @@ XPI_FILE=$xpi_file BIN_FILE=$destination \
   $INTERFACER_ROOT/contrib/xpi2bin.sh
 
 # The actual build iteself
-go build -o browsh src/main.go
+go build ./cmd/browsh
