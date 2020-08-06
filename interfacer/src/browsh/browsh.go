@@ -204,10 +204,20 @@ func MainEntry() {
 	}
 	viper.SetDefault("validURL", validURL)
 	Initialise()
-	if viper.GetBool("version") {
+	
+	// Print version if asked and exit
+	if (viper.GetBool("version") || viper.GetBool("v")) {
 		println(browshVersion)
 		os.Exit(0)
 	}
+	
+	// Print name if asked and exit
+	if (viper.GetBool("name") || viper.GetBool("n")) {
+		println("Browsh")
+		os.Exit(0)
+	}
+	
+	// Decide whether to run in http-server-mode or CLI app
 	if viper.GetBool("http-server-mode") {
 		HTTPServerStart()
 	} else {
