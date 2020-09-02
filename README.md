@@ -101,5 +101,8 @@ For HTTP Service tests: in `/interfacer` run `go test test/http-server/*.go`
   * [@tobimensch](https://github.com/tobimensch) For essential early feedback and user testing.
   * [@arasatasaygin](https://github.com/arasatasaygin) For the Browsh logo.
 
+## Donating
+Please consider donating: https://www.brow.sh/donate
+
 ## License
 GNU Lesser General Public License v2.1
