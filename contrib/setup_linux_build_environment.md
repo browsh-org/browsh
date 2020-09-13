@@ -44,7 +44,7 @@ $ sudo ln -s /usr/local/lib/nodejs/node-$VERSION/bin/npm /usr/local/bin/npm
 Now you should be able to call the *go* and *node* binaries:
 
 ```
-$ go --version
+$ go version
 $ node --version
 ```
 
