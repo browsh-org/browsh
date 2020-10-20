@@ -41,6 +41,9 @@ WORKDIR /app
 
 COPY --from=build /go-home/src/browsh/interfacer/browsh /app/browsh
 
+# Add browsh on PATH
+RUN ln -s /app/browsh /usr/local/bin/browsh
+
 RUN install_packages \
       xvfb \
       libgtk-3-0 \
@@ -76,5 +79,4 @@ RUN TERM=xterm script \
   >/dev/null & \
   sleep 10
 
-CMD ["/app/browsh"]
-
+CMD [ "browsh" ]
