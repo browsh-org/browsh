@@ -12,10 +12,11 @@ import (
 
 func getFirefoxPath() string {
 	versionString := getWindowsFirefoxVersionString()
+	flavor := getFirefoxFlavor()
 
 	k, err := registry.OpenKey(
-		registry.CURRENT_USER,
-		`Software\Mozilla\Mozilla Firefox\`+versionString+`\Main`,
+		registry.LOCAL_MACHINE,
+		`Software\Mozilla\`+flavor+` `+versionString+`\bin`,
 		registry.QUERY_VALUE)
 	if err != nil {
 		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
@@ -29,16 +30,18 @@ func getFirefoxPath() string {
 }
 
 func getWindowsFirefoxVersionString() string {
+	flavor := getFirefoxFlavor()
+
 	k, err := registry.OpenKey(
-		registry.CURRENT_USER,
-		`Software\Mozilla\Mozilla Firefox`,
+		registry.LOCAL_MACHINE,
+		`Software\Mozilla\`+flavor,
 		registry.QUERY_VALUE)
 	if err != nil {
 		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
 	}
 	defer k.Close()
 
-	versionString, _, err := k.GetStringValue("CurrentVersion")
+	versionString, _, err := k.GetStringValue("")
 	if err != nil {
 		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
 	}
@@ -46,6 +49,48 @@ func getWindowsFirefoxVersionString() string {
 	Log("Windows registry Firefox version: " + versionString)
 
 	return versionString
+}
+
+func getFirefoxFlavor() string {
+	var flavor = "null"
+	k, err := registry.OpenKey(
+		registry.LOCAL_MACHINE,
+		`Software\Mozilla\Mozilla Firefox`,
+		registry.QUERY_VALUE)
+
+	if err == nil {
+		flavor = "Mozilla Firefox"
+	}
+	defer k.Close()
+
+	if flavor == "null" {
+		k, err := registry.OpenKey(
+			registry.LOCAL_MACHINE,
+			`Software\Mozilla\Firefox Developer Edition`,
+			registry.QUERY_VALUE)
+
+		if err == nil {
+			flavor = "Firefox Developer Edition"
+		}
+		defer k.Close()
+	}
+
+	if flavor == "null" {
+		k, err := registry.OpenKey(
+			registry.LOCAL_MACHINE,
+			`Software\Mozilla\Nightly`,
+			registry.QUERY_VALUE)
+
+		if err == nil {
+			flavor = "Nightly"
+		}
+		defer k.Close()
+	}
+
+	if flavor == "null" {
+		Shutdown(errors.New("Could not find Firefox on your registry"))
+	}
+	return flavor
 }
 
 func ensureFirefoxVersion(path string) {
