@@ -65,6 +65,10 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 		urlBarFocusToggle()
 	case tcell.KeyCtrlT:
 		createNewEmptyTab()
+	case tcell.KeyCtrlU:
+		if isNewEmptyTabActive() {
+			sendMessageToWebExtension("/new_tab,view-source:" + CurrentTab.URI)
+		}
 	case tcell.KeyCtrlW:
 		removeTab(CurrentTab.ID)
 	case tcell.KeyBackspace, tcell.KeyBackspace2:
