@@ -22,8 +22,6 @@ archive:
   format_overrides:
     - goos: windows
       format: binary
-    - goos: linux
-      format: binary
     - goos: freebsd
       format: binary
     - goos: openbsd
