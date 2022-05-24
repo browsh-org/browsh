@@ -76,7 +76,7 @@ $ npx webpack --watch
 
 ```sh
 $ # the dist folder is created in the first terminal
-$ cd "$GOPATH/browsh/webext/dist"
+$ cd "$GOPATH/src/browsh/webext/dist"
 $ # create a dist folder inside the webext folder.
 $ npx webpack --watch
 ```
@@ -84,7 +84,7 @@ $ npx webpack --watch
 ### Terminal 3 (Displays Browsh)
 
 ```sh
-$ cd "$GOPATH/browsh"
-$ go run ./interfacer/src/main.go --firefox.use-existing --debug
+$ cd "$GOPATH/src/browsh/interfacer"
+$ go run ./cmd/browsh/main.go --firefox.use-existing --debug
 ```
 
