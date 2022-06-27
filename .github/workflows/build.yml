@@ -1,0 +1,24 @@
+name: Build browsh
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}
+      GOBIN: ${{ github.workspace }}/bin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18.x
+      - name: Install go-bindata
+        run: go install github.com/kevinburke/go-bindata/go-bindata@latest
+      - name: Build
+        run: ./interfacer/contrib/build_browsh.sh
+      - name: Test
+        run: ./interfacer/browsh --version
+

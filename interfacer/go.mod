@@ -1,6 +1,6 @@
 module github.com/browsh-org/browsh/interfacer
 
-go 1.14
+go 1.18
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
@@ -27,7 +27,7 @@ require (
 	github.com/spf13/viper v1.4.0
 	github.com/ulule/limiter v2.2.2+incompatible
 	golang.org/x/net v0.0.0-20190607181551-461777fb6f67
-	golang.org/x/sys v0.0.0-20190610200419-93c9922d18ae
+	golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c
 	golang.org/x/text v0.3.2
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 	gopkg.in/yaml.v2 v2.2.2
