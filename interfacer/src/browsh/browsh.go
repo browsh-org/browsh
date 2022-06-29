@@ -93,8 +93,11 @@ func Initialise() {
 // Shutdown tries its best to cleanly shutdown browsh and the associated browser
 func Shutdown(err error) {
 	if *isDebug {
-		out := err.(*errors.Error).ErrorStack()
-		Log(fmt.Sprintf(out))
+		if e, ok := err.(*errors.Error); ok {
+			Log(fmt.Sprintf(e.ErrorStack()))
+		} else {
+			Log(err.Error())
+		}
 	}
 	exitCode := 0
 	if screen != nil {
