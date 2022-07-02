@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -192,20 +191,21 @@ func ttyEntry() {
 	TTYStart(realScreen)
 }
 
+func noFlagParse() {
+	// validURI contains array of valid user inputted links.
+	var validURI []string
+	if pflag.NArg() != 0 {
+		for i := 0; i < len(pflag.Args()); i++ {
+			validURI = append(validURI, pflag.Args()[i])
+		}
+	}
+	viper.SetDefault("validURI", validURI)
+}
+
 // MainEntry decides between running Browsh as a CLI app or as an HTTP web server
 func MainEntry() {
 	pflag.Parse()
-	// validURL contains array of valid user inputted links.
-	var validURL []string
-	if pflag.NArg() != 0 {
-		for i := 0; i < len(pflag.Args()); i++ {
-			u, _ := url.ParseRequestURI(pflag.Args()[i])
-			if u != nil {
-				validURL = append(validURL, pflag.Args()[i])
-			}
-		}
-	}
-	viper.SetDefault("validURL", validURL)
+	noFlagParse()
 	Initialise()
 	
 	// Print version if asked and exit
