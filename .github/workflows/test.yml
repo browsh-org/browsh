@@ -1,4 +1,4 @@
-name: Build browsh
+name: Run tests
 on: [push]
 jobs:
   build:
@@ -29,5 +29,13 @@ jobs:
         working-directory: ./webext
       - run: npx webpack
         working-directory: ./webext
+      - name: Pre-build
+        run: ./interfacer/contrib/build_browsh.sh
+      - name: Build
+        working-directory: ./interfacer
+        run: go build ./cmd/browsh
       - run: go test -v ./...
         working-directory: ./interfacer
+      - name: Test
+        run: ./interfacer/browsh --version
+
