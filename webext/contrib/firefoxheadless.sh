@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [[ "$1" = "kill" ]]; then
-  pids=$(ps aux|grep headless|grep 'profile /tmp'| tr -s ' ' | cut -d ' ' -f2)
+  pids=$(ps aux|grep headless|grep 'profile '| tr -s ' ' | cut -d ' ' -f2)
   if [[ $pids =~ [^0-9] ]] ; then
     kill $pids
   fi
