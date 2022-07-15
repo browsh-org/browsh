@@ -18,15 +18,14 @@ func TestHTTPServer(t *testing.T) {
 var _ = Describe("HTTP Server", func() {
 	It("should return plain text", func() {
 		response := getPath("/smorgasbord", "plain")
-		Expect(response).To(ContainSubstring("multiple hot       Smörgås"))
-		Expect(response).To(ContainSubstring("A special Swedish type of smörgåsbord"))
+		Expect(response).To(ContainSubstring("smörgåsbord"))
 		Expect(response).ToNot(ContainSubstring("<a href"))
 	})
 
 	It("should return HTML text", func() {
 		response := getPath("/smorgasbord", "html")
 		Expect(response).To(ContainSubstring(
-			"<a href=\"/http://localhost:4444/smorgasbord/another.html\">Another page</a>"))
+			"<a href=\"/http://localhost:4444/smorgasbord/another.html\">"))
 	})
 
 	It("should return the DOM", func() {
