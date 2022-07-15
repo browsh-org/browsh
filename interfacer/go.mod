@@ -6,7 +6,7 @@ require (
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/gdamore/tcell v1.1.2
 	github.com/go-errors/errors v1.0.1
-	github.com/gorilla/websocket v1.4.0
+	github.com/gorilla/websocket v1.4.1
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
 	github.com/shibukawa/configdir v0.0.0-20170330084843-e180dbdc8da0
