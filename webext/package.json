@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "get-gobindata": "go get -u gopkg.in/shuLhan/go-bindata.v3/...",
+    "get-gobindata": "go install github.com/kevinburke/go-bindata/go-bindata@latest",
     "build": "./contrib/bundle_webextension.sh",
     "test": "NODE_PATH=src:test mocha"
   },
