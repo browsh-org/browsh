@@ -311,7 +311,7 @@ func setupFirefox() {
 	go func() {
 		<-sigs
 		quitBrowsh()
-    }()
+	}()
 
 	firefoxMarionette()
 	installWebextension()
