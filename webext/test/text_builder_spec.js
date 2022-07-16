@@ -4,7 +4,7 @@ import helper from "helper";
 let text_builder, grid;
 
 describe("Text Builder", () => {
-  beforeEach(done => {
+  beforeEach((done) => {
     global.mock_DOM_template = [
       "                ",
       "                ",
@@ -12,7 +12,7 @@ describe("Text Builder", () => {
       "                ",
       "                ",
       "       !!!      ",
-      "       !!!      "
+      "       !!!      ",
     ];
 
     // We can't simulate anything that uses groups of spaces, as TextBuilder collapses all spaces
@@ -28,17 +28,17 @@ describe("Text Builder", () => {
       "Diff kinds of ",
       "Whitespace. ",
       "Also we need to ",
-      "test subframes."
+      "test subframes.",
     ];
 
     global.tty = {
       width: 5,
       height: 3,
       x_scroll: 0,
-      y_scroll: 0
+      y_scroll: 0,
     };
     global.frame_type = "small";
-    helper.runTextBuilder(returned_text_builder => {
+    helper.runTextBuilder((returned_text_builder) => {
       text_builder = returned_text_builder;
       grid = text_builder.tty_grid.cells;
       done();
@@ -54,17 +54,17 @@ describe("Text Builder", () => {
       bg_colour: [0, 0, 6],
       parent_element: {
         style: {
-          textAlign: "left"
-        }
+          textAlign: "left",
+        },
       },
       tty_coords: {
         x: 0,
-        y: 0
+        y: 0,
       },
       dom_coords: {
         x: 0,
-        y: 0
-      }
+        y: 0,
+      },
     });
     expect(grid[5]).to.equal(undefined);
     expect(grid[16]).to.deep.equal({
@@ -74,17 +74,17 @@ describe("Text Builder", () => {
       bg_colour: [0, 0, 16],
       parent_element: {
         style: {
-          textAlign: "left"
-        }
+          textAlign: "left",
+        },
       },
       tty_coords: {
         x: 0,
-        y: 1
+        y: 1,
       },
       dom_coords: {
         x: 0,
-        y: 2
-      }
+        y: 2,
+      },
     });
     expect(grid[36]).to.deep.equal({
       index: 36,
@@ -93,17 +93,17 @@ describe("Text Builder", () => {
       bg_colour: [0, 0, 30],
       parent_element: {
         style: {
-          textAlign: "left"
-        }
+          textAlign: "left",
+        },
       },
       tty_coords: {
         x: 4,
-        y: 2
+        y: 2,
       },
       dom_coords: {
         x: 4,
-        y: 4
-      }
+        y: 4,
+      },
     });
     expect(grid[37]).to.equal(undefined);
   });
@@ -122,7 +122,7 @@ describe("Text Builder", () => {
       sub_height: 6,
       total_width: 16,
       total_height: 14,
-      id: 1
+      id: 1,
     });
     expect(text_builder.frame.text).to.deep.equal([
       "T",
@@ -139,54 +139,11 @@ describe("Text Builder", () => {
       "i",
       "d",
       "e",
-      "."
+      ".",
     ]);
     expect(text_builder.frame.colours).to.deep.equal([
-      6,
-      0,
-      0,
-      7,
-      0,
-      0,
-      8,
-      0,
-      0,
-      9,
-      0,
-      0,
-      10,
-      0,
-      0,
-      16,
-      0,
-      0,
-      17,
-      0,
-      0,
-      18,
-      0,
-      0,
-      0,
-      19,
-      0,
-      20,
-      0,
-      0,
-      26,
-      0,
-      0,
-      27,
-      0,
-      0,
-      28,
-      0,
-      0,
-      29,
-      0,
-      0,
-      30,
-      0,
-      0
+      6, 0, 0, 7, 0, 0, 8, 0, 0, 9, 0, 0, 10, 0, 0, 16, 0, 0, 17, 0, 0, 18, 0,
+      0, 0, 19, 0, 20, 0, 0, 26, 0, 0, 27, 0, 0, 28, 0, 0, 29, 0, 0, 30, 0, 0,
     ]);
   });
 });

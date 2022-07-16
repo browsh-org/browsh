@@ -1,4 +1,4 @@
-export default MixinBase =>
+export default (MixinBase) =>
   class extends MixinBase {
     constructor() {
       super();

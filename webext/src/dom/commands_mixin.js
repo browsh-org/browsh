@@ -1,6 +1,6 @@
 import utils from "utils";
 
-export default MixinBase =>
+export default (MixinBase) =>
   class extends MixinBase {
     _handleBackgroundMessage(message) {
       let input, url, config;
@@ -169,7 +169,7 @@ export default MixinBase =>
       }
       const key_object = {
         key: key.char,
-        keyCode: key.key
+        keyCode: key.key,
       };
       let event_press = new KeyboardEvent("keypress", key_object);
       let event_down = new KeyboardEvent("keydown", key_object);
@@ -241,7 +241,7 @@ export default MixinBase =>
       }
       return [
         dom_x + this.dimensions.char.width / 2,
-        dom_y + this.dimensions.char.height / 2
+        dom_y + this.dimensions.char.height / 2,
       ];
     }
 
@@ -249,7 +249,7 @@ export default MixinBase =>
       const title_object = document.getElementsByTagName("title");
       let info = {
         url: document.location.href,
-        title: title_object.length ? title_object[0].innerHTML : ""
+        title: title_object.length ? title_object[0].innerHTML : "",
       };
       this.sendMessage(`/tab_info,${JSON.stringify(info)}`);
     }

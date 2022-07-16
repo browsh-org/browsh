@@ -1,7 +1,7 @@
 import utils from "utils";
 
 // Handle commands coming in from the terminal, like; STDIN keystrokes, TTY resize, etc
-export default MixinBase =>
+export default (MixinBase) =>
   class extends MixinBase {
     handleTerminalMessage(message) {
       const parts = message.split(",");
@@ -127,16 +127,16 @@ export default MixinBase =>
     createNewTab(url, callback) {
       const final_url = this._getURLfromUserInput(url);
       let creating = browser.tabs.create({
-        url: final_url
+        url: final_url,
       });
       creating.then(
-        tab => {
+        (tab) => {
           if (callback) {
             callback(tab);
           }
           this.log(`New tab created: ${tab}`);
         },
-        error => {
+        (error) => {
           this.log(`Error creating new tab: ${error}`);
         }
       );
@@ -144,13 +144,13 @@ export default MixinBase =>
 
     gotoURL(url) {
       let updating = browser.tabs.update(parseInt(this.currentTab().id), {
-        url: url
+        url: url,
       });
       updating.then(
-        tab => {
+        (tab) => {
           this.log(`Tab ${tab.id} loaded: ${url}`);
         },
-        error => {
+        (error) => {
           this.log(`Error loading: ${url} \nError: ${error}`);
         }
       );
@@ -158,13 +158,13 @@ export default MixinBase =>
 
     switchToTab(id) {
       let updating = browser.tabs.update(parseInt(id), {
-        active: true
+        active: true,
       });
       updating.then(
-        tab => {
+        (tab) => {
           this.log(`Switched to tab: ${tab.id}`);
         },
-        error => {
+        (error) => {
           this.log(`Error switching to tab: ${error}`);
         }
       );
@@ -179,9 +179,11 @@ export default MixinBase =>
     // because the content script may have crashed, even never loaded.
     screenshotActiveTab() {
       const capturing = browser.tabs.captureVisibleTab({
-        format: "jpeg"
+        format: "jpeg",
       });
-      capturing.then(this._saveScreenshot.bind(this), error => this.log(error));
+      capturing.then(this._saveScreenshot.bind(this), (error) =>
+        this.log(error)
+      );
     }
 
     _saveScreenshot(imageUri) {
@@ -190,12 +192,12 @@ export default MixinBase =>
     }
 
     _rawTextRequest(request_id, mode, url) {
-      this.createNewTab(url, native_tab => {
+      this.createNewTab(url, (native_tab) => {
         this._acknowledgeNewTab({
           id: native_tab.id,
           request_id: request_id,
           raw_text_mode_type: mode.toLowerCase(),
-          start_time: Date.now()
+          start_time: Date.now(),
         });
         // Sometimes tabs fail to load for whatever reason. Make sure they get
         // removed to save RAM in long-lived Browsh HTTP servers
@@ -218,20 +220,20 @@ export default MixinBase =>
 
     _addUserAgentListener() {
       browser.webRequest.onBeforeSendHeaders.addListener(
-        e => {
+        (e) => {
           if (this._is_using_mobile_user_agent) {
-            e.requestHeaders.forEach(header => {
+            e.requestHeaders.forEach((header) => {
               if (header.name.toLowerCase() == "user-agent") {
                 header.value = this.config.mobile_user_agent;
               }
             });
             return {
-              requestHeaders: e.requestHeaders
+              requestHeaders: e.requestHeaders,
             };
           }
         },
         {
-          urls: ["*://*/*"]
+          urls: ["*://*/*"],
         },
         ["blocking", "requestHeaders"]
       );

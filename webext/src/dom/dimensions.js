@@ -17,11 +17,11 @@ export default class extends utils.mixins(CommonMixin) {
     this._pre_calculated_char = !TEST
       ? {
           width: 9,
-          height: 15
+          height: 15,
         }
       : {
           width: 1,
-          height: 2
+          height: 2,
         };
 
     // TODO: WTF is this magic number? The gap between lines?
@@ -42,7 +42,7 @@ export default class extends utils.mixins(CommonMixin) {
       x_scroll: 0,
       y_scroll: 0,
       x_last_big_frame: 0,
-      y_last_big_frame: 0
+      y_last_big_frame: 0,
     };
   }
 
@@ -75,7 +75,7 @@ export default class extends utils.mixins(CommonMixin) {
       sub_width: utils.snap(this.frame.sub.width),
       sub_height: utils.snap(this.frame.sub.height),
       total_width: utils.snap(this.frame.width),
-      total_height: utils.snap(this.frame.height)
+      total_height: utils.snap(this.frame.height),
     };
   }
 
@@ -86,7 +86,7 @@ export default class extends utils.mixins(CommonMixin) {
       left: this.frame.x_scroll,
       top: this.frame.y_scroll,
       width: this.tty.width,
-      height: this.tty.height * 2
+      height: this.tty.height * 2,
     };
 
     this._scaleSubFrameToSubDOM();
@@ -101,7 +101,7 @@ export default class extends utils.mixins(CommonMixin) {
         this.frame.y_scroll - this._big_sub_frame_factor * this.tty.height * 2,
       width: this.tty.width + this._big_sub_frame_factor * 2 * this.tty.width,
       height:
-        this.tty.height + this._big_sub_frame_factor * 2 * this.tty.height * 2
+        this.tty.height + this._big_sub_frame_factor * 2 * this.tty.height * 2,
     };
     this._limitSubFrameDimensions();
     this._scaleSubFrameToSubDOM();
@@ -114,7 +114,7 @@ export default class extends utils.mixins(CommonMixin) {
       left: 0,
       top: 0,
       width: this.dom.width,
-      height: this.dom.height
+      height: this.dom.height,
     };
     if (this.dom.sub.width > this._entire_dom_limit) {
       this.dom.sub.width = this._entire_dom_limit;
@@ -128,7 +128,7 @@ export default class extends utils.mixins(CommonMixin) {
       left: 0,
       top: 0,
       width: this.dom.sub.width * this.scale_factor.width,
-      height: this.dom.sub.height * this.scale_factor.height
+      height: this.dom.sub.height * this.scale_factor.height,
     };
   }
 
@@ -152,7 +152,7 @@ export default class extends utils.mixins(CommonMixin) {
       left: this.frame.sub.left / this.scale_factor.width,
       top: this.frame.sub.top / this.scale_factor.height,
       width: this.frame.sub.width / this.scale_factor.width,
-      height: this.frame.sub.height / this.scale_factor.height
+      height: this.frame.sub.height / this.scale_factor.height,
     };
   }
 
@@ -182,7 +182,7 @@ export default class extends utils.mixins(CommonMixin) {
     }
     this.char = {
       width: this._pre_calculated_char.width,
-      height: this._pre_calculated_char.height + this._char_height_magic_number
+      height: this._pre_calculated_char.height + this._char_height_magic_number,
     };
   }
 
@@ -212,7 +212,7 @@ export default class extends utils.mixins(CommonMixin) {
       sub: this.dom.sub,
       width: new_width,
       height: new_height,
-      is_new: is_new
+      is_new: is_new,
     };
   }
 
@@ -256,7 +256,7 @@ export default class extends utils.mixins(CommonMixin) {
     this.scale_factor = {
       width: 1 / this.char.width,
       // Recall that 2 UTF8 half-black "pixels" can fit into a single TTY cell
-      height: 2 / this.char.height
+      height: 2 / this.char.height,
     };
   }
 
@@ -264,7 +264,7 @@ export default class extends utils.mixins(CommonMixin) {
     const dimensions = {
       dom: this.dom,
       frame: this.frame,
-      char: this.char
+      char: this.char,
     };
     this.sendMessage(`/dimensions,${JSON.stringify(dimensions)}`);
   }

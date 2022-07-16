@@ -46,7 +46,7 @@ export default class extends utils.mixins(CommonMixin) {
   _setRawTextTTYSize() {
     this.raw_text_tty_size = {
       width: this.config["http-server"].columns,
-      height: this.config["http-server"].rows
+      height: this.config["http-server"].rows,
     };
   }
 
@@ -73,14 +73,14 @@ export default class extends utils.mixins(CommonMixin) {
     );
     const current_window = browser.windows.getCurrent();
     current_window.then(
-      active_window => {
+      (active_window) => {
         this._sendWindowResizeRequest(
           active_window,
           window_width,
           window_height
         );
       },
-      error => {
+      (error) => {
         this.log("Error getting current browser window", error);
       }
     );
@@ -91,11 +91,11 @@ export default class extends utils.mixins(CommonMixin) {
     const updating = browser.windows.update(active_window.id, {
       width: width,
       height: height,
-      focused: false
+      focused: false,
     });
     updating.then(
-      info => this.log(`${tag} successful (${info.width}x${info.height})`),
-      error => this.log(tag + " error: ", error)
+      (info) => this.log(`${tag} successful (${info.width}x${info.height})`),
+      (error) => this.log(tag + " error: ", error)
     );
   }
 }

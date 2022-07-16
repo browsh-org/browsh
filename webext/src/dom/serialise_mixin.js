@@ -1,6 +1,6 @@
 import utils from "utils";
 
-export default MixinBase =>
+export default (MixinBase) =>
   class extends MixinBase {
     __serialiseFrame() {
       let cell, index;
@@ -20,7 +20,7 @@ export default MixinBase =>
             this.frame.colours.push(0);
             this.frame.text.push("");
           } else {
-            cell.fg_colour.map(c => this.frame.colours.push(c));
+            cell.fg_colour.map((c) => this.frame.colours.push(c));
             this.frame.text.push(cell.rune);
           }
         }
@@ -224,7 +224,7 @@ export default MixinBase =>
       let raw_input_boxes = document.querySelectorAll(
         "input, " + "textarea, " + '[role="textbox"]'
       );
-      raw_input_boxes.forEach(i => {
+      raw_input_boxes.forEach((i) => {
         let type;
         this._ensureBrowshID(i);
         dom_rect = this._convertDOMRectToAbsoluteCoords(
@@ -247,7 +247,7 @@ export default MixinBase =>
         font_rgb = styles["color"]
           .replace(/[^\d,]/g, "")
           .split(",")
-          .map(i => parseInt(i));
+          .map((i) => parseInt(i));
         const padding_top = parseInt(styles["padding-top"].replace("px", ""));
         const padding_left = parseInt(styles["padding-left"].replace("px", ""));
         if (this._isUnwantedInboxBox(i, styles)) {
@@ -265,7 +265,7 @@ export default MixinBase =>
           height: height,
           tag_name: i.nodeName,
           type: type,
-          colour: [font_rgb[0], font_rgb[1], font_rgb[2]]
+          colour: [font_rgb[0], font_rgb[1], font_rgb[2]],
         };
       });
       return parsed_input_boxes;
@@ -298,7 +298,7 @@ export default MixinBase =>
       let payload = {
         body: body,
         page_load_duration: this.config.page_load_duration,
-        parsing_duration: this._parsing_duration
+        parsing_duration: this._parsing_duration,
       };
       this.sendMessage(`/raw_text,${JSON.stringify(payload)}`);
     }
@@ -398,7 +398,7 @@ export default MixinBase =>
       this.frame = {
         meta: this.dimensions.getFrameMeta(),
         text: [],
-        colours: []
+        colours: [],
       };
       this.frame.meta.id = parseInt(this.channel.name);
     }

@@ -40,8 +40,8 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
   reload() {
     const reloading = browser.tabs.reload(this.id);
     reloading.then(
-      tab => this.log(`Tab ${tab.id} reloaded.`),
-      error => this.log(error)
+      (tab) => this.log(`Tab ${tab.id} reloaded.`),
+      (error) => this.log(error)
     );
   }
 
@@ -49,7 +49,7 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
     const removing = browser.tabs.remove(this.id);
     removing.then(
       () => this.log(`Tab ${this.id} removed.`),
-      error => this.log(error)
+      (error) => this.log(error)
     );
   }
 
@@ -81,7 +81,7 @@ export default class extends utils.mixins(CommonMixin, TabCommandsMixin) {
       title: this.title,
       uri: this.url,
       page_state: this.page_state,
-      status_message: this.status_message
+      status_message: this.status_message,
     };
   }
 

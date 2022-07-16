@@ -141,7 +141,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
 
   _setupDebouncedFunctions() {
     this._debouncedSmallTextFrame = _.debounce(this.sendSmallTextFrame, 100, {
-      leading: true
+      leading: true,
     });
   }
 
@@ -169,8 +169,8 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
   _registerWithBackground() {
     let sending = browser.runtime.sendMessage("/register");
     sending.then(
-      r => this._registrationSuccess(r),
-      e => this._registrationError(e)
+      (r) => this._registrationSuccess(r),
+      (e) => this._registrationError(e)
     );
   }
 
@@ -178,7 +178,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     this.channel = browser.runtime.connect({
       // We need to give ourselves a unique channel name, so the background
       // process can identify us amongst other tabs.
-      name: registered.id.toString()
+      name: registered.id.toString(),
     });
     this._postCommsInit();
   }
@@ -202,15 +202,15 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     window.addEventListener("unload", () => {
       this.sendMessage("/status,window_unload");
     });
-    window.addEventListener("error", error => {
+    window.addEventListener("error", (error) => {
       this.logError(error);
     });
   }
 
   _startMutationObserver() {
     let target = document.querySelector("body");
-    let observer = new MutationObserver(mutations => {
-      mutations.forEach(mutation => {
+    let observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
         this.log("!!MUTATION!!", mutation);
         this._debouncedSmallTextFrame();
       });
@@ -218,12 +218,12 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     observer.observe(target, {
       subtree: true,
       characterData: true,
-      childList: true
+      childList: true,
     });
   }
 
   _listenForBackgroundMessages() {
-    this.channel.onMessage.addListener(message => {
+    this.channel.onMessage.addListener((message) => {
       try {
         this._handleBackgroundMessage(message);
       } catch (error) {

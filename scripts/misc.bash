@@ -9,3 +9,9 @@ function golang_lint_check() {
 function golang_lint_fix() {
 	gofmt -w ./interfacer
 }
+
+function prettier_fix() {
+	pushd "$PROJECT_ROOT"/webext || _panic
+	prettier --write '{src,test}/**/*.js'
+	popd || _panic
+}

@@ -12,7 +12,7 @@ describe("Graphics Builder", () => {
         width: 4,
         height: 2,
         x_scroll: 0,
-        y_scroll: 0
+        y_scroll: 0,
       };
       graphics_builder = helper.runGraphicsBuilder();
     });
@@ -35,7 +35,7 @@ describe("Graphics Builder", () => {
         sub_height: 4,
         total_width: 4,
         total_height: 4,
-        id: 1
+        id: 1,
       });
     });
   });
@@ -46,7 +46,7 @@ describe("Graphics Builder", () => {
         width: 2,
         height: 2,
         x_scroll: 2,
-        y_scroll: 1
+        y_scroll: 1,
       };
       global.frame_type = "small";
       global.mock_DOM_template = ["    ", "    ", "    ", "    "];
@@ -71,7 +71,7 @@ describe("Graphics Builder", () => {
         sub_height: 4,
         total_width: 4,
         total_height: 8,
-        id: 1
+        id: 1,
       });
     });
   });
