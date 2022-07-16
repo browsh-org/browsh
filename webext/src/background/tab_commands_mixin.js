@@ -47,11 +47,16 @@ export default MixinBase =>
     }
 
     _rawTextRequest(incoming) {
-      let payload = {
-        json: JSON.stringify(incoming),
-        request_id: this.request_id
-      };
-      this.sendToTerminal(`/raw_text,${JSON.stringify(payload)}`);
+      // I think the only reason that a tab would send a raw text payload is the
+      // automatic startup URL loading, which should now be disabled for HTTP Server
+      // mode.
+      if (this.request_id) {
+        let payload = {
+          json: JSON.stringify(incoming),
+          request_id: this.request_id
+        };
+        this.sendToTerminal(`/raw_text,${JSON.stringify(payload)}`);
+      }
       this._tabCount(count => {
         if (count > 1) {
           this.remove();
