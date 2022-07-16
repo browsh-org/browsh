@@ -158,7 +158,9 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	// work. So we do it here instead.
 	validURL := viper.GetStringSlice("validURL")
 	if len(validURL) == 0 {
-		sendMessageToWebExtension("/new_tab," + viper.GetString("startup-url"))
+		if !IsHTTPServerMode {
+			sendMessageToWebExtension("/new_tab," + viper.GetString("startup-url"))
+		}
 	} else {
 		for i := 0; i < len(validURL); i++ {
 			sendMessageToWebExtension("/new_tab," + validURL[i])
