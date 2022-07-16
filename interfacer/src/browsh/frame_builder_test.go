@@ -10,7 +10,6 @@ import (
 
 func TestFrameBuilder(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Frame builder tests")
 }
 
 var testFrame *frame

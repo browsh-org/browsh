@@ -10,7 +10,6 @@ import (
 
 func TestMultiLineTextBuilder(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Frame builder tests")
 }
 
 var input *inputBox

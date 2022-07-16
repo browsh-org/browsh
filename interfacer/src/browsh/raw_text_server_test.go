@@ -9,7 +9,6 @@ import (
 
 func TestRawTextServer(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Raw text server tests")
 }
 
 var _ = Describe("Raw text server", func() {
