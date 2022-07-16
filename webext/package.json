@@ -1,7 +1,7 @@
 {
   "scripts": {
     "build_webextension": "../ctl.sh build_webextension",
-    "lint": "prettier --list-different "{src,test}/**/*.js",
+    "lint": "prettier --list-different '{src,test}/**/*.js'",
     "test": "NODE_PATH=src:test mocha"
   },
   "babel": {
