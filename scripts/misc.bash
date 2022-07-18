@@ -56,14 +56,3 @@ function install_golang() {
 	tar -C "$GOROOT/.." -xzf go.tar.gz
 	go version
 }
-
-function build_browsh_binary() {
-	local path=$1
-	pushd "$path" || _panic
-	local webextension="src/browsh/browsh.xpi"
-	[ ! -f "$webextension" ] && _panic "browsh.xpi not present"
-	md5sum "$webextension"
-	go build ./cmd/browsh
-	./browsh --version
-	popd || _panic
-}

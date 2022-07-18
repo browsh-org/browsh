@@ -12,3 +12,8 @@ webext/node_modules
 webext/dist/*
 dist
 *.xpi
+
+# This is because of odd permissions quirk on Github Actions. I can't seem to find a
+# way to delete these files in CI, so let's just igmore them
+/pkg
+/bin

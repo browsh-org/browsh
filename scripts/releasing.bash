@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 export BROWSH_VERSION
 export LATEST_TAGGED_VERSION
@@ -8,8 +8,12 @@ function _goreleaser_production() {
 		echo "Installing \`goreleaser'..."
 		go install github.com/goreleaser/goreleaser@v"$GORELEASER_VERSION"
 	fi
-	pushd "$PROJECT_ROOT"/interfacer/src || _panic
-	goreleaser release
+	pushd "$PROJECT_ROOT"/interfacer || _panic
+	_export_versions
+	[ "$BROWSH_VERSION" = "" ] && _panic "BROWSH_VERSION unset (goreleaser needs it)"
+	goreleaser release \
+		--config "$PROJECT_ROOT"/goreleaser.yml \
+		--rm-dist
 	popd || _panic
 }
 
@@ -21,9 +25,9 @@ function _export_versions() {
 }
 
 function _parse_browsh_version() {
-	version_file=$PROJECT_ROOT/interfacer/src/browsh/version.go
-	line=$(grep 'browshVersion' <"$version_file")
-	version=$(echo "$line" | grep -o '".*"' | sed 's/"//g')
+	local version_file=$PROJECT_ROOT/interfacer/src/browsh/version.go
+	local line && line=$(grep 'browshVersion' <"$version_file")
+	local version && version=$(echo "$line" | grep -o '".*"' | sed 's/"//g')
 	echo -n "$version"
 }
 
@@ -39,7 +43,7 @@ function _tag_on_version_change() {
 	echo_versions
 
 	if ! _is_new_version; then
-		echo "Not running release as there's no new version."
+		echo "Not tagging as there's no new version."
 		exit 0
 	fi
 
@@ -47,15 +51,13 @@ function _tag_on_version_change() {
 	git show v"$BROWSH_VERSION" --quiet
 	git config --global user.email "ci@github.com"
 	git config --global user.name "Github Actions"
-	# `/dev/null` needed to prevent Github token appearing in logs
-	git push --tags --quiet https://"$GITHUB_TOKEN"@github.com/browsh-org/browsh >/dev/null 2>&1
-
+	git add --all
 	git reset --hard v"$BROWSH_VERSION"
 }
 
 function echo_versions() {
 	_export_versions
-	echo "Browsh Golang version: $BROWSH_VERSION"
+	echo "Browsh binary version: $BROWSH_VERSION"
 	echo "Git latest tag: $LATEST_TAGGED_VERSION"
 }
 
@@ -72,21 +74,22 @@ function github_actions_output_version_status() {
 	echo "::set-output name=is_new_version::$status"
 }
 
-function npm_build_release() {
+function webext_build_release() {
 	pushd "$PROJECT_ROOT"/webext || _panic
-	BROWSH_ENV=RELEASE npm run build_webextension
+	build_webextension_production
 	popd || _panic
 }
 
 function update_browsh_website_with_new_version() {
+	_export_versions
+	local remote="git@github.com:browsh-org/www.brow.sh.git"
 	pushd /tmp || _panic
-	git clone https://github.com/browsh-org/www.brow.sh.git
-	cd www.brow.sh || exit 1
+	git clone "$remote"
+	cd www.brow.sh || _panic
 	echo "latest_version: $BROWSH_VERSION" >_data/browsh.yml
 	git add _data/browsh.yml
 	git commit -m "Github Actions: updated Browsh version to $BROWSH_VERSION"
-	# `/dev/null` needed to prevent Github token appearing in logs
-	git push --quiet https://"$GITHUB_TOKEN"@github.com/browsh-org/www.brow.sh >/dev/null 2>&1
+	git push "$remote"
 	popd || _panic
 }
 
@@ -99,9 +102,23 @@ function goreleaser_local_only() {
 	popd || _panic
 }
 
+function build_browsh_binary() {
+	# Requires $path argument because it's used in the Dockerfile where the GOROOT is
+	# outside .git/
+	local path=$1
+	pushd "$path" || _panic
+	local webextension="src/browsh/browsh.xpi"
+	[ ! -f "$webextension" ] && _panic "browsh.xpi not present"
+	md5sum "$webextension"
+	go build ./cmd/browsh
+	echo "Freshly built \`browsh' version: $(./browsh --version 2>&1)"
+	popd || _panic
+}
+
 function release() {
-	npm_build_release
+	[ "$(git rev-parse --abbrev-ref HEAD)" != "master" ] && _panic "Not releasing unless on the master branch"
+	webext_build_release
+	build_browsh_binary "$PROJECT_ROOT"/interfacer
 	_tag_on_version_change
 	_goreleaser_production
-	update_browsh_website_with_new_version
 }
