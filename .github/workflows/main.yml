@@ -64,3 +64,12 @@ jobs:
       - name: Release
         if: contains(steps.check_versions.outputs.is_new_version, 'true')
         run: ./ctl.sh release
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: tombh
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+      - name: Docker Release
+        run: ./ctl.sh docker_release
+      - name: Update Browsh Website
+        run: ./ctl.sh update_browsh_website_with_new_version
