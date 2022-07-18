@@ -35,8 +35,8 @@ is running somewhere else on mains electricity.
 
 ## Installation
 
-Download a binary from the [releases](https://github.com/browsh-org/browsh/releases) (~7MB).
-You will need to have [Firefox 63](https://www.mozilla.org/en-US/firefox/new/) (or higher) already installed.
+Download a binary from the [releases](https://github.com/browsh-org/browsh/releases) (~11MB).
+You will need to have [Firefox](https://www.mozilla.org/en-US/firefox/new/) already installed.
 
 Or download and run the Docker image (~230MB) with:
     `docker run --rm -it browsh/browsh`

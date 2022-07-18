@@ -57,15 +57,14 @@ nfpms:
 brews:
   - name: browsh
     tap:
-      owner: browsh-org
       name: homebrew-browsh
-    commit_author:
-      name: Goreleaser Bot care of Github Actions
-      email: ci@github.com
     homepage: "https://www.brow.sh"
     description: "The modern, text-based browser"
     caveats: "You need Firefox 57 or newer to run Browsh"
+    # We do the upload manually because Goreleaser doesn't support Deploy Keys and Github
+    # doesn't support repo-specific Access Tokens 🙄
+    skip_upload: true
 
 release:
   extra_files:
-    - glob: ./webext/dist/web-ext-artifacts/browsh-{{ Env.BROWSH_VERSION }}-an+fx.xpi
+    - glob: ./browsh-*.xpi

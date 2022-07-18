@@ -12,3 +12,14 @@ webext/node_modules
 webext/dist/*
 dist
 *.xpi
+
+# This is because of an odd permissions quirk on Github Actions. I can't seem to find a
+# way to delete these files in CI, so let's just ignore them. Otherwise Goreleaser complains
+# about a dirty working tree.
+/pkg
+/bin
+
+# Goreleaser needs to upload the webextension as an extra file in the release. But it doesn't
+# like Git to be in a dirty state. Also Goreleaser is run at PWD ./interfacer, so we can't
+# reference the webextension with something like ../webext/...
+interfacer/browsh-*.xpi

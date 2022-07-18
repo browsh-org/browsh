@@ -24,20 +24,18 @@ ADD .github .github
 ADD scripts scripts
 ADD ctl.sh .
 
-# Install Golang
+# Install Golang and Browsh
 ENV GOROOT=/go
 ENV GOPATH=/go-home
 ENV PATH=$GOROOT/bin:$GOPATH/bin:$PATH
-RUN /build/ctl.sh install_golang
+ENV BASE=$GOPATH/src/browsh/interfacer
+ADD interfacer $BASE
+WORKDIR $BASE
+RUN /build/ctl.sh install_golang $BASE
+RUN /build/ctl.sh build_browsh_binary $BASE
 
 # Install firefox
 RUN /build/ctl.sh install_firefox
-
-# Build Browsh
-ENV BASE=$GOPATH/src/browsh/interfacer
-WORKDIR $BASE
-ADD interfacer $BASE
-RUN /build/ctl.sh build_browsh_binary $BASE
 
 
 ###########################

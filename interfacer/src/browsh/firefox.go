@@ -230,8 +230,6 @@ func firefoxMarionette() {
 	sendFirefoxCommand("WebDriver:NewSession", map[string]interface{}{})
 }
 
-// Install the Browsh extension that was bundled with `go-bindata` under
-// `webextension.go`.
 func installWebextension() {
 	data, err := browshXpi.ReadFile("browsh.xpi")
 	if err != nil {
