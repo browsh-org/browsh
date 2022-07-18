@@ -36,15 +36,19 @@ function install_firefox() {
 	popd || _panic
 }
 
-function parse_golang_version_from_ci_config() {
-	local line && line=$(grep 'go-version:' <"$PROJECT_ROOT"/.github/workflows/main.yml)
-	local version && version=$(echo "$line" | tr -s ' ' | cut -d ' ' -f 3)
-	[ "$version" = "" ] && _panic "Couldn't parse Golang version"
+function parse_golang_version_from_go_mod() {
+	local path=$1
+	[ "$path" = "" ] && _panic "Path to Golang interfacer code not passed"
+	local line && line=$(grep '^go ' <"$path"/go.mod)
+	local version && version=$(echo "$line" | tr -s ' ' | cut -d ' ' -f 2)
+	[ "$(echo "$version" | tr -s ' ')" == "" ] && _panic "Couldn't parse Golang version"
 	echo -n "$version"
 }
 
 function install_golang() {
-	local version && version=$(parse_golang_version_from_ci_config)
+	local path=$1
+	[ "$path" = "" ] && _panic "Path to Golang interfacer code not passed"
+	local version && version=$(parse_golang_version_from_go_mod "$path")
 	[ "$GOPATH" = "" ] && _panic "GOPATH not set"
 	[ "$GOROOT" = "" ] && _panic "GOROOT not set"
 	echo "Installing Golang v$version... to $GOROOT"
@@ -55,15 +59,4 @@ function install_golang() {
 	mkdir -p "$GOROOT"
 	tar -C "$GOROOT/.." -xzf go.tar.gz
 	go version
-}
-
-function build_browsh_binary() {
-	local path=$1
-	pushd "$path" || _panic
-	local webextension="src/browsh/browsh.xpi"
-	[ ! -f "$webextension" ] && _panic "browsh.xpi not present"
-	md5sum "$webextension"
-	go build ./cmd/browsh
-	./browsh --version
-	popd || _panic
 }

@@ -1,7 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "build_webextension": "../ctl.sh build_webextension",
+    "build:dev": "webpack",
+    "build:watch": "webpack --watch",
     "lint": "prettier --list-different '{src,test}/**/*.js'",
     "test": "NODE_PATH=src:test mocha"
   },

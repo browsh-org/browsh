@@ -1,11 +1,12 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 set -e
 
 function_to_run=$1
 
-export PROJECT_ROOT && PROJECT_ROOT=$(git rev-parse --show-toplevel)
+export PROJECT_ROOT
 export GORELEASER_VERSION=1.10.2
-export GOBINDATA_VERSION=3.23.0
+
+PROJECT_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 function _includes_path {
 	echo "$PROJECT_ROOT"/scripts
@@ -26,4 +27,7 @@ if [[ $(type -t "$function_to_run") != function ]]; then
 fi
 
 shift
+
+pushd "$PROJECT_ROOT" || _panic
 "$function_to_run" "$@"
+popd || _panic

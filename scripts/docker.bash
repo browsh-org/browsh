@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 function docker_image_name() {
+	_export_versions
 	echo browsh/browsh:v"$BROWSH_VERSION"
 }
 

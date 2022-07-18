@@ -1,13 +1,15 @@
-name: Test/Release
+name: Test-Release
 on: [push]
 
 jobs:
-  test_maybe_release:
-    name: Test (then release if new version)
+  tests:
+    name: "Tests (webextension, interfacer: unit, tty, http-server)"
     runs-on: ubuntu-latest
     env:
       GOPATH: ${{ github.workspace }}
       GOBIN: ${{ github.workspace }}/bin
+    outputs:
+      is_new_version: ${{ steps.check_versions.outputs.is_new_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -16,15 +18,15 @@ jobs:
       - name: Setup go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.18.x
+          go-version-file: 'interfacer/go.mod'
       - name: Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version-file: '.nvmrc'
       - name: Install Firefox
         uses: browser-actions/setup-firefox@latest
         with:
-          firefox-version: 102.0.1 # TODO: Use same version in Dockerfile
+          firefox-version: 102.0.1
       - run: firefox --version
 
       # Web extension tests
@@ -33,14 +35,13 @@ jobs:
       - name: Web extension tests
         run: npm test
         working-directory: ./webext
-      - run: npm run build_webextension
-        working-directory: ./webext
 
       # Interfacer tests
-      - name: Build
-        run: go build ./cmd/browsh
-        working-directory: ./interfacer
-
+      - name: Interfacer tests setup
+        run: |
+          touch interfacer/src/browsh/browsh.xpi
+          cd webext
+          npm run build:dev
       - name: Unit tests
         run: go test -v $(find src/browsh -name '*.go' | grep -v windows)
         working-directory: ./interfacer
@@ -51,19 +52,64 @@ jobs:
         if: ${{ failure() }}
         run: cat ./interfacer/test/tty/debug.log || echo "No log file"
       - name: HTTP Server tests
-        run: go test test/http-server/*.go -v -ginkgo.slowSpecThreshold=30 -ginkgo.flakeAttempts=3
-        working-directory: ./interfacer
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 3
+          retry_on: error
+          timeout_minutes: 15
+          command: |
+            cd interfacer
+            go test test/http-server/*.go -v -ginkgo.slowSpecThreshold=30 -ginkgo.flakeAttempts=3
       - name: HTTP Server debug log
         if: ${{ failure() }}
         run: cat ./interfacer/test/http-server/debug.log || echo "No log file"
 
-      # Release
       - name: Check for new version
         id: check_versions
         run: ./ctl.sh github_actions_output_version_status
-      - name: Release
-        if: contains(steps.check_versions.outputs.is_new_version, 'true')
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: tests
+    if: github.ref == 'refs/heads/master' && contains(needs.tests.outputs.is_new_version, 'true')
+    env:
+      GOPATH: ${{ github.workspace }}
+      GOBIN: ${{ github.workspace }}/bin
+      MDN_KEY: ${{ secrets.MDN_KEY }}
+      DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Setup Deploy Keys
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          # Note that these private keys depend on having an ssh-keygen'd comment with the
+          # Git remote URL. This is because Github Actions use the *first* matching private
+          # key and fails if it doesn't match. webfactory/ssh-agent
+          ssh-private-key: |
+            ${{ secrets.HOMEBREW_DEPLOY_KEY }}
+            ${{ secrets.WWW_DEPLOY_KEY }}
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: 'interfacer/go.mod'
+      - run: npm ci
+        working-directory: ./webext
+      - name: Binary Release
         run: ./ctl.sh release
+      - name: Push new tag
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tags: true
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -71,5 +117,7 @@ jobs:
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
       - name: Docker Release
         run: ./ctl.sh docker_release
+      - name: Update Homebrew Tap
+        run: ./ctl.sh update_homebrew_tap_with_new_version
       - name: Update Browsh Website
         run: ./ctl.sh update_browsh_website_with_new_version
