@@ -25,8 +25,15 @@ function docker_login() {
 		-p "$DOCKER_ACCESS_TOKEN"
 }
 
+function docker_tag_latest() {
+	local latest=browsh/browsh:latest
+	docker tag "$(docker_image_name)" "$latest"
+	docker push "$latest"
+}
+
 function docker_release() {
 	! is_docker_logged_in && try_docker_login
 	docker_build
 	docker push "$(docker_image_name)"
+	docker_tag_latest
 }
