@@ -2,22 +2,28 @@ package browsh
 
 import (
 	"bufio"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path"
 	"regexp"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/gdamore/tcell"
 	"github.com/go-errors/errors"
 	"github.com/spf13/viper"
 )
+
+//go:embed browsh.xpi
+var browshXpi embed.FS
 
 var (
 	marionette     net.Conn
@@ -224,10 +230,8 @@ func firefoxMarionette() {
 	sendFirefoxCommand("WebDriver:NewSession", map[string]interface{}{})
 }
 
-// Install the Browsh extension that was bundled with `go-bindata` under
-// `webextension.go`.
 func installWebextension() {
-	data, err := Asset("/browsh.xpi")
+	data, err := browshXpi.ReadFile("browsh.xpi")
 	if err != nil {
 		Shutdown(err)
 	}
@@ -300,6 +304,13 @@ func setupFirefox() {
 	if *timeLimit > 0 {
 		go beginTimeLimit()
 	}
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigs
+		quitBrowsh()
+	}()
+
 	firefoxMarionette()
 	installWebextension()
 }

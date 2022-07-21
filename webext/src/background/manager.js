@@ -39,13 +39,13 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   _connectToTerminal() {
     // This is the websocket server run by the CLI client
     this.terminal = new WebSocket("ws://localhost:3334");
-    this.terminal.addEventListener("open", _event => {
+    this.terminal.addEventListener("open", (_event) => {
       this.log("Webextension connected to the terminal's websocket server");
       this.dimensions.terminal = this.terminal;
       this._listenForTerminalMessages();
       this._connectToBrowserDOM();
     });
-    this.terminal.addEventListener("close", _event => {
+    this.terminal.addEventListener("close", (_event) => {
       this._reconnectToTerminal();
     });
   }
@@ -65,8 +65,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   // to TTY resize events too.
   _listenForTerminalMessages() {
     this.log("Starting to listen to TTY");
-    this.terminal.addEventListener("message", event => {
-      // chatty this.log("message from terminal: " + event.data);
+    this.terminal.addEventListener("message", (event) => {
       this.handleTerminalMessage(event.data);
     });
   }
@@ -111,7 +110,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   // TODO: Detect deleted tabs to remove the key from `this.tabs[]`
   _listenForTabUpdates() {
     setInterval(() => {
-      this._pollAllTabs(native_tab_object => {
+      this._pollAllTabs((native_tab_object) => {
         let tab = this._applyUpdates(native_tab_object);
         tab.ensureConnectionToBackground();
       });
@@ -129,7 +128,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
 
   _handleTabUpdate(_tab_id, changes, native_tab_object) {
     this.log(
-      `Tab ${native_tab_object.id} detected chages: ${JSON.stringify(changes)}`
+      `Tab ${native_tab_object.id} detected chages: ${JSON.stringify(changes)}`,
     );
     let tab = this.tabs[native_tab_object.id];
     tab.native_last_change = changes;
@@ -142,7 +141,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   // until it knows its internally represented ID.
   _newTabHandler(_request, sender, sendResponse) {
     this.log(
-      `Tab ${sender.tab.id} (${sender.tab.title}) registered with background process`
+      `Tab ${sender.tab.id} (${sender.tab.title}) registered with background process`,
     );
     // Send the tab back to itself, such that it can be enlightened unto its own nature
     sendResponse(sender.tab);
@@ -157,7 +156,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
 
   _applyUpdates(tabish_object) {
     let tab = this._maybeNewTab({
-      id: tabish_object.id
+      id: tabish_object.id,
     });
     [
       "id",
@@ -166,8 +165,8 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
       "active",
       "request_id",
       "raw_text_mode_type",
-      "start_time"
-    ].map(key => {
+      "start_time",
+    ].map((key) => {
       if (tabish_object.hasOwnProperty(key)) {
         tab[key] = tabish_object[key];
       }
@@ -181,13 +180,13 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   // This is the main communication channel for all back and forth messages to tabs
   _listenForTabChannelOpen() {
     browser.runtime.onConnect.addListener(
-      this._tabChannelOpenHandler.bind(this)
+      this._tabChannelOpenHandler.bind(this),
     );
   }
 
   _tabChannelOpenHandler(channel) {
     this.log(
-      `Tab ${channel.name} connected for communication with background process`
+      `Tab ${channel.name} connected for communication with background process`,
     );
     let tab = this.tabs[parseInt(channel.name)];
     tab.postConnectionInit(channel, this.config);
@@ -208,7 +207,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
 
   _getTabsOnSuccess(windowInfoArray, callback) {
     for (let windowInfo of windowInfoArray) {
-      windowInfo.tabs.map(tab => {
+      windowInfo.tabs.map((tab) => {
         callback(tab);
       });
     }
@@ -221,11 +220,11 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   _pollAllTabs(callback) {
     var getting = browser.windows.getAll({
       populate: true,
-      windowTypes: ["normal"]
+      windowTypes: ["normal"],
     });
     getting.then(
-      windowInfoArray => this._getTabsOnSuccess(windowInfoArray, callback),
-      () => this._getTabsOnError(callback)
+      (windowInfoArray) => this._getTabsOnSuccess(windowInfoArray, callback),
+      () => this._getTabsOnError(callback),
     );
   }
 
@@ -250,7 +249,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     this.log(
       "BACKGROUND: Frame loop starting at " +
         this.config.tty.small_pixel_frame_rate +
-        "ms intervals"
+        "ms intervals",
     );
     setInterval(() => {
       if (this._is_initial_window_size_pending) this._initialWindowResize();
@@ -274,7 +273,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     }
     if (this.currentTab().channel === undefined) {
       this.log(
-        `Active tab ${this.active_tab_id} does not have a channel, so not requesting a frame`
+        `Active tab ${this.active_tab_id} does not have a channel, so not requesting a frame`,
       );
       return false;
     }
@@ -284,7 +283,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   // Listen for HTTP activity so we can notify the user that something is loading in the background
   _addWebRequestListener() {
     browser.webRequest.onBeforeRequest.addListener(
-      e => {
+      (e) => {
         let message;
         if (e.type == "main_frame") {
           message = `Loading ${e.url}`;
@@ -294,9 +293,9 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
         }
       },
       {
-        urls: ["*://*/*"]
+        urls: ["*://*/*"],
       },
-      ["blocking"]
+      ["blocking"],
     );
   }
 }

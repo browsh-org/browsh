@@ -130,7 +130,6 @@ func webSocketWriter(ws *websocket.Conn) {
 	defer ws.Close()
 	for {
 		message = <-stdinChannel
-		// chatty Log(fmt.Sprintf("TTY sending: %s", message))
 		if err := ws.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 			if err == websocket.ErrCloseSent {
 				Log("Socket writer detected that the browser closed the websocket")
@@ -160,7 +159,9 @@ func webSocketServer(w http.ResponseWriter, r *http.Request) {
 	// work. So we do it here instead.
 	validURL := viper.GetStringSlice("validURL")
 	if len(validURL) == 0 {
-		sendMessageToWebExtension("/new_tab," + viper.GetString("startup-url"))
+		if !IsHTTPServerMode {
+			sendMessageToWebExtension("/new_tab," + viper.GetString("startup-url"))
+		}
 	} else {
 		for i := 0; i < len(validURL); i++ {
 			sendMessageToWebExtension("/new_tab," + validURL[i])

@@ -2,7 +2,7 @@ import utils from "utils";
 
 // Handle commands from tabs, like sending a frame or information about
 // the current character dimensions.
-export default MixinBase =>
+export default (MixinBase) =>
   class extends MixinBase {
     // TODO: There needs to be some consistency in this message sending protocol.
     //       Eg; always requiring JSON.
@@ -50,12 +50,17 @@ export default MixinBase =>
     }
 
     _rawTextRequest(incoming) {
-      let payload = {
-        json: JSON.stringify(incoming),
-        request_id: this.request_id
-      };
-      this.sendToTerminal(`/raw_text,${JSON.stringify(payload)}`);
-      this._tabCount(count => {
+      // I think the only reason that a tab would send a raw text payload is the
+      // automatic startup URL loading, which should now be disabled for HTTP Server
+      // mode.
+      if (this.request_id) {
+        let payload = {
+          json: JSON.stringify(incoming),
+          request_id: this.request_id,
+        };
+        this.sendToTerminal(`/raw_text,${JSON.stringify(payload)}`);
+      }
+      this._tabCount((count) => {
         if (count > 1) {
           this.remove();
         }
@@ -63,7 +68,7 @@ export default MixinBase =>
     }
 
     _tabCount(callback) {
-      this._getAllTabs(windowInfoArray => {
+      this._getAllTabs((windowInfoArray) => {
         callback(windowInfoArray[0].tabs.length);
       });
     }
@@ -71,10 +76,10 @@ export default MixinBase =>
     _getAllTabs(callback) {
       var getting = browser.windows.getAll({
         populate: true,
-        windowTypes: ["normal"]
+        windowTypes: ["normal"],
       });
       getting.then(
-        windowInfoArray => callback(windowInfoArray),
+        (windowInfoArray) => callback(windowInfoArray),
         () => this.log("Error getting all tabs in Tab class")
       );
     }

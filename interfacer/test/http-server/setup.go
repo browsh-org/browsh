@@ -8,7 +8,7 @@ import (
 
 	ginkgo "github.com/onsi/ginkgo"
 
-	"browsh/interfacer/src/browsh"
+	"github.com/browsh-org/browsh/interfacer/src/browsh"
 	"github.com/spf13/viper"
 )
 
@@ -75,9 +75,7 @@ func stopFirefox() {
 }
 
 var _ = ginkgo.BeforeEach(func() {
-	stopFirefox()
 	browsh.ResetTabs()
-	browsh.StartFirefox()
 	waitUntilConnectedToWebExtension(15 * time.Second)
 	browsh.IsMonochromeMode = false
 	browsh.Log("\n---------")

@@ -38,9 +38,10 @@ var (
    ********///////////////
      ***********************`
 	// IsTesting is used in tests, so it needs to be exported
-	IsTesting = false
-	logfile   string
-	_         = pflag.Bool("version", false, "Output current Browsh version")
+	IsTesting        = false
+	IsHTTPServerMode = false
+	logfile          string
+	_                = pflag.Bool("version", false, "Output current Browsh version")
 )
 
 func setupLogging() {
@@ -94,8 +95,11 @@ func Initialise() {
 // Shutdown tries its best to cleanly shutdown browsh and the associated browser
 func Shutdown(err error) {
 	if *isDebug {
-		out := err.(*errors.Error).ErrorStack()
-		Log(fmt.Sprintf(out))
+		if e, ok := err.(*errors.Error); ok {
+			Log(fmt.Sprintf(e.ErrorStack()))
+		} else {
+			Log(err.Error())
+		}
 	}
 	exitCode := 0
 	if screen != nil {
@@ -212,10 +216,20 @@ func MainEntry() {
 	}
 	viper.SetDefault("validURL", validURL)
 	Initialise()
-	if viper.GetBool("version") {
+
+	// Print version if asked and exit
+	if viper.GetBool("version") || viper.GetBool("v") {
 		println(browshVersion)
 		os.Exit(0)
 	}
+
+	// Print name if asked and exit
+	if viper.GetBool("name") || viper.GetBool("n") {
+		println("Browsh")
+		os.Exit(0)
+	}
+
+	// Decide whether to run in http-server-mode or CLI app
 	if viper.GetBool("http-server-mode") {
 		HTTPServerStart()
 	} else {

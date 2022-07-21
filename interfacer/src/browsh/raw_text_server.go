@@ -66,6 +66,7 @@ type rawTextResponse struct {
 // it will return:
 // `Something                                                                    `
 func HTTPServerStart() {
+	IsHTTPServerMode = true
 	StartFirefox()
 	go startWebSocketServer()
 	Log("Starting Browsh HTTP server")

@@ -1,0 +1,70 @@
+# Run with `ctl.sh release` to get ENV vars
+
+project_name: browsh
+builds:
+  - binary: browsh
+    env:
+      - CGO_ENABLED=0
+    main: cmd/browsh/main.go
+    goos:
+      - windows
+      - darwin
+      - linux
+      - freebsd
+      - openbsd
+    goarch:
+      - 386
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - 6
+      - 7
+    ignore:
+      - goos: darwin
+        goarch: 386
+      - goarch: arm64
+        goos: windows
+    ldflags: -s -w
+
+archives:
+  - format_overrides:
+    - goos: windows
+      format: binary
+    - goos: linux
+      format: binary
+    - goos: freebsd
+      format: binary
+    - goos: openbsd
+      format: binary
+
+nfpms:
+  - vendor: Browsh
+    homepage: https://www.brow.sh
+    maintainer: Thomas Buckley-Houston <tom@tombh.co.uk>
+    description: The modern, text-based browser
+    license: GPL v3
+    formats:
+      - deb
+      - rpm
+    dependencies:
+      - firefox
+    overrides:
+      deb:
+        dependencies:
+          - 'firefox | firefox-esr'
+
+brews:
+  - name: browsh
+    tap:
+      name: homebrew-browsh
+    homepage: "https://www.brow.sh"
+    description: "The modern, text-based browser"
+    caveats: "You need Firefox 57 or newer to run Browsh"
+    # We do the upload manually because Goreleaser doesn't support Deploy Keys and Github
+    # doesn't support repo-specific Access Tokens 🙄
+    skip_upload: true
+
+release:
+  extra_files:
+    - glob: ./browsh-*.xpi

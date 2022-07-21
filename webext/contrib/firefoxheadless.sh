@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 
 if [[ "$1" = "kill" ]]; then
-  pids=$(ps aux|grep headless|grep 'profile /tmp'| tr -s ' ' | cut -d ' ' -f2)
-  if [[ $pids =~ [^0-9] ]] ; then
-    kill $pids
-  fi
-  if [[ "$CI" == "true" ]]; then
-    pkill -9 firefox || true
-  fi
+	pkill --full 'firefox.*headless.*profile'
+	sleep 1
+	if [[ "$CI" == "true" ]]; then
+		pkill -9 firefox || true
+	fi
 else
-  FIREFOX_BIN=${FIREFOX:-firefox}
-  $FIREFOX_BIN --headless --marionette "$@"
+	FIREFOX_BIN=${FIREFOX:-firefox}
+	"$FIREFOX_BIN" --headless --marionette "$@"
 fi

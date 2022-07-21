@@ -1,10 +1,10 @@
-[![Build Status](https://travis-ci.org/browsh-org/browsh.svg?branch=master)](https://travis-ci.org/browsh-org/browsh) [![Follow @brow_sh](https://img.shields.io/twitter/follow/brow_sh.svg?style=social&label=Follow)](https://twitter.com/intent/follow?screen_name=brow_sh)
+[![Follow @brow_sh](https://img.shields.io/twitter/follow/brow_sh.svg?style=social&label=Follow)](https://twitter.com/intent/follow?screen_name=brow_sh)
 
 ![Browsh Logo](https://www.brow.sh/assets/images/browsh-header.jpg)
 
-**A fully interactive, realtime, and modern text-based browser rendered to TTYs and browsers**
+**A fully interactive, real-time, and modern text-based browser rendered to TTYs and browsers**
 
-![Browsh Gif](https://media.giphy.com/media/bbsmVkYjPdOKHhMXOO/giphy.gif)
+![Browsh GIF](https://media.giphy.com/media/bbsmVkYjPdOKHhMXOO/giphy.gif)
 
 ## Why use Browsh?
 
@@ -35,8 +35,8 @@ is running somewhere else on mains electricity.
 
 ## Installation
 
-Download a binary from the [releases](https://github.com/browsh-org/browsh/releases) (~7MB).
-You will need to have [Firefox 63](https://www.mozilla.org/en-US/firefox/new/) (or higher) aleady installed.
+Download a binary from the [releases](https://github.com/browsh-org/browsh/releases) (~11MB).
+You will need to have [Firefox](https://www.mozilla.org/en-US/firefox/new/) already installed.
 
 Or download and run the Docker image (~230MB) with:
     `docker run --rm -it browsh/browsh`
@@ -48,47 +48,18 @@ browser.
 For full documentation click [here](https://www.brow.sh/docs/introduction/).
 
 ## Contributing
-To setup a dev env you will need NodeJS and Golang installed. If you get stuck
-setting up your env, take a look in `.travis.yml`, it has to setup everything
-from scratch for every push to Github.
+_Note that some of these instructions may be out of date (July 2022)_
 
-I'd recommend [nvm](https://github.com/creationix/nvm) for NodeJS - note that
-`nvm install` will automatically parse the `.nvmrc` version in this repo to get
-the correct NodeJS version. For Golang it's probably best to just use your OS's
-package manager. The current Golang version being used is stored in `.travis.yml`.
+For generic Linux systems you can follow [this guide](https://github.com/browsh-org/browsh/blob/master/SETUP_DEV_LINUX.md) on how to setup a build environment, that you may be able to adapt for other systems as well.
 
-You'll then need to install the project dependencies. For the webextension, just
-run: `npm install` inside the `webext/` folder. For the CLI client you will first
-need to install `dep`, there is a script for this in `interfacer/contrib/setup_dep.sh`.
-I don't fully understand Golang's best practices, but it seems you are forced to
-keep your Go project's code under `$GOPATH/src`, you might be able to get away
-with symlinks. Anyway, to install the dependencies use: `dep ensure` inside the
-`interfacer/` folder.
+Windows users can follow [this guide](https://github.com/browsh-org/browsh/blob/master/SETUP_DEV_WIN.md) in order to set up a build environment.
 
-Then the ideal setup for development is:
-  * have Webpack watch the JS code so that it rebuilds automatically:
-    `webext> webpack --watch`
-  * run the CLI client without giving it the responsibility to launch Firefox:
-    `go run ./interfacer/src/main.go --firefox.use-existing --debug`
-  * have Mozilla's handy `web-ext` tool run Firefox and reinstall the
-    webextension everytime webpack rebuilds it: (in `webext/dist`)
-    `webext/dist> web-ext run --verbose`
-
-For generic Linux systems you can follow [this guide](https://github.com/browsh-org/browsh/blob/master/contrib/setup_linux_build_environment.md) on how to setup a build environment, that you may be able to adapt for other systems as well.
-
-Windows users can follow [this guide](https://github.com/browsh-org/browsh/blob/master/contrib/setup_windows_build_environment.md) in order to set up a build environment.
-
-Mac users may follow [this guide](https://github.com/browsh-org/browsh/blob/master/contrib/setup_mac_build_environment.md) that goes through the steps of setting up a build environment.
+Mac users may follow [this guide](https://github.com/browsh-org/browsh/blob/master/SETUP_DEV_OSX.md) that goes through the steps of setting up a build environment.
 
 ### Communication
-Questions about Brow.sh? Stuck trying to resolve a tricky issue? Connect with the Brow.sh community on [Gitter](https://gitter.im/browsh)!
-
-## Building a Browsh release
-If you'd like to build Browsh for a new package manager, or for any other reason,
-you can use the script at `interfacer/contrib/build_browsh.go` as a guide. Note
-you won't be able to build the web extension as Mozilla only allows one canonical
-version of web extensions per version number. So the build script downloads the
-official web extension `.xpi` file from the Mozilla archives.
+Questions about Brow.sh? Stuck trying to resolve a tricky issue? Try:
+  - [Github Discussions](https://github.com/browsh-org/browsh/discussions)
+  - [Gitter](https://gitter.im/browsh)
     
 ## Tests
 
@@ -100,6 +71,9 @@ For HTTP Service tests: in `/interfacer` run `go test test/http-server/*.go`
 ## Special Thanks
   * [@tobimensch](https://github.com/tobimensch) For essential early feedback and user testing.
   * [@arasatasaygin](https://github.com/arasatasaygin) For the Browsh logo.
+
+## Donating
+Please consider donating: https://www.brow.sh/donate
 
 ## License
 GNU Lesser General Public License v2.1

@@ -1,6 +1,6 @@
 import utils from "utils";
 
-export default MixinBase =>
+export default (MixinBase) =>
   class extends MixinBase {
     __serialiseFrame() {
       let cell, index;
@@ -20,7 +20,7 @@ export default MixinBase =>
             this.frame.colours.push(0);
             this.frame.text.push("");
           } else {
-            cell.fg_colour.map(c => this.frame.colours.push(c));
+            cell.fg_colour.map((c) => this.frame.colours.push(c));
             this.frame.text.push(cell.rune);
           }
         }
@@ -103,7 +103,7 @@ export default MixinBase =>
       donating =
         this._raw_mode_type === "raw_text_html"
           ? '<a href="https://www.brow.sh/donate">donating</a>'
-          : "brow.sh/donate";
+          : "https://brow.sh/donate";
       return (
         "\nPlease consider " +
         donating +
@@ -139,27 +139,24 @@ export default MixinBase =>
        <title>${document.title}</title>
        <style>
         html * {
-         font-family: monospace;
+         font-family: 'Courier New', monospace;
         }
         body {
           font-size: 15px;
         }
         pre {
           background-image: url(${img_src});
-          background-size: contain;
           background-repeat: no-repeat;
           background-size: ${width}px ${height}px;
-          // Pixelate the background image
-          image-rendering: optimizeSpeed;             /* STOP SMOOTHING, GIVE ME SPEED  */
+          /* Pixelate the background image */
           image-rendering: -moz-crisp-edges;          /* Firefox                        */
           image-rendering: -o-crisp-edges;            /* Opera                          */
           image-rendering: -webkit-optimize-contrast; /* Chrome (and eventually Safari) */
-          image-rendering: pixelated; /* Chrome */
-          image-rendering: optimize-contrast;         /* CSS3 Proposed                  */
+          image-rendering: pixelated;                 /* Chrome                         */
           -ms-interpolation-mode: nearest-neighbor;   /* IE8+                           */
           width: ${width}px;
           height: ${height}px;
-          // These styles need to exactly follow Browsh's rendering styles
+          /* These styles need to exactly follow Browsh's rendering styles */
           font-size: 15px !important;
           line-height: 20px !important;
           letter-spacing: 0px !important;
@@ -227,7 +224,7 @@ export default MixinBase =>
       let raw_input_boxes = document.querySelectorAll(
         "input, " + "textarea, " + '[role="textbox"]'
       );
-      raw_input_boxes.forEach(i => {
+      raw_input_boxes.forEach((i) => {
         let type;
         this._ensureBrowshID(i);
         dom_rect = this._convertDOMRectToAbsoluteCoords(
@@ -250,7 +247,7 @@ export default MixinBase =>
         font_rgb = styles["color"]
           .replace(/[^\d,]/g, "")
           .split(",")
-          .map(i => parseInt(i));
+          .map((i) => parseInt(i));
         const padding_top = parseInt(styles["padding-top"].replace("px", ""));
         const padding_left = parseInt(styles["padding-left"].replace("px", ""));
         if (this._isUnwantedInboxBox(i, styles)) {
@@ -268,7 +265,7 @@ export default MixinBase =>
           height: height,
           tag_name: i.nodeName,
           type: type,
-          colour: [font_rgb[0], font_rgb[1], font_rgb[2]]
+          colour: [font_rgb[0], font_rgb[1], font_rgb[2]],
         };
       });
       return parsed_input_boxes;
@@ -301,7 +298,7 @@ export default MixinBase =>
       let payload = {
         body: body,
         page_load_duration: this.config.page_load_duration,
-        parsing_duration: this._parsing_duration
+        parsing_duration: this._parsing_duration,
       };
       this.sendMessage(`/raw_text,${JSON.stringify(payload)}`);
     }
@@ -401,7 +398,7 @@ export default MixinBase =>
       this.frame = {
         meta: this.dimensions.getFrameMeta(),
         text: [],
-        colours: []
+        colours: [],
       };
       this.frame.meta.id = parseInt(this.channel.name);
     }

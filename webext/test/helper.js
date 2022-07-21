@@ -9,7 +9,7 @@ import MockRange from "mocks/range";
 import TextNodes from "fixtures/text_nodes";
 import CanvasPixels from "fixtures/canvas_pixels";
 
-var sandbox = sinon.sandbox.create();
+var sandbox = sinon.createSandbox();
 let getPixelsStub;
 let channel = { name: 1 };
 
@@ -34,8 +34,8 @@ afterEach(() => {
 global.dimensions = {
   char: {
     width: 1,
-    height: 2
-  }
+    height: 2,
+  },
 };
 
 global.document = {
@@ -43,14 +43,14 @@ global.document = {
   body: {
     contains: () => {
       return true;
-    }
+    },
   },
   getElementById: () => {},
   getElementsByTagName: () => {
     return [
       {
-        innerHTML: "Google"
-      }
+        innerHTML: "Google",
+      },
     ];
   },
   createRange: () => {
@@ -58,21 +58,21 @@ global.document = {
   },
   createElement: () => {
     return {
-      getContext: () => {}
+      getContext: () => {},
     };
   },
   documentElement: {
     scrollWidth: null,
-    scrollHeight: null
+    scrollHeight: null,
   },
   location: {
-    href: "https://www.google.com"
+    href: "https://www.google.com",
   },
   scrollX: 0,
   scrollY: 0,
 
   innerWidth: null,
-  innerHeight: null
+  innerHeight: null,
 };
 
 global.DEVELOPMENT = false;
@@ -80,16 +80,16 @@ global.PRODUCTION = false;
 global.TEST = true;
 global.window = global.document;
 global.performance = {
-  now: () => {}
+  now: () => {},
 };
 
 let element = {
   getBoundingClientRect: () => {
     return {
       width: global.dimensions.char.width,
-      height: global.dimensions.char.height
+      height: global.dimensions.char.height,
     };
-  }
+  },
 };
 
 function _setupMockDOMSize() {
@@ -126,15 +126,15 @@ function _setupGraphicsBuilder(type) {
   let config = {
     "http-server": {
       "jpeg-compression": 0.9,
-      render_delay: 0
-    }
+      render_delay: 0,
+    },
   };
   let graphics_builder = new GraphicsBuilder(channel, dimensions, config);
   return graphics_builder;
 }
 
 let functions = {
-  runTextBuilder: callback => {
+  runTextBuilder: (callback) => {
     let text_nodes = new TextNodes();
     let graphics_builder = _setupGraphicsBuilder("with_text");
     let text_builder = new TextBuilder(
@@ -143,8 +143,8 @@ let functions = {
       graphics_builder,
       {
         browsh: {
-          use_experimental_text_visibility: true
-        }
+          use_experimental_text_visibility: true,
+        },
       }
     );
     graphics_builder._getScreenshotWithText(() => {
@@ -162,7 +162,7 @@ let functions = {
     graphics_builder.__getScaledScreenshot();
     graphics_builder._serialiseFrame();
     return graphics_builder;
-  }
+  },
 };
 
 export default functions;

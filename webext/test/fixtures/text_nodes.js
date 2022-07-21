@@ -17,11 +17,11 @@ export default class TextNodes {
       {
         textContent: global.mock_DOM_text.join(""),
         parentElement: {
-          style: {}
+          style: {},
         },
         bounding_box: this.boundingBox(),
-        dom_rects: this.dom_rects
-      }
+        dom_rects: this.dom_rects,
+      },
     ];
   }
 
@@ -32,7 +32,7 @@ export default class TextNodes {
       left: this.offset,
       right: this.total_width + this.offset,
       width: this.total_width,
-      height: this.total_height
+      height: this.total_height,
     };
   }
 
@@ -46,7 +46,7 @@ export default class TextNodes {
       left: this.offset,
       right: width + this.offset,
       width: width,
-      height: height
+      height: height,
     });
   }
 }

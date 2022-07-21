@@ -123,7 +123,7 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
       right:
         this.dimensions.dom.sub.left +
         this.dimensions.dom.sub.width -
-        window.scrollX
+        window.scrollX,
     };
   }
 
@@ -302,11 +302,11 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   _createTrackers() {
     this._dom_tracker = {
       x: this._dom_box.left,
-      y: this._dom_box.top
+      y: this._dom_box.top,
     };
     this._tty_tracker = {
       x: this._tty_box.col_start,
-      y: this._tty_box.row
+      y: this._tty_box.row,
     };
   }
 
@@ -356,7 +356,7 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
       left: dom_rect.left + window.scrollX,
       right: dom_rect.right + window.scrollX,
       height: dom_rect.height,
-      width: dom_rect.width
+      width: dom_rect.width,
     };
   }
 
@@ -371,7 +371,7 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
       ),
       width: utils.snap(
         this._dom_box.width * this.dimensions.scale_factor.width
-      )
+      ),
     };
   }
 

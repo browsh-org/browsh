@@ -1,9 +1,11 @@
-const webpack = require('webpack');
-const path = require('path');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const fs = require('fs');
+import webpack from 'webpack';
+import path from 'path';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+import fs from 'fs';
 
-module.exports = {
+const dirname = process.cwd();
+
+export default {
   mode: process.env['BROWSH_ENV'] === 'RELEASE' ? 'production' : 'development',
   target: 'node',
   entry: {
@@ -11,13 +13,23 @@ module.exports = {
     background: './background.js'
   },
   output: {
-    path: __dirname,
+    path: dirname,
     filename: 'dist/[name].js',
   },
   resolve: {
     modules: [
-      path.resolve(__dirname, './src'),
+      path.resolve(dirname, './src'),
       'node_modules'
+    ],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.m?js/,
+        resolve: {
+          fullySpecified: false,
+        },
+      },
     ]
   },
   devtool: 'source-map',
@@ -28,19 +40,22 @@ module.exports = {
       // TODO: For production use a different webpack.config.js
       PRODUCTION: JSON.stringify(false)
     }),
-    new CopyWebpackPlugin([
-      { from: 'assets', to: 'dist/assets' },
-      { from: '.web-extension-id', to: 'dist/' },
-      { from: 'manifest.json', to: 'dist/',
-        // Inject the current Browsh version into the manifest JSON
-        transform(manifest, _) {
-          const version_path = '../interfacer/src/browsh/version.go';
-          let buffer = fs.readFileSync(version_path);
-          let version_contents = buffer.toString();
-          const matches = version_contents.match(/"(.*?)"/);
-          return manifest.toString().replace('BROWSH_VERSION', matches[1]);
-        }
-      },
-    ])
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: 'assets', to: 'dist/assets' },
+        { from: '.web-extension-id', to: 'dist/' },
+        {
+          from: 'manifest.json', to: 'dist/',
+          // Inject the current Browsh version into the manifest JSON
+          transform(manifest, _) {
+            const version_path = '../interfacer/src/browsh/version.go';
+            let buffer = fs.readFileSync(version_path);
+            let version_contents = buffer.toString();
+            const matches = version_contents.match(/"(.*?)"/);
+            return manifest.toString().replace('BROWSH_VERSION', matches[1]);
+          }
+        },
+      ]
+    })
   ]
-};
+}

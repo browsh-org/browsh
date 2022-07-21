@@ -240,7 +240,7 @@ export default class extends utils.mixins(CommonMixin) {
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         // TODO: Explore sending as binary data
-        this._getScaledPixelAt(x, y).map(c => this.frame.colours.push(c));
+        this._getScaledPixelAt(x, y).map((c) => this.frame.colours.push(c));
       }
     }
   }
@@ -248,7 +248,7 @@ export default class extends utils.mixins(CommonMixin) {
   _setupFrameMeta() {
     this.frame = {
       meta: this.dimensions.getFrameMeta(),
-      colours: []
+      colours: [],
     };
     this.frame.meta.id = parseInt(this.channel.name);
   }
