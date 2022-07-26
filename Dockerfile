@@ -82,5 +82,5 @@ RUN TERM=xterm script \
   >/dev/null & \
   sleep 10
 
-CMD ["/app/bin/browsh"]
+ENTRYPOINT ["/app/bin/browsh"]
 
