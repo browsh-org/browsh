@@ -29,8 +29,8 @@ func (m *multiLine) convert() []rune {
 		if m.isInsideWord() {
 			// TODO: This sometimes causes a panic :/
 			if m.currentCharacter != "" {
-			  m.currentWordish += m.currentCharacter
-		        }
+				m.currentWordish += m.currentCharacter
+			}
 		} else {
 			m.addWhitespace()
 		}

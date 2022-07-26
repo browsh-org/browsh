@@ -3,7 +3,6 @@ package browsh
 import (
 	"encoding/base64"
 	"fmt"
-	"time"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -12,6 +11,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	// TCell seems to be one of the best projects in any language for handling terminal
 	// standards across the major OSs.

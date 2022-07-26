@@ -39,27 +39,27 @@
 // because Browsh is currently assuming that it is being run in Firefox.
 
 var Rect = {
-  create: function(x1, y1, x2, y2) {
+  create: function (x1, y1, x2, y2) {
     return {
       bottom: y2,
       top: y1,
       left: x1,
       right: x2,
       width: x2 - x1,
-      height: y2 - y1
+      height: y2 - y1,
     };
   },
-  copy: function(rect) {
+  copy: function (rect) {
     return {
       bottom: rect.bottom,
       top: rect.top,
       left: rect.left,
       right: rect.right,
       width: rect.width,
-      height: rect.height
+      height: rect.height,
     };
   },
-  translate: function(rect, x, y) {
+  translate: function (rect, x, y) {
     if (x == null) {
       x = 0;
     }
@@ -72,10 +72,10 @@ var Rect = {
       left: rect.left + x,
       right: rect.right + x,
       width: rect.width,
-      height: rect.height
+      height: rect.height,
     };
   },
-  subtract: function(rect1, rect2) {
+  subtract: function (rect1, rect2) {
     var rects;
     rect2 = this.create(
       Math.max(rect1.left, rect2.left),
@@ -94,13 +94,13 @@ var Rect = {
       this.create(rect2.right, rect2.top, rect1.right, rect2.bottom),
       this.create(rect1.left, rect2.bottom, rect2.left, rect1.bottom),
       this.create(rect2.left, rect2.bottom, rect2.right, rect1.bottom),
-      this.create(rect2.right, rect2.bottom, rect1.right, rect1.bottom)
+      this.create(rect2.right, rect2.bottom, rect1.right, rect1.bottom),
     ];
-    return rects.filter(function(rect) {
+    return rects.filter(function (rect) {
       return rect.height > 0 && rect.width > 0;
     });
   },
-  intersects: function(rect1, rect2) {
+  intersects: function (rect1, rect2) {
     return (
       rect1.right > rect2.left &&
       rect1.left < rect2.right &&
@@ -108,7 +108,7 @@ var Rect = {
       rect1.top < rect2.bottom
     );
   },
-  intersectsStrict: function(rect1, rect2) {
+  intersectsStrict: function (rect1, rect2) {
     return (
       rect1.right >= rect2.left &&
       rect1.left <= rect2.right &&
@@ -116,7 +116,7 @@ var Rect = {
       rect1.top <= rect2.bottom
     );
   },
-  equals: function(rect1, rect2) {
+  equals: function (rect1, rect2) {
     var i, len, property, ref;
     ref = ["top", "bottom", "left", "right", "width", "height"];
     for (i = 0, len = ref.length; i < len; i++) {
@@ -127,18 +127,18 @@ var Rect = {
     }
     return true;
   },
-  intersect: function(rect1, rect2) {
+  intersect: function (rect1, rect2) {
     return this.create(
       Math.max(rect1.left, rect2.left),
       Math.max(rect1.top, rect2.top),
       Math.min(rect1.right, rect2.right),
       Math.min(rect1.bottom, rect2.bottom)
     );
-  }
+  },
 };
 
 var DomUtils = {
-  documentReady: function() {
+  documentReady: function () {
     var callbacks, isReady, onDOMContentLoaded, ref;
     (ref = [document.readyState !== "loading", []]),
       (isReady = ref[0]),
@@ -146,7 +146,7 @@ var DomUtils = {
     if (!isReady) {
       window.addEventListener(
         "DOMContentLoaded",
-        (onDOMContentLoaded = forTrusted(function() {
+        (onDOMContentLoaded = forTrusted(function () {
           var callback, i, len;
           window.removeEventListener("DOMContentLoaded", onDOMContentLoaded);
           isReady = true;
@@ -158,7 +158,7 @@ var DomUtils = {
         }))
       );
     }
-    return function(callback) {
+    return function (callback) {
       if (isReady) {
         return callback();
       } else {
@@ -166,7 +166,7 @@ var DomUtils = {
       }
     };
   },
-  getVisibleClientRect: function(element, testChildren) {
+  getVisibleClientRect: function (element, testChildren) {
     var child,
       childClientRect,
       clientRect,
@@ -182,7 +182,7 @@ var DomUtils = {
     if (testChildren == null) {
       testChildren = false;
     }
-    clientRects = (function() {
+    clientRects = (function () {
       var i, len, ref, results;
       ref = element.getClientRects();
       results = [];
@@ -192,14 +192,14 @@ var DomUtils = {
       }
       return results;
     })();
-    isInlineZeroHeight = function() {
+    isInlineZeroHeight = function () {
       var elementComputedStyle, isInlineZeroFontSize;
       elementComputedStyle = window.getComputedStyle(element, null);
       isInlineZeroFontSize =
         0 ===
           elementComputedStyle.getPropertyValue("display").indexOf("inline") &&
         elementComputedStyle.getPropertyValue("font-size") === "0px";
-      isInlineZeroHeight = function() {
+      isInlineZeroHeight = function () {
         return isInlineZeroFontSize;
       };
       return isInlineZeroFontSize;
@@ -253,7 +253,7 @@ var DomUtils = {
     }
     return null;
   },
-  cropRectToVisible: function(rect) {
+  cropRectToVisible: function (rect) {
     var boundedRect;
     boundedRect = Rect.create(
       Math.max(rect.left, 0),
@@ -270,7 +270,7 @@ var DomUtils = {
       return boundedRect;
     }
   },
-  getClientRectsForAreas: function(imgClientRect, areas) {
+  getClientRectsForAreas: function (imgClientRect, areas) {
     var area,
       coords,
       diff,
@@ -290,7 +290,7 @@ var DomUtils = {
     rects = [];
     for (i = 0, len = areas.length; i < len; i++) {
       area = areas[i];
-      coords = area.coords.split(",").map(function(coord) {
+      coords = area.coords.split(",").map(function (coord) {
         return parseInt(coord, 10);
       });
       shape = area.shape.toLowerCase();
@@ -321,13 +321,13 @@ var DomUtils = {
       if (rect && !isNaN(rect.top)) {
         rects.push({
           element: area,
-          rect: rect
+          rect: rect,
         });
       }
     }
     return rects;
   },
-  isSelectable: function(element) {
+  isSelectable: function (element) {
     var unselectableTypes;
     if (!(element instanceof Element)) {
       return false;
@@ -341,7 +341,7 @@ var DomUtils = {
       "image",
       "radio",
       "reset",
-      "submit"
+      "submit",
     ];
     return (
       (element.nodeName.toLowerCase() === "input" &&
@@ -350,7 +350,7 @@ var DomUtils = {
       element.isContentEditable
     );
   },
-  getViewportTopLeft: function() {
+  getViewportTopLeft: function () {
     var box, clientLeft, clientTop, marginLeft, marginTop, rect, style;
     box = document.documentElement;
     style = getComputedStyle(box);
@@ -363,7 +363,7 @@ var DomUtils = {
       marginLeft = parseInt(style.marginLeft);
       return {
         top: -rect.top + marginTop,
-        left: -rect.left + marginLeft
+        left: -rect.left + marginLeft,
       };
     } else {
       //if (Utils.isFirefox())
@@ -375,11 +375,11 @@ var DomUtils = {
       }
       return {
         top: -rect.top - clientTop,
-        left: -rect.left - clientLeft
+        left: -rect.left - clientLeft,
       };
     }
   },
-  makeXPath: function(elementArray) {
+  makeXPath: function (elementArray) {
     var element, i, len, xpath;
     xpath = [];
     for (i = 0, len = elementArray.length; i < len; i++) {
@@ -388,12 +388,12 @@ var DomUtils = {
     }
     return xpath.join(" | ");
   },
-  evaluateXPath: function(xpath, resultType) {
+  evaluateXPath: function (xpath, resultType) {
     var contextNode, namespaceResolver;
     contextNode = document.webkitIsFullScreen
       ? document.webkitFullscreenElement
       : document.documentElement;
-    namespaceResolver = function(namespace) {
+    namespaceResolver = function (namespace) {
       if (namespace === "xhtml") {
         return "http://www.w3.org/1999/xhtml";
       } else {
@@ -408,7 +408,7 @@ var DomUtils = {
       null
     );
   },
-  simulateClick: function(element, modifiers) {
+  simulateClick: function (element, modifiers) {
     var defaultActionShouldTrigger, event, eventSequence, i, len, results;
     if (modifiers == null) {
       modifiers = {};
@@ -438,10 +438,10 @@ var DomUtils = {
     }
     return results;
   },
-  simulateMouseEvent: (function() {
+  simulateMouseEvent: (function () {
     var lastHoveredElement;
     lastHoveredElement = void 0;
-    return function(event, element, modifiers) {
+    return function (event, element, modifiers) {
       var mouseEvent;
       if (modifiers == null) {
         modifiers = {};
@@ -479,7 +479,7 @@ var DomUtils = {
       return element.dispatchEvent(mouseEvent);
     };
   })(),
-  simulateClickDefaultAction: function(element, modifiers) {
+  simulateClickDefaultAction: function (element, modifiers) {
     var altKey, ctrlKey, metaKey, newTabModifier, ref, shiftKey;
     if (modifiers == null) {
       modifiers = {};
@@ -505,7 +505,7 @@ var DomUtils = {
       chrome.runtime.sendMessage({
         handler: "openUrlInNewTab",
         url: element.href,
-        active: shiftKey === true
+        active: shiftKey === true,
       });
     } else if (
       shiftKey === true &&
@@ -515,20 +515,20 @@ var DomUtils = {
     ) {
       chrome.runtime.sendMessage({
         handler: "openUrlInNewWindow",
-        url: element.href
+        url: element.href,
       });
     } else if (element.target === "_blank") {
       chrome.runtime.sendMessage({
         handler: "openUrlInNewTab",
         url: element.href,
-        active: true
+        active: true,
       });
     }
-  }
+  },
 };
 
 var LocalHints = {
-  getVisibleClickable: function(element) {
+  getVisibleClickable: function (element) {
     var actionName,
       areas,
       areasAndRects,
@@ -603,16 +603,16 @@ var LocalHints = {
           ? ref2.toLowerCase()
           : void 0) === "" ||
       ref1 === "true" ||
-      ((ref3 =
+      (ref3 =
         (ref4 = element.getAttribute("aria-disabled")) != null
           ? ref4.toLowerCase()
           : void 0) === "" ||
-        ref3 === "true")
+      ref3 === "true"
     ) {
       return [];
     }
     if (this.checkForAngularJs == null) {
-      this.checkForAngularJs = (function() {
+      this.checkForAngularJs = (function () {
         var angularElements,
           i,
           k,
@@ -625,7 +625,7 @@ var LocalHints = {
           separator;
         angularElements = document.getElementsByClassName("ng-scope");
         if (angularElements.length === 0) {
-          return function() {
+          return function () {
             return false;
           };
         } else {
@@ -639,7 +639,7 @@ var LocalHints = {
               ngAttributes.push(prefix + "ng" + separator + "click");
             }
           }
-          return function(element) {
+          return function (element) {
             var attribute, l, len2;
             for (l = 0, len2 = ngAttributes.length; l < len2; l++) {
               attribute = ngAttributes[l];
@@ -679,7 +679,7 @@ var LocalHints = {
           (ref8 =
             ruleSplit.length === 1
               ? ["click"].concat(slice.call(ruleSplit[0].trim().split(".")), [
-                  "_"
+                  "_",
                 ])
               : [ruleSplit[0]].concat(
                   slice.call(ruleSplit[1].trim().split(".")),
@@ -775,13 +775,13 @@ var LocalHints = {
           rect: clientRect,
           secondClassCitizen: onlyHasTabIndex,
           possibleFalsePositive: possibleFalsePositive,
-          reason: reason
+          reason: reason,
         });
       }
     }
     return visibleElements;
   },
-  getLocalHints: function(requireHref) {
+  getLocalHints: function (requireHref) {
     var descendantsToCheck,
       element,
       elements,
@@ -822,7 +822,7 @@ var LocalHints = {
     }
     visibleElements = visibleElements.reverse();
     descendantsToCheck = [1, 2, 3];
-    visibleElements = (function() {
+    visibleElements = (function () {
       var k, len1, results;
       results = [];
       for (
@@ -833,7 +833,7 @@ var LocalHints = {
         element = visibleElements[position];
         if (
           element.possibleFalsePositive &&
-          (function() {
+          (function () {
             var _, candidateDescendant, index, l, len2;
             index = Math.max(0, position - 6);
             while (index < position) {
@@ -866,7 +866,7 @@ var LocalHints = {
         negativeRect = visibleElements[k].rect;
         rects = (ref = []).concat.apply(
           ref,
-          rects.map(function(rect) {
+          rects.map(function (rect) {
             return Rect.subtract(rect, negativeRect);
           })
         );
@@ -903,7 +903,7 @@ var LocalHints = {
       }*/
     return localHints;
   },
-  generateLinkText: function(hint) {
+  generateLinkText: function (hint) {
     var element, linkText, nodeName, ref, showLinkText;
     element = hint.element;
     linkText = "";
@@ -951,13 +951,13 @@ var LocalHints = {
     }
     return {
       linkText: linkText.trim(),
-      showLinkText: showLinkText
+      showLinkText: showLinkText,
     };
-  }
+  },
 };
 
 var VimiumNormal = {
-  followLink: function(linkElement) {
+  followLink: function (linkElement) {
     if (linkElement.nodeName.toLowerCase() === "link") {
       return (window.location.href = linkElement.href);
     } else {
@@ -965,7 +965,7 @@ var VimiumNormal = {
       return DomUtils.simulateClick(linkElement);
     }
   },
-  findAndFollowLink: function(linkStrings) {
+  findAndFollowLink: function (linkStrings) {
     var boundingClientRect,
       candidateLink,
       candidateLinks,
@@ -990,7 +990,7 @@ var VimiumNormal = {
       ref1;
     linksXPath = DomUtils.makeXPath([
       "a",
-      "*[@onclick or @role='link' or contains(@class, 'button')]"
+      "*[@onclick or @role='link' or contains(@class, 'button')]",
     ]);
     links = DomUtils.evaluateXPath(
       linksXPath,
@@ -1038,18 +1038,18 @@ var VimiumNormal = {
       link = candidateLinks[l];
       link.wordCount = link.innerText.trim().split(/\s+/).length;
     }
-    candidateLinks.forEach(function(a, i) {
+    candidateLinks.forEach(function (a, i) {
       return (a.originalIndex = i);
     });
     candidateLinks = candidateLinks
-      .sort(function(a, b) {
+      .sort(function (a, b) {
         if (a.wordCount === b.wordCount) {
           return a.originalIndex - b.originalIndex;
         } else {
           return a.wordCount - b.wordCount;
         }
       })
-      .filter(function(a) {
+      .filter(function (a) {
         return a.wordCount <= candidateLinks[0].wordCount + 1;
       });
     for (m = 0, len2 = linkStrings.length; m < len2; m++) {
@@ -1071,7 +1071,7 @@ var VimiumNormal = {
     }
     return false;
   },
-  findAndFollowRel: function(value) {
+  findAndFollowRel: function (value) {
     var element, elements, j, k, len, len1, relTags, tag;
     relTags = ["link", "a", "area"];
     for (j = 0, len = relTags.length; j < len; j++) {
@@ -1089,7 +1089,7 @@ var VimiumNormal = {
       }
     }
   },
-  textInputXPath: function() {
+  textInputXPath: function () {
     var inputElements, textInputTypes;
     textInputTypes = [
       "text",
@@ -1099,26 +1099,26 @@ var VimiumNormal = {
       "number",
       "password",
       "date",
-      "tel"
+      "tel",
     ];
     inputElements = [
       "input[" +
         "(" +
         textInputTypes
-          .map(function(type) {
+          .map(function (type) {
             return '@type="' + type + '"';
           })
           .join(" or ") +
         "or not(@type))" +
         " and not(@disabled or @readonly)]",
       "textarea",
-      "*[@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']"
+      "*[@contenteditable='' or translate(@contenteditable, 'TRUE', 'true')='true']",
     ];
     return typeof DomUtils !== "undefined" && DomUtils !== null
       ? DomUtils.makeXPath(inputElements)
       : void 0;
   },
-  focusInput: function(count) {
+  focusInput: function (count) {
     var element,
       elements,
       hint,
@@ -1133,7 +1133,7 @@ var VimiumNormal = {
       textInputXPath,
       XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
     );
-    visibleInputs = (function() {
+    visibleInputs = (function () {
       var j, ref, results;
       results = [];
       for (i = j = 0, ref = resultSet.snapshotLength; j < ref; i = j += 1) {
@@ -1144,12 +1144,12 @@ var VimiumNormal = {
         results.push({
           element: element,
           index: i,
-          rect: Rect.copy(element.getBoundingClientRect())
+          rect: Rect.copy(element.getBoundingClientRect()),
         });
       }
       return results;
     })();
-    visibleInputs.sort(function(arg, arg1) {
+    visibleInputs.sort(function (arg, arg1) {
       var element1, element2, i1, i2, tabDifference;
       (element1 = arg.element), (i1 = arg.index);
       (element2 = arg1.element), (i2 = arg1.index);
@@ -1177,12 +1177,12 @@ var VimiumNormal = {
     recentlyFocusedElement = lastFocusedInput();
     selectedInputIndex =
       count === 1
-        ? ((elements = visibleInputs.map(function(visibleInput) {
+        ? ((elements = visibleInputs.map(function (visibleInput) {
             return visibleInput.element;
           })),
           Math.max(0, elements.indexOf(recentlyFocusedElement)))
         : Math.min(count, visibleInputs.length) - 1;
-    hints = (function() {
+    hints = (function () {
       var j, len, results;
       results = [];
       for (j = 0, len = visibleInputs.length; j < len; j++) {
@@ -1198,13 +1198,13 @@ var VimiumNormal = {
       return results;
     })();
     return new FocusSelector(hints, visibleInputs, selectedInputIndex);
-  }
+  },
 };
 
 export function MiscVimium() {
   if (window.forTrusted == null) {
-    window.forTrusted = function(handler) {
-      return function(event) {
+    window.forTrusted = function (handler) {
+      return function (event) {
         if (event != null ? event.isTrusted : void 0) {
           return handler.apply(this, arguments);
         } else {
@@ -1213,15 +1213,15 @@ export function MiscVimium() {
       };
     };
   }
-  window.windowIsFocused = function() {
+  window.windowIsFocused = function () {
     var windowHasFocus;
     windowHasFocus = null;
-    DomUtils.documentReady(function() {
+    DomUtils.documentReady(function () {
       return (windowHasFocus = document.hasFocus());
     });
     window.addEventListener(
       "focus",
-      forTrusted(function(event) {
+      forTrusted(function (event) {
         if (event.target === window) {
           windowHasFocus = true;
         }
@@ -1230,14 +1230,14 @@ export function MiscVimium() {
     );
     window.addEventListener(
       "blur",
-      forTrusted(function(event) {
+      forTrusted(function (event) {
         if (event.target === window) {
           windowHasFocus = false;
         }
         return true;
       })
     );
-    return function() {
+    return function () {
       return windowHasFocus;
     };
   };

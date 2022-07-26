@@ -90,8 +90,8 @@ func (f *frame) buildFrameText(incoming incomingFrameText) {
 		return
 	}
 
-	var s = "/frame_text ";
-	for _,c := range incoming.Text {
+	var s = "/frame_text "
+	for _, c := range incoming.Text {
 		if c != "" {
 			s = s + c
 		}

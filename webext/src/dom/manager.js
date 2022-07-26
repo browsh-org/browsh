@@ -30,13 +30,13 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     this.graphics_builder = new GraphicsBuilder(
       this.channel,
       this.dimensions,
-      this.config,
+      this.config
     );
     this.text_builder = new TextBuilder(
       this.channel,
       this.dimensions,
       this.graphics_builder,
-      this.config,
+      this.config
     );
   }
 
@@ -171,7 +171,7 @@ export default class extends utils.mixins(CommonMixin, CommandsMixin) {
     let sending = browser.runtime.sendMessage("/register");
     sending.then(
       (r) => this._registrationSuccess(r),
-      (e) => this._registrationError(e),
+      (e) => this._registrationError(e)
     );
   }
 

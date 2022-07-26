@@ -94,7 +94,7 @@ export default (MixinBase) =>
     //adapted vimium code
     followLinkLabeledNext() {
       var nextPatterns = "next,more,newer,>,›,→,»,≫,>>,weiter" || "";
-      var nextStrings = nextPatterns.split(",").filter(function(s) {
+      var nextStrings = nextPatterns.split(",").filter(function (s) {
         return s.trim().length;
       });
       return (
@@ -111,7 +111,7 @@ export default (MixinBase) =>
     followLinkLabeledPrevious() {
       var previousPatterns =
         "prev,previous,back,older,<,‹,←,«,≪,<<,zurück" || "";
-      var previousStrings = previousPatterns.split(",").filter(function(s) {
+      var previousStrings = previousPatterns.split(",").filter(function (s) {
         return s.trim().length;
       });
       return (

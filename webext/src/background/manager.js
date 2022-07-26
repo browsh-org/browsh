@@ -128,7 +128,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
 
   _handleTabUpdate(_tab_id, changes, native_tab_object) {
     this.log(
-      `Tab ${native_tab_object.id} detected chages: ${JSON.stringify(changes)}`,
+      `Tab ${native_tab_object.id} detected chages: ${JSON.stringify(changes)}`
     );
     let tab = this.tabs[native_tab_object.id];
     tab.native_last_change = changes;
@@ -141,7 +141,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   // until it knows its internally represented ID.
   _newTabHandler(_request, sender, sendResponse) {
     this.log(
-      `Tab ${sender.tab.id} (${sender.tab.title}) registered with background process`,
+      `Tab ${sender.tab.id} (${sender.tab.title}) registered with background process`
     );
     // Send the tab back to itself, such that it can be enlightened unto its own nature
     sendResponse(sender.tab);
@@ -180,13 +180,13 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   // This is the main communication channel for all back and forth messages to tabs
   _listenForTabChannelOpen() {
     browser.runtime.onConnect.addListener(
-      this._tabChannelOpenHandler.bind(this),
+      this._tabChannelOpenHandler.bind(this)
     );
   }
 
   _tabChannelOpenHandler(channel) {
     this.log(
-      `Tab ${channel.name} connected for communication with background process`,
+      `Tab ${channel.name} connected for communication with background process`
     );
     let tab = this.tabs[parseInt(channel.name)];
     tab.postConnectionInit(channel, this.config);
@@ -224,7 +224,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     });
     getting.then(
       (windowInfoArray) => this._getTabsOnSuccess(windowInfoArray, callback),
-      () => this._getTabsOnError(callback),
+      () => this._getTabsOnError(callback)
     );
   }
 
@@ -249,7 +249,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     this.log(
       "BACKGROUND: Frame loop starting at " +
         this.config.tty.small_pixel_frame_rate +
-        "ms intervals",
+        "ms intervals"
     );
     setInterval(() => {
       if (this._is_initial_window_size_pending) this._initialWindowResize();
@@ -273,7 +273,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
     }
     if (this.currentTab().channel === undefined) {
       this.log(
-        `Active tab ${this.active_tab_id} does not have a channel, so not requesting a frame`,
+        `Active tab ${this.active_tab_id} does not have a channel, so not requesting a frame`
       );
       return false;
     }
@@ -295,7 +295,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
       {
         urls: ["*://*/*"],
       },
-      ["blocking"],
+      ["blocking"]
     );
   }
 }
