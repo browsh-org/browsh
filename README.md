@@ -12,7 +12,7 @@ Not all the world has good Internet.
 
 If you only have a 3kbps internet connection tethered from a phone,
 then it's good to SSH into a server and browse the web through, say,
-[elinks](https://github.com/browsh-org/browsh/issues/17). That way the
+[elinks](https://github.com/browsh-org/browsh/issues/17). That way, the
 _server_ downloads the web pages and uses the limited bandwidth of an
 SSH connection to display the result. However, traditional text-based browsers
 lack JS and all other modern HTML5 support. Browsh is different
@@ -20,7 +20,7 @@ in that it's backed by a real browser, namely headless Firefox,
 to create a purely text-based version of web pages and web apps. These can be easily
 rendered in a terminal or indeed, ironically, in another browser. Do note that currently the browser client doesn't have feature parity with the terminal client.
 
-Why not VNC? Well VNC is certainly one solution but it doesn't quite
+Why not VNC? Well VNC is certainly one solution, but it doesn't quite
 have the same ability to deal with extremely bad Internet. Terminal 
 Browsh can also use MoSH to further reduce bandwidth and increase stability
 of the connection. Mosh offers features like automatic
@@ -35,22 +35,22 @@ is running somewhere else on mains electricity.
 
 ## Installation
 
-Download a binary from the [releases](https://github.com/browsh-org/browsh/releases) (~11MB).
+Download a binary from the [releases](https://github.com/browsh-org/browsh/releases) (~11 MB).
 You will need to have [Firefox](https://www.mozilla.org/en-US/firefox/new/) already installed.
 
-Or download and run the Docker image (~230MB) with:
+Or download and run the Docker image (~230 MB) with:
     `docker run --rm -it browsh/browsh`
 
 ## Usage
 Most keys and mouse gestures should work as you'd expect on a desktop
 browser.
 
-For full documentation click [here](https://www.brow.sh/docs/introduction/).
+For full documentation, click [here](https://www.brow.sh/docs/introduction/).
 
 ## Contributing
 _Note that some of these instructions may be out of date (July 2022)_
 
-For generic Linux systems you can follow [this guide](https://github.com/browsh-org/browsh/blob/master/SETUP_DEV_LINUX.md) on how to setup a build environment, that you may be able to adapt for other systems as well.
+For generic Linux systems you can follow [this guide](https://github.com/browsh-org/browsh/blob/master/SETUP_DEV_LINUX.md) on how to set up a build environment, that you may be able to adapt for other systems as well.
 
 Windows users can follow [this guide](https://github.com/browsh-org/browsh/blob/master/SETUP_DEV_WIN.md) in order to set up a build environment.
 
@@ -58,7 +58,7 @@ Mac users may follow [this guide](https://github.com/browsh-org/browsh/blob/mast
 
 ### Communication
 Questions about Brow.sh? Stuck trying to resolve a tricky issue? Try:
-  - [Github Discussions](https://github.com/browsh-org/browsh/discussions)
+  - [GitHub Discussions](https://github.com/browsh-org/browsh/discussions)
   - [Gitter](https://gitter.im/browsh)
     
 ## Tests
