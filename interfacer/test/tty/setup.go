@@ -174,7 +174,7 @@ func elementColourForTTY(element tcell.SimCell) string {
 		int(r2), int(g2), int(b2))
 }
 
-// GetText retruns an individual piece of a frame
+// GetText returns an individual piece of a frame
 func GetText(x, y, length int) string {
 	var text string
 	frame := []rune(GetFrame())

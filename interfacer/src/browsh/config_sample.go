@@ -33,7 +33,7 @@ custom_css = ""
 [firefox]
 # The path to your Firefox binary
 path = "firefox"
-# Browsh has its own profile, seperate from the normal user's. But you can change that.
+# Browsh has its own profile, separate from the normal user's. But you can change that.
 profile = "browsh-default"
 # Don't let Browsh launch Firefox, but make it try to connect to an existing one. Note
 # it will need to have been launched with the '--marionette' flag.
@@ -64,7 +64,7 @@ bind = "0.0.0.0"
 
 # The time to wait in milliseconds after the DOM is ready before
 # trying to parse and render the page's text. Too soon and text risks not being
-# parsed, too long and you wait unecessarily.
+# parsed, too long and you wait unnecessarily.
 render_delay = 100
 
 # The length of time in seconds to wait before aborting the page load

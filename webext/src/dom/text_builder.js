@@ -258,7 +258,7 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
     let rects = [];
     // TODO: selectNode() hangs if it can't find a node in the DOM
     // Node.isConnected() might be faster
-    // It's possible that the node has dissapeared since nodes were collected.
+    // It's possible that the node has disappeared since nodes were collected.
     if (document.body.contains(this._node)) {
       this._range.selectNode(this._node);
       rects = this._range.getClientRects();
@@ -328,7 +328,7 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
   // There is a careful tracking between the currently parsed character of `this._text`
   // and the position of the current 'cell' space within `this._dom_box`. So we must be precise
   // in how we synchronise them. This requires following the DOM's method for wrapping text.
-  // Recall how the DOM will split a line at a space character boundry. That space character
+  // Recall how the DOM will split a line at a space character boundary. That space character
   // is then in fact never rendered - its existence is never registered within the dimensions
   // of a DOM rectangle's box (`this._dom_box`).
   _ignoreUnrenderedWhitespace() {

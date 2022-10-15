@@ -129,7 +129,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
 
   _handleTabUpdate(_tab_id, changes, native_tab_object) {
     this.log(
-      `Tab ${native_tab_object.id} detected chages: ${JSON.stringify(changes)}`
+      `Tab ${native_tab_object.id} detected changes: ${JSON.stringify(changes)}`
     );
     let tab = this.tabs[native_tab_object.id];
     tab.native_last_change = changes;
@@ -243,7 +243,7 @@ export default class extends utils.mixins(CommonMixin, TTYCommandsMixin) {
   // heartbeat in the background process that switches automatically to the current active
   // tab.
   //
-  // Note that by "frame rate" here we justs mean the rate at which a TTY-sized frame of
+  // Note that by "frame rate" here we just mean the rate at which a TTY-sized frame of
   // graphics pixles are sent. Larger frames are sent in response to scroll events and
   // TTY-sized text frames are sent in response to DOM mutation events.
   _startFrameRequestLoop() {

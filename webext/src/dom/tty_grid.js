@@ -68,12 +68,12 @@ export default class {
   }
 
   // This is the value to reach the middle of a uni-glyph font character in order to
-  // sample its colour. Obviosuly it is better to reach for the middle in case there are
+  // sample its colour. Obviously it is better to reach for the middle in case there are
   // vagaries of rendering, it increases our chances of actually getting the characters
   // own colour and not some other colour nearby.
   //
   // However during testing, we use very small self-generated pixel arrays which makes
-  // the snapped values rather unintuitive. So we just encourage the snaped values to
+  // the snapped values rather unintuitive. So we just encourage the snapped values to
   // snap lower which just lends itself to more readable test values.
   _setMiddleOfEm() {
     this._middle_of_em = TEST ? 0.49 : 0.5;
@@ -90,7 +90,7 @@ export default class {
   // characters in the element. Secondly, even ignoring the first caveat, running
   // `elementFromPoint()` for every character is very expensive, around 25ms for an average
   // DOM. So it's basically a no-go. So instead we take advantage of the fact that we're
-  // working with a snapshot of the the webpage's pixels. It's pretty good assumption that if
+  // working with a snapshot of the webpage's pixels. It's pretty good assumption that if
   // you make the text transparent and a pixel's colour doesn't change then that character
   // must be obscured by something.
   //

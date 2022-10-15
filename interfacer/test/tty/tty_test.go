@@ -198,7 +198,7 @@ var _ = Describe("Showing a basic webpage", func() {
 		})
 
 		Describe("Text positioning", func() {
-			It("should position the left/right-aligned coloumns", func() {
+			It("should position the left/right-aligned columns", func() {
 				Expect("Smörgåsbord▄(Swedish:").To(BeInFrameAt(12, 10))
 				Expect("The▄Swedish▄word").To(BeInFrameAt(42, 10))
 			})

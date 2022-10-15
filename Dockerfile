@@ -73,7 +73,7 @@ USER user
 ENV PATH="${HOME}/bin:${HOME}/bin/firefox:${PATH}"
 
 # Firefox behaves quite differently to normal on its first run, so by getting
-# that over and done with here when there's no user to be dissapointed means
+# that over and done with here when there's no user to be disapointed means
 # that all future runs will be consistent.
 RUN TERM=xterm script \
   --return \

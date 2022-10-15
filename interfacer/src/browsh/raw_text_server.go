@@ -59,7 +59,7 @@ type rawTextResponse struct {
 	Text             string `json:"body"`
 }
 
-// HTTPServerStart starts the HTTP server is a seperate service from the usual interactive TTY
+// HTTPServerStart starts the HTTP server is a separate service from the usual interactive TTY
 // app. It accepts normal HTTP requests and uses the path portion of the URL as the entry to the
 // Browsh URL bar. It then returns a simple line-broken text version of whatever the browser
 // loads. So for example, if you request `curl browsh-http-service.com/http://something.com`,

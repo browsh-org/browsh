@@ -58,7 +58,7 @@ func webSocketReader(ws *websocket.Conn) {
 				return
 			}
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				Log("Socket reader detected that the connection unexpectedly dissapeared")
+				Log("Socket reader detected that the connection unexpectedly disappeared")
 				triggerSocketWriterClose()
 				return
 			}

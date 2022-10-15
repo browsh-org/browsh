@@ -44,7 +44,7 @@ function build_webextension_production() {
 # It is possible to use unsigned webextensions in Firefox but it requires that Firefox
 # uses problematically insecure config. I know it's a hassle having to jump through all
 # these signing hoops, but I think it's better to use a standard Firefox configuration.
-# Moving away from the webextension alltogether is another story, but something I'm still
+# Moving away from the webextension altogether is another story, but something I'm still
 # thinking about.
 #
 # NB: There can only be one canonical XPI for each semantic version.
