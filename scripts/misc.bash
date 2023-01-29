@@ -51,10 +51,12 @@ function install_golang() {
 	local version && version=$(parse_golang_version_from_go_mod "$path")
 	[ "$GOPATH" = "" ] && _panic "GOPATH not set"
 	[ "$GOROOT" = "" ] && _panic "GOROOT not set"
+	GOARCH=$(uname -m)
+	[[ $GOARCH == aarch64 ]] && GOARCH=arm64
 	echo "Installing Golang v$version... to $GOROOT"
 	curl -L \
 		-o go.tar.gz \
-		https://dl.google.com/go/go"$version".linux-amd64.tar.gz
+		https://dl.google.com/go/go"$version".linux-"$GOARCH".tar.gz
 	mkdir -p "$GOPATH"/bin
 	mkdir -p "$GOROOT"
 	tar -C "$GOROOT/.." -xzf go.tar.gz
