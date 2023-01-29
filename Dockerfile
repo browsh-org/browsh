@@ -34,10 +34,6 @@ WORKDIR $BASE
 RUN /build/ctl.sh install_golang $BASE
 RUN /build/ctl.sh build_browsh_binary $BASE
 
-# Install firefox
-RUN /build/ctl.sh install_firefox
-
-
 ###########################
 # Actual final Docker image
 ###########################
@@ -47,7 +43,6 @@ ENV HOME=/app
 WORKDIR $HOME
 
 COPY --from=build /go-home/src/browsh/interfacer/browsh /app/bin/browsh
-COPY --from=build /tmp/firefox /app/bin/firefox
 
 RUN install_packages \
       xvfb \
@@ -57,7 +52,8 @@ RUN install_packages \
       libdbus-glib-1-2 \
       procps \
       libasound2 \
-      libxtst6
+      libxtst6 \
+      firefox-esr
 
 # Block ads, etc. This includes porn just because this image is also used on the
 # public SSH demo: `ssh brow.sh`.
