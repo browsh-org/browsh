@@ -81,11 +81,13 @@ function _rename_built_xpi() {
 function bundle_production_webextension() {
 	local version && version=$(browsh_version)
 	local base='https://github.com/browsh-org/browsh/releases/download'
-	local release_url="$base/v$version/browsh-$version-an.fx.xpi"
+	local release_url="$base/v$version/browsh-$version.xpi"
 	echo "Downloading webextension from: $release_url"
-	local size && size=$(wc -c <"$XPI_PATH")
 	curl -L -o "$XPI_PATH" "$release_url"
+	local size && size=$(wc -c <"$XPI_PATH")
 	if [ "$size" -lt 500 ]; then
+		echo "XPI size seems too small: $size"
 		_panic "Problem downloading latest webextension XPI"
 	fi
+	cp -a "$XPI_PATH" "$(versioned_xpi_file)"
 }
