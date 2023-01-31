@@ -1,3 +1,3 @@
 package browsh
 
-var browshVersion = "1.8.1"
+var browshVersion = "1.8.2"
