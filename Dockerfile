@@ -17,7 +17,6 @@ RUN install_packages \
       bzip2
 
 # Helper scripts
-RUN mkdir /build
 WORKDIR /build
 ADD .git .git
 ADD .github .github
