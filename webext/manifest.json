@@ -32,6 +32,7 @@
     "<all_urls>",
     "webRequest",
     "webRequestBlocking",
-    "tabs"
+    "tabs",
+    "sessions"
   ]
 }

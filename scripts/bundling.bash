@@ -11,9 +11,11 @@ function versioned_xpi_file() {
 
 # You'll want to use this with `go run ./cmd/browsh --debug --firefox.use-existing`
 function build_webextension_watch() {
+	pushd "$PROJECT_ROOT"/webext/dist || _panic
 	"$NODE_BIN"/web-ext run \
-		--firefox contrib/firefoxheadless.sh \
+		--firefox ../contrib/firefoxheadless.sh \
 		--verbose
+	popd || _panic
 }
 
 function build_webextension_production() {

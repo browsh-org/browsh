@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	// TCell seems to be one of the best projects in any language for handling terminal
 	// standards across the major OSs.
@@ -23,7 +24,7 @@ import (
 
 var (
 	logo = `
-////  ////
+ ////  ////
  / /   / /
  //    //
  //    //    ,,,,,,,,
@@ -73,7 +74,7 @@ func Log(msg string) {
 		}
 		defer f.Close()
 
-		msg = msg + "\n"
+		msg = time.Now().Format("01-02T15:04:05.999 ") + msg + "\n"
 		if _, wErr := f.WriteString(msg); wErr != nil {
 			Shutdown(wErr)
 		}
@@ -159,6 +160,7 @@ func TTYStart(injectedScreen tcell.Screen) {
 	Log("Starting Browsh CLI client")
 	go readStdin()
 	startWebSocketServer()
+	setupLinkHints()
 }
 
 func toInt(char string) int {
@@ -185,6 +187,12 @@ func ttyEntry() {
 		// from tcell.
 		os.Setenv("TERM", "xterm-truecolor")
 	}
+	// This is for getting the clipboard (github.com/atotto/clipboard) to work
+	// with the applications xsel and xclip on systems with an X display server.
+	if os.Getenv("DISPLAY") == "" {
+		os.Setenv("DISPLAY", ":0")
+	}
+
 	realScreen, err := tcell.NewScreen()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)

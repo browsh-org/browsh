@@ -87,7 +87,7 @@ func startHeadlessFirefox() {
 	}
 	in := bufio.NewScanner(stdout)
 	for in.Scan() {
-		Log("FF-CONSOLE: " + in.Text())
+		Log("start headless FF-CONSOLE: " + in.Text())
 	}
 }
 
@@ -185,7 +185,7 @@ func startWERFirefox() {
 			strings.Contains(in.Text(), "dbus") {
 			continue
 		}
-		Log("FF-CONSOLE: " + in.Text())
+		Log("start WER FF-CONSOLE: " + in.Text())
 	}
 	Log("WER Firefox unexpectedly closed")
 }

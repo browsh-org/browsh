@@ -78,6 +78,9 @@ export default class extends utils.mixins(CommonMixin, SerialiseMixin) {
 
   // Search through every node in the DOM looking for displayable text.
   __getTextNodes() {
+    if (!document.body) {
+      return;
+    }
     this._text_nodes = [];
     const walker = document.createTreeWalker(
       document.body,

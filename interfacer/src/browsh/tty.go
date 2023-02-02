@@ -5,14 +5,20 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/gdamore/tcell"
 	"github.com/go-errors/errors"
 	"github.com/spf13/viper"
 )
 
+type Coordinate struct {
+	X, Y int
+}
+
 var (
-	screen   tcell.Screen
+	screen tcell.Screen
+	// The height of the tabs and URL bar
 	uiHeight = 2
 	// IsMonochromeMode decides whether to render the TTY in full colour or monochrome
 	IsMonochromeMode = false
@@ -51,7 +57,7 @@ func readStdin() {
 	}
 }
 
-func handleUserKeyPress(ev *tcell.EventKey) {
+func handleShortcuts(ev *tcell.EventKey) {
 	if CurrentTab == nil {
 		if ev.Key() == tcell.KeyCtrlQ {
 			quitBrowsh()
@@ -86,16 +92,24 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 	if isKey("tty.keys.next-tab", ev) {
 		nextTab()
 	}
+}
+
+func handleUserKeyPress(ev *tcell.EventKey) {
+	if currentVimMode != insertModeHard {
+		handleShortcuts(ev)
+	}
 	if !urlInputBox.isActive {
 		forwardKeyPress(ev)
 	}
 	if activeInputBox != nil {
 		handleInputBoxInput(ev)
 	} else {
+		handleVimControl(ev)
 		handleScrolling(ev) // TODO: shouldn't you be able to still use mouse scrolling?
 	}
 }
 
+// Matches a human-readable key defintion with a Tcell event
 func isKey(userKey string, ev *tcell.EventKey) bool {
 	key := viper.GetStringSlice(userKey)
 	runeMatch := []rune(key[0])[0] == ev.Rune()
@@ -143,34 +157,66 @@ func isMultiLineEnter(ev *tcell.EventKey) bool {
 	return activeInputBox.isMultiLine() && ev.Key() == 13 && ev.Modifiers() != 4
 }
 
-func handleScrolling(ev *tcell.EventKey) {
+func generateLeftClickYHack(x, y int, yHack bool) {
+	newMouseEvent := tcell.NewEventMouse(x, y+uiHeight, tcell.Button1, 0)
+	handleMouseEventYHack(newMouseEvent, yHack)
+	time.Sleep(time.Millisecond * 100)
+	newMouseEvent = tcell.NewEventMouse(x, y+uiHeight, 0, 0)
+	handleMouseEventYHack(newMouseEvent, yHack)
+}
+
+func generateLeftClick(x, y int) {
+	generateLeftClickYHack(x, y, false)
+}
+
+// TODO: This isn't working for opening new tabs.
+func generateMiddleClick(x, y int) {
+	newMouseEvent := tcell.NewEventMouse(x, y+uiHeight, tcell.Button2, 0)
+	handleMouseEvent(newMouseEvent)
+	time.Sleep(time.Millisecond * 100)
+	newMouseEvent = tcell.NewEventMouse(x, y+uiHeight, 0, 0)
+	handleMouseEvent(newMouseEvent)
+}
+
+func doScroll(relX int, relY int) {
+	doScrollAbsolute(CurrentTab.frame.xScroll+relX, CurrentTab.frame.yScroll+relY)
+}
+
+func doScrollAbsolute(absX int, absY int) {
 	yScrollOriginal := CurrentTab.frame.yScroll
 	_, height := screen.Size()
 	height -= uiHeight
-	if ev.Key() == tcell.KeyUp {
-		CurrentTab.frame.yScroll -= 2
-	}
-	if ev.Key() == tcell.KeyDown {
-		CurrentTab.frame.yScroll += 2
-	}
-	if ev.Key() == tcell.KeyPgUp {
-		CurrentTab.frame.yScroll -= height
-	}
-	if ev.Key() == tcell.KeyPgDn {
-		CurrentTab.frame.yScroll += height
-	}
+
+	CurrentTab.frame.yScroll = absY
+	CurrentTab.frame.xScroll = absX
+
 	CurrentTab.frame.limitScroll(height)
 	sendMessageToWebExtension(
-		fmt.Sprintf(
-			"/tab_command,/scroll_status,%d,%d",
-			CurrentTab.frame.xScroll,
-			CurrentTab.frame.yScroll*2))
+		fmt.Sprintf("/tab_command,/scroll_status,%d,%d",
+			CurrentTab.frame.xScroll, CurrentTab.frame.yScroll*2))
 	if CurrentTab.frame.yScroll != yScrollOriginal {
 		renderCurrentTabWindow()
 	}
 }
 
-func handleMouseEvent(ev *tcell.EventMouse) {
+func handleScrolling(ev *tcell.EventKey) {
+	_, height := screen.Size()
+	height -= uiHeight
+	if ev.Key() == tcell.KeyUp {
+		doScroll(0, -2)
+	}
+	if ev.Key() == tcell.KeyDown {
+		doScroll(0, 2)
+	}
+	if ev.Key() == tcell.KeyPgUp {
+		doScroll(0, -height)
+	}
+	if ev.Key() == tcell.KeyPgDn {
+		doScroll(0, height)
+	}
+}
+
+func handleMouseEventYHack(ev *tcell.EventMouse, yHack bool) {
 	if CurrentTab == nil {
 		return
 	}
@@ -190,27 +236,24 @@ func handleMouseEvent(ev *tcell.EventMouse) {
 		"mouse_y":   int(yInFrame),
 		"modifiers": int(ev.Modifiers()),
 	}
+	if yHack {
+		eventMap["y_hack"] = true
+	}
 	marshalled, _ := json.Marshal(eventMap)
 	sendMessageToWebExtension("/stdin," + string(marshalled))
 }
 
+func handleMouseEvent(ev *tcell.EventMouse) {
+	handleMouseEventYHack(ev, false)
+}
+
 func handleMouseScroll(scrollType tcell.ButtonMask) {
-	yScrollOriginal := CurrentTab.frame.yScroll
 	_, height := screen.Size()
 	height -= uiHeight
 	if scrollType == tcell.WheelUp {
-		CurrentTab.frame.yScroll -= 1
+		doScroll(0, -1)
 	} else if scrollType == tcell.WheelDown {
-		CurrentTab.frame.yScroll += 1
-	}
-	CurrentTab.frame.limitScroll(height)
-	sendMessageToWebExtension(
-		fmt.Sprintf(
-			"/tab_command,/scroll_status,%d,%d",
-			CurrentTab.frame.xScroll,
-			CurrentTab.frame.yScroll*2))
-	if CurrentTab.frame.yScroll != yScrollOriginal {
-		renderCurrentTabWindow()
+		doScroll(0, 1)
 	}
 }
 
@@ -259,6 +302,7 @@ func renderCurrentTabWindow() {
 		activeInputBox.renderCursor()
 	}
 	overlayPageStatusMessage()
+	overlayVimMode()
 	overlayCallToSupport()
 	screen.Show()
 }
@@ -279,6 +323,8 @@ func getCell(x, y int) cell {
 	return currentCell
 }
 
+// These are the dark and light grey squares that appear in the background to indicate that
+// nothing has been rendered there yet.
 func getHatchedCellColours(x int) (tcell.Color, tcell.Color) {
 	var bgColour, fgColour tcell.Color
 	if x%2 == 0 {

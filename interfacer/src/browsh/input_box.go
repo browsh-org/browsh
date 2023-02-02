@@ -12,7 +12,7 @@ var activeInputBox *inputBox
 // A box into which you can enter text. Generally will be forwarded to a standard
 // HTML input box in the real browser.
 //
-// Note that tcell alreay has some ready-made code in its 'views' concept for
+// Note that tcell already has some ready-made code in its 'views' concept for
 // dealing with input areas. However, at the time of writing it wasn't well documented,
 // so it was unclear how easy it would be to integrate the requirements of Browsh's
 // input boxes - namely overlaying them onto the existing graphics and having them
@@ -181,7 +181,7 @@ func (i *inputBox) handleEnterKey(modifier tcell.ModMask) {
 		} else {
 			sendMessageToWebExtension("/url_bar," + string(i.text))
 		}
-		urlBarFocus(false)
+		URLBarFocus(false)
 	}
 	if i.isMultiLine() && modifier != tcell.ModAlt {
 		i.cursorInsertRune([]rune("\n")[0])
@@ -237,6 +237,9 @@ func handleInputBoxInput(ev *tcell.EventKey) {
 	case tcell.KeyEnter:
 		activeInputBox.removeSelectedText()
 		activeInputBox.handleEnterKey(ev.Modifiers())
+	case tcell.KeyEscape:
+		activeInputBox.isActive = false
+		activeInputBox = nil
 	case tcell.KeyRune:
 		activeInputBox.removeSelectedText()
 		activeInputBox.cursorInsertRune(ev.Rune())

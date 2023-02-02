@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
+	github.com/atotto/clipboard v0.1.4
 	github.com/gdamore/tcell v1.4.0
 	github.com/go-errors/errors v1.4.2
 	github.com/gorilla/websocket v1.5.0
