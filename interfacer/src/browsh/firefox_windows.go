@@ -4,6 +4,7 @@ package browsh
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/go-errors/errors"
@@ -46,13 +47,13 @@ func getWindowsFirefoxVersionString() string {
 		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
 	}
 
-	Log("Windows registry Firefox version: " + versionString)
+	slog.Info("Windows registry Firefox version: " + versionString)
 
 	return versionString
 }
 
 func getFirefoxFlavor() string {
-	var flavor = "null"
+	flavor := "null"
 	k, err := registry.OpenKey(
 		registry.LOCAL_MACHINE,
 		`Software\Mozilla\Mozilla Firefox`,

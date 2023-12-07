@@ -3,6 +3,7 @@ package browsh
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"unicode"
 
 	"github.com/gdamore/tcell"
@@ -78,7 +79,9 @@ func parseJSONFrameText(jsonString string) {
 		Shutdown(err)
 	}
 	if !isTabPresent(incoming.Meta.TabID) {
-		Log(fmt.Sprintf("Not building frame for non-existent tab ID: %d", incoming.Meta.TabID))
+		slog.Info(
+			fmt.Sprintf("Not building frame for non-existent tab ID: %d", incoming.Meta.TabID),
+		)
 		return
 	}
 	Tabs[incoming.Meta.TabID].frame.buildFrameText(incoming)
@@ -100,7 +103,9 @@ func parseJSONFramePixels(jsonString string) {
 		Shutdown(err)
 	}
 	if !isTabPresent(incoming.Meta.TabID) {
-		Log(fmt.Sprintf("Not building frame for non-existent tab ID: %d", incoming.Meta.TabID))
+		slog.Info(
+			fmt.Sprintf("Not building frame for non-existent tab ID: %d", incoming.Meta.TabID),
+		)
 		return
 	}
 	if len(Tabs[incoming.Meta.TabID].frame.text) == 0 {
@@ -139,7 +144,7 @@ func (f *frame) resetCells() {
 
 func (f *frame) isIncomingFrameTextValid(incoming incomingFrameText) bool {
 	if len(incoming.Text) == 0 {
-		Log("Not parsing zero-size text frame")
+		slog.Info("Not parsing zero-size text frame")
 		return false
 	}
 	return true
@@ -224,7 +229,7 @@ func (f *frame) populateFramePixels(incoming incomingFramePixels) {
 
 func (f *frame) isIncomingFramePixelsValid(incoming incomingFramePixels) bool {
 	if len(incoming.Colours) == 0 {
-		Log("Not parsing zero-size text frame")
+		slog.Info("Not parsing zero-size text frame")
 		return false
 	}
 	return true

@@ -3,6 +3,7 @@ package browsh
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -30,7 +31,7 @@ func startWebSocketServer() {
 	serverMux := http.NewServeMux()
 	serverMux.HandleFunc("/", webSocketServer)
 	port := viper.GetString("browsh.websocket-port")
-	Log("Starting websocket server...")
+	slog.Info("Starting websocket server...")
 	if netErr := http.ListenAndServe(":"+port, serverMux); netErr != nil {
 		Shutdown(errors.New(fmt.Errorf("Error starting websocket server: %v", netErr)))
 	}
@@ -38,7 +39,7 @@ func startWebSocketServer() {
 
 func sendMessageToWebExtension(message string) {
 	if !IsConnectedToWebExtension {
-		Log("Webextension not connected. Message not sent: " + message)
+		slog.Info("Webextension not connected. Message not sent: " + message)
 		return
 	}
 	stdinChannel <- message
@@ -53,12 +54,12 @@ func webSocketReader(ws *websocket.Conn) {
 		handleWebextensionCommand(message)
 		if err != nil {
 			if websocket.IsCloseError(err, websocket.CloseGoingAway) {
-				Log("Socket reader detected that the browser closed the websocket")
+				slog.Info("Socket reader detected that the browser closed the websocket")
 				triggerSocketWriterClose()
 				return
 			}
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				Log("Socket reader detected that the connection unexpectedly dissapeared")
+				slog.Info("Socket reader detected that the connection unexpectedly dissapeared")
 				triggerSocketWriterClose()
 				return
 			}
@@ -89,7 +90,7 @@ func handleWebextensionCommand(message []byte) {
 	case "/screenshot":
 		saveScreenshot(parts[1])
 	default:
-		Log("WEBEXT: " + string(message))
+		slog.Info("WEBEXT: " + string(message))
 	}
 }
 
@@ -102,13 +103,13 @@ func handleRawFrameTextCommands(parts []string) {
 			Shutdown(err)
 		}
 		if incoming.RequestID != "" {
-			Log("Raw text for " + incoming.RequestID)
+			slog.Info("Raw text for " + incoming.RequestID)
 			rawTextRequests.store(incoming.RequestID, incoming.RawJSON)
 		} else {
-			Log("Raw text but no associated request ID")
+			slog.Info("Raw text but no associated request ID")
 		}
 	} else {
-		Log("WEBEXT: " + strings.Join(parts[0:], ","))
+		slog.Info("WEBEXT: " + strings.Join(parts[0:], ","))
 	}
 }
 
@@ -117,7 +118,8 @@ func handleRawFrameTextCommands(parts []string) {
 // automatically notice until it actually needs to send something. So we force that
 // by sending this NOOP text.
 // TODO: There's a potential race condition because new connections share the same
-//       Go channel. So we need to setup a new channel for every connection.
+//
+//	Go channel. So we need to setup a new channel for every connection.
 func triggerSocketWriterClose() {
 	stdinChannel <- "BROWSH CLIENT FORCING CLOSE OF WEBSOCKET WRITER"
 }
@@ -128,12 +130,12 @@ func webSocketWriter(ws *websocket.Conn) {
 	defer ws.Close()
 	for {
 		message = <-stdinChannel
-		Log(fmt.Sprintf("TTY sending: %s", message))
+		slog.Info(fmt.Sprintf("TTY sending: %s", message))
 		if err := ws.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
 			if err == websocket.ErrCloseSent {
-				Log("Socket writer detected that the browser closed the websocket")
+				slog.Info("Socket writer detected that the browser closed the websocket")
 			} else {
-				Log("Socket writer detected unexpected closure of websocket")
+				slog.Info("Socket writer detected unexpected closure of websocket")
 			}
 			return
 		}
@@ -141,7 +143,7 @@ func webSocketWriter(ws *websocket.Conn) {
 }
 
 func webSocketServer(w http.ResponseWriter, r *http.Request) {
-	Log("Incoming web request from browser")
+	slog.Info("Incoming web request from browser")
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		Shutdown(err)
