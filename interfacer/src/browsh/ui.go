@@ -1,20 +1,20 @@
 package browsh
 
 import (
+	"log/slog"
+
 	"github.com/gdamore/tcell"
 	"github.com/spf13/viper"
 )
 
-var (
-	urlInputBox = inputBox{
-		X:        0,
-		Y:        1,
-		Height:   1,
-		text:     nil,
-		FgColour: [3]int32{255, 255, 255},
-		bgColour: [3]int32{-1, -1, -1},
-	}
-)
+var urlInputBox = inputBox{
+	X:        0,
+	Y:        1,
+	Height:   1,
+	text:     nil,
+	FgColour: [3]int32{255, 255, 255},
+	bgColour: [3]int32{-1, -1, -1},
+}
 
 // Render tabs, URL bar, status messages, etc
 func renderUI() {
@@ -28,7 +28,7 @@ func renderUI() {
 func writeString(x, y int, str string, style tcell.Style) {
 	xOriginal := x
 	if viper.GetBool("http-server-mode") {
-		Log(str)
+		slog.Info(str)
 		return
 	}
 	for _, c := range str {

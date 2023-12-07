@@ -2,18 +2,20 @@ package test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
+	"log/slog"
 	"net/http"
 	"time"
 
-	ginkgo "github.com/onsi/ginkgo"
-
 	"github.com/browsh-org/browsh/interfacer/src/browsh"
+	ginkgo "github.com/onsi/ginkgo"
 	"github.com/spf13/viper"
 )
 
-var staticFileServerPort = "4444"
-var rootDir = browsh.Shell("git rev-parse --show-toplevel")
+var (
+	staticFileServerPort = "4444"
+	rootDir              = browsh.Shell("git rev-parse --show-toplevel")
+)
 
 func startStaticFileServer() {
 	serverMux := http.NewServeMux()
@@ -59,7 +61,7 @@ func getPath(path string, mode string) string {
 		panic(fmt.Sprintf("%s", err))
 	} else {
 		defer response.Body.Close()
-		contents, err := ioutil.ReadAll(response.Body)
+		contents, err := io.ReadAll(response.Body)
 		if err != nil {
 			fmt.Printf("%s", err)
 			panic(fmt.Sprintf("%s", err))
@@ -78,9 +80,9 @@ var _ = ginkgo.BeforeEach(func() {
 	browsh.ResetTabs()
 	waitUntilConnectedToWebExtension(15 * time.Second)
 	browsh.IsMonochromeMode = false
-	browsh.Log("\n---------")
-	browsh.Log(ginkgo.CurrentGinkgoTestDescription().FullTestText)
-	browsh.Log("---------")
+	slog.Info("\n---------")
+	slog.Info(ginkgo.CurrentGinkgoTestDescription().FullTestText)
+	slog.Info("---------")
 })
 
 var _ = ginkgo.BeforeSuite(func() {

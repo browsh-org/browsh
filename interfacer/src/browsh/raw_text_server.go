@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -69,7 +70,7 @@ func HTTPServerStart() {
 	IsHTTPServerMode = true
 	StartFirefox()
 	go startWebSocketServer()
-	Log("Starting Browsh HTTP server")
+	slog.Info("Starting Browsh HTTP server")
 	bind := viper.GetString("http-server.bind")
 	port := viper.GetString("http-server.port")
 	serverMux := http.NewServeMux()
@@ -120,7 +121,7 @@ func (h *slashFix) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 	var message string
 	var isErrored bool
-	var start = time.Now().Format(time.RFC3339)
+	start := time.Now().Format(time.RFC3339)
 	urlForBrowsh, _ := url.PathUnescape(strings.TrimPrefix(r.URL.Path, "/"))
 	urlForBrowsh, isErrored = deRecurseURL(urlForBrowsh)
 	if isErrored {
@@ -147,7 +148,7 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	Log(r.Header.Get("User-Agent"))
+	slog.Info(r.Header.Get("User-Agent"))
 	if isKubeReadinessProbe(r.Header.Get("User-Agent")) {
 		io.WriteString(w, "healthy")
 		return
@@ -228,7 +229,7 @@ func isProductionHTTP(r *http.Request) bool {
 // 'HTML' mode returns some basic HTML tags for things like anchor links.
 // 'DOM' mode returns a simple dump of the DOM.
 func getRawTextMode(r *http.Request) string {
-	var mode = "HTML"
+	mode := "HTML"
 	if strings.Contains(r.Host, "text.") {
 		mode = "PLAIN"
 	}

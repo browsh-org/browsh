@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log/slog"
 	"net"
 	"os"
 	"os/exec"
@@ -59,7 +60,7 @@ var (
 )
 
 func startHeadlessFirefox() {
-	Log("Starting Firefox in headless mode")
+	slog.Info("Starting Firefox in headless mode")
 	checkIfFirefoxIsAlreadyRunning()
 	firefoxPath := ensureFirefoxBinary()
 	ensureFirefoxVersion(firefoxPath)
@@ -69,11 +70,11 @@ func startHeadlessFirefox() {
 	}
 	profile := viper.GetString("firefox.profile")
 	if profile != "browsh-default" {
-		Log("Using profile: " + profile)
+		slog.Info("Using profile: " + profile)
 		args = append(args, "-P", profile)
 	} else {
 		profilePath := getFirefoxProfilePath()
-		Log("Using default profile at: " + profilePath)
+		slog.Info("Using default profile at: " + profilePath)
 		args = append(args, "--profile", profilePath)
 	}
 	firefoxProcess := exec.Command(firefoxPath, args...)
@@ -87,7 +88,7 @@ func startHeadlessFirefox() {
 	}
 	in := bufio.NewScanner(stdout)
 	for in.Scan() {
-		Log("FF-CONSOLE: " + in.Text())
+		slog.Info("FF-CONSOLE: " + in.Text())
 	}
 }
 
@@ -114,7 +115,7 @@ func ensureFirefoxBinary() string {
 			path = getFirefoxPath()
 		}
 	}
-	Log("Using Firefox at: " + path)
+	slog.Info("Using Firefox at: " + path)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		Shutdown(errors.New("Firefox binary not found: " + path))
 	}
@@ -155,12 +156,12 @@ func versionOrdinal(version string) string {
 // because I haven't been able to recreate the way `web-ext` injects an unsigned
 // extension.
 func startWERFirefox() {
-	Log("Attempting to start headless Firefox with `web-ext`")
+	slog.Info("Attempting to start headless Firefox with `web-ext`")
 	if IsConnectedToWebExtension {
 		Shutdown(errors.New("There appears to already be an existing Web Extension connection"))
 	}
 	checkIfFirefoxIsAlreadyRunning()
-	var rootDir = Shell("git rev-parse --show-toplevel")
+	rootDir := Shell("git rev-parse --show-toplevel")
 	args := []string{
 		"run",
 		"--firefox=" + rootDir + "/webext/contrib/firefoxheadless.sh",
@@ -185,9 +186,9 @@ func startWERFirefox() {
 			strings.Contains(in.Text(), "dbus") {
 			continue
 		}
-		Log("FF-CONSOLE: " + in.Text())
+		slog.Info("FF-CONSOLE: " + in.Text())
 	}
-	Log("WER Firefox unexpectedly closed")
+	slog.Info("WER Firefox unexpectedly closed")
 }
 
 // Connect to Firefox's Marionette service.
@@ -206,7 +207,7 @@ func firefoxMarionette() {
 		conn net.Conn
 	)
 	connected := false
-	Log("Attempting to connect to Firefox Marionette")
+	slog.Info("Attempting to connect to Firefox Marionette")
 	start := time.Now()
 	for time.Since(start) < 30*time.Second {
 		conn, err = net.Dial("tcp", "127.0.0.1:2828")
@@ -262,14 +263,14 @@ func readMarionette() {
 	buffer := make([]byte, 4096)
 	count, err := marionette.Read(buffer)
 	if err != nil {
-		Log("Error reading from Marionette connection")
+		slog.Info("Error reading from Marionette connection")
 		return
 	}
-	Log("FF-MRNT: " + string(buffer[:count]))
+	slog.Info("FF-MRNT: " + string(buffer[:count]))
 }
 
 func sendFirefoxCommand(command string, args map[string]interface{}) {
-	Log("Sending `" + command + "` to Firefox Marionette")
+	slog.Info("Sending `" + command + "` to Firefox Marionette")
 	fullCommand := []interface{}{0, ffCommandCount, command, args}
 	marshalled, _ := json.Marshal(fullCommand)
 	message := fmt.Sprintf("%d:%s", len(marshalled), marshalled)

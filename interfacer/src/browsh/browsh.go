@@ -3,7 +3,7 @@ package browsh
 import (
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"log/slog"
 	"net/url"
 	"os"
 	"os/exec"
@@ -44,40 +44,18 @@ var (
 )
 
 func setupLogging() {
-	dir, err := os.Getwd()
-	if err != nil {
-		Shutdown(err)
-	}
-	logfile = fmt.Sprintf(filepath.Join(dir, "debug.log"))
-	fmt.Println("Logging to: " + logfile)
-	if _, err := os.Stat(logfile); err == nil {
-		os.Truncate(logfile, 0)
-	}
-	if err != nil {
-		Shutdown(err)
-	}
-}
-
-// Log for general purpose logging
-// TODO: accept generic types
-func Log(msg string) {
-	if !*isDebug {
-		return
-	}
-	if viper.GetBool("http-server-mode") && !IsTesting {
-		fmt.Println(msg)
-	} else {
-		f, oErr := os.OpenFile(logfile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-		if oErr != nil {
-			Shutdown(oErr)
+	out := os.Stderr
+	if *isDebug {
+		dir, err := os.Getwd()
+		if err != nil {
+			Shutdown(err)
 		}
-		defer f.Close()
-
-		msg = msg + "\n"
-		if _, wErr := f.WriteString(msg); wErr != nil {
-			Shutdown(wErr)
+		logfile = fmt.Sprintf(filepath.Join(dir, "debug.log"))
+		if out, err = os.OpenFile(logfile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644); err != nil {
+			Shutdown(err)
 		}
 	}
+	slog.SetDefault(slog.New(slog.NewTextHandler(out, nil)))
 }
 
 // Initialise browsh
@@ -85,9 +63,7 @@ func Initialise() {
 	if IsTesting {
 		*isDebug = true
 	}
-	if *isDebug {
-		setupLogging()
-	}
+	setupLogging()
 	loadConfig()
 }
 
@@ -95,9 +71,9 @@ func Initialise() {
 func Shutdown(err error) {
 	if *isDebug {
 		if e, ok := err.(*errors.Error); ok {
-			Log(fmt.Sprintf(e.ErrorStack()))
+			slog.Error(e.ErrorStack())
 		} else {
-			Log(err.Error())
+			slog.Error(err.Error())
 		}
 	}
 	exitCode := 0
@@ -111,12 +87,15 @@ func Shutdown(err error) {
 	os.Exit(exitCode)
 }
 
+func Log(message string) {
+}
+
 func saveScreenshot(base64String string) {
 	dec, err := base64.StdEncoding.DecodeString(base64String)
 	if err != nil {
 		Shutdown(err)
 	}
-	file, err := ioutil.TempFile(os.TempDir(), "browsh-screenshot")
+	file, err := os.CreateTemp("", "browsh-screenshot")
 	if err != nil {
 		Shutdown(err)
 	}
@@ -154,9 +133,14 @@ func TTYStart(injectedScreen tcell.Screen) {
 	screen = injectedScreen
 	setupTcell()
 	writeString(1, 0, logo, tcell.StyleDefault)
-	writeString(0, 15, "Starting Browsh v"+browshVersion+", the modern text-based web browser.", tcell.StyleDefault)
+	writeString(
+		0,
+		15,
+		"Starting Browsh v"+browshVersion+", the modern text-based web browser.",
+		tcell.StyleDefault,
+	)
 	StartFirefox()
-	Log("Starting Browsh CLI client")
+	slog.Info("Starting Browsh CLI client")
 	go readStdin()
 	startWebSocketServer()
 }

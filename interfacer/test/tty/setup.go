@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -9,24 +10,41 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/browsh-org/browsh/interfacer/src/browsh"
 	"github.com/gdamore/tcell"
 	"github.com/gdamore/tcell/terminfo"
 	ginkgo "github.com/onsi/ginkgo"
 	gomega "github.com/onsi/gomega"
-
-	"github.com/browsh-org/browsh/interfacer/src/browsh"
 	"github.com/spf13/viper"
 )
 
-var staticFileServerPort = "4444"
-var simScreen tcell.SimulationScreen
-var startupWait = 60 * time.Second
-var perTestTimeout = 2000 * time.Millisecond
-var rootDir = browsh.Shell("git rev-parse --show-toplevel")
-var testSiteURL = "http://localhost:" + staticFileServerPort
-var ti *terminfo.Terminfo
-var dir, _ = os.Getwd()
-var framesLogFile = fmt.Sprintf(filepath.Join(dir, "frames.log"))
+var (
+	staticFileServerPort = "4444"
+	simScreen            tcell.SimulationScreen
+	startupWait          = 60 * time.Second
+	perTestTimeout       = 2000 * time.Millisecond
+	rootDir              = browsh.Shell("git rev-parse --show-toplevel")
+	testSiteURL          = "http://localhost:" + staticFileServerPort
+	ti                   *terminfo.Terminfo
+	framesLogFileName    string
+	frameLogger          *slog.Logger
+)
+
+func init() {
+	dir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	framesLogFileName = fmt.Sprintf(filepath.Join(dir, "frames.log"))
+	framesLogFile, err := os.OpenFile(framesLogFileName,
+		os.O_CREATE|os.O_TRUNC|os.O_WRONLY,
+		0o644,
+	)
+	if err != nil {
+		panic(err)
+	}
+	frameLogger = slog.New(slog.NewTextHandler(framesLogFile, nil))
+}
 
 func initTerm() {
 	// The tests check for true colour RGB values. The only downside to forcing true colour
@@ -39,8 +57,8 @@ func initTerm() {
 // GetFrame returns the current Browsh frame's text
 func GetFrame() string {
 	var frame, log string
-	var line = 0
-	var styleDefault = ti.TParm(ti.SetFgBg, int(tcell.ColorWhite), int(tcell.ColorBlack))
+	line := 0
+	styleDefault := ti.TParm(ti.SetFgBg, int(tcell.ColorWhite), int(tcell.ColorBlack))
 	width, _ := simScreen.Size()
 	cells, _, _ := simScreen.GetContents()
 	for _, element := range cells {
@@ -53,23 +71,10 @@ func GetFrame() string {
 			line = 0
 		}
 	}
-	writeFrameLog("================================================")
-	writeFrameLog(ginkgo.CurrentGinkgoTestDescription().FullTestText)
-	writeFrameLog("================================================\n")
-	log = "\n" + log + styleDefault
-	writeFrameLog(log)
+	frameLogger.Info("================================================")
+	frameLogger.Info(ginkgo.CurrentGinkgoTestDescription().FullTestText)
+	frameLogger.Info("================================================\n")
 	return frame
-}
-
-func writeFrameLog(log string) {
-	f, err := os.OpenFile(framesLogFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	if _, err = f.WriteString(log); err != nil {
-		panic(err)
-	}
 }
 
 // Trigger the key definition specified by name
@@ -228,11 +233,10 @@ func initBrowsh() {
 	browsh.IsTesting = true
 	simScreen = tcell.NewSimulationScreen("UTF-8")
 	browsh.Initialise()
-
 }
 
 func stopFirefox() {
-	browsh.Log("Attempting to kill all firefox processes")
+	slog.Info("Attempting to kill all firefox processes")
 	browsh.IsConnectedToWebExtension = false
 	browsh.Shell(rootDir + "/webext/contrib/firefoxheadless.sh kill")
 	time.Sleep(500 * time.Millisecond)
@@ -243,19 +247,19 @@ func runeCount(text string) int {
 }
 
 var _ = ginkgo.BeforeEach(func() {
-	browsh.Log("Attempting to restart WER Firefox...")
+	slog.Info("Attempting to restart WER Firefox...")
 	stopFirefox()
 	browsh.ResetTabs()
 	browsh.StartFirefox()
 	sleepUntilPageLoad(startupWait)
 	browsh.IsMonochromeMode = false
-	browsh.Log("\n---------")
-	browsh.Log(ginkgo.CurrentGinkgoTestDescription().FullTestText)
-	browsh.Log("---------")
+	slog.Info("\n---------")
+	slog.Info(ginkgo.CurrentGinkgoTestDescription().FullTestText)
+	slog.Info("---------")
 })
 
 var _ = ginkgo.BeforeSuite(func() {
-	os.Truncate(framesLogFile, 0)
+	os.Truncate(framesLogFileName, 0)
 	initTerm()
 	initBrowsh()
 	stopFirefox()
