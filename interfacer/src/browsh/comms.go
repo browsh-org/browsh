@@ -33,13 +33,13 @@ func startWebSocketServer() {
 	port := viper.GetString("browsh.websocket-port")
 	slog.Info("Starting websocket server...")
 	if netErr := http.ListenAndServe(":"+port, serverMux); netErr != nil {
-		Shutdown(errors.New(fmt.Errorf("Error starting websocket server: %v", netErr)))
+		Shutdown(fmt.Errorf("Error starting websocket server: %w", netErr))
 	}
 }
 
 func sendMessageToWebExtension(message string) {
 	if !IsConnectedToWebExtension {
-		slog.Info("Webextension not connected. Message not sent: " + message)
+		slog.Info("Webextension not connected. Message not sent", "message", message)
 		return
 	}
 	stdinChannel <- message
@@ -59,7 +59,7 @@ func webSocketReader(ws *websocket.Conn) {
 				return
 			}
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				slog.Info("Socket reader detected that the connection unexpectedly dissapeared")
+				slog.Error("Socket reader detected that the connection unexpectedly dissapeared")
 				triggerSocketWriterClose()
 				return
 			}
@@ -90,7 +90,7 @@ func handleWebextensionCommand(message []byte) {
 	case "/screenshot":
 		saveScreenshot(parts[1])
 	default:
-		slog.Info("WEBEXT: " + string(message))
+		slog.Info("WEBEXT", "message", string(message))
 	}
 }
 
@@ -103,13 +103,13 @@ func handleRawFrameTextCommands(parts []string) {
 			Shutdown(err)
 		}
 		if incoming.RequestID != "" {
-			slog.Info("Raw text for " + incoming.RequestID)
+			slog.Info("Raw text for", "RequestID", incoming.RequestID)
 			rawTextRequests.store(incoming.RequestID, incoming.RawJSON)
 		} else {
 			slog.Info("Raw text but no associated request ID")
 		}
 	} else {
-		slog.Info("WEBEXT: " + strings.Join(parts[0:], ","))
+		slog.Info("WEBEXT", "command", strings.Join(parts[0:], ","))
 	}
 }
 
@@ -130,12 +130,12 @@ func webSocketWriter(ws *websocket.Conn) {
 	defer ws.Close()
 	for {
 		message = <-stdinChannel
-		slog.Info(fmt.Sprintf("TTY sending: %s", message))
+		slog.Info("TTY sending", "message", message)
 		if err := ws.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
-			if err == websocket.ErrCloseSent {
+			if errors.Is(err, websocket.ErrCloseSent) {
 				slog.Info("Socket writer detected that the browser closed the websocket")
 			} else {
-				slog.Info("Socket writer detected unexpected closure of websocket")
+				slog.Error("Socket writer detected unexpected closure of websocket", "error", err)
 			}
 			return
 		}

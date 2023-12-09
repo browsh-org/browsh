@@ -16,6 +16,8 @@ var (
 	uiHeight = 2
 	// IsMonochromeMode decides whether to render the TTY in full colour or monochrome
 	IsMonochromeMode = false
+
+	errNormalExit = errors.New("normal")
 )
 
 func setupTcell() {
@@ -110,7 +112,7 @@ func quitBrowsh() {
 	if !viper.GetBool("firefox.use-existing") {
 		quitFirefox()
 	}
-	Shutdown(errors.New("normal"))
+	Shutdown(errNormalExit)
 }
 
 func toggleMonochromeMode() {
@@ -227,7 +229,7 @@ func handleTTYResize() {
 // that have changed.
 func renderCurrentTabWindow() {
 	var currentCell cell
-	var styling = tcell.StyleDefault
+	styling := tcell.StyleDefault
 	var runeChars []rune
 	width, height := screen.Size()
 	if CurrentTab == nil || CurrentTab.frame.cells == nil {
