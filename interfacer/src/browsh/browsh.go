@@ -69,20 +69,19 @@ func Initialise() {
 
 // Shutdown tries its best to cleanly shutdown browsh and the associated browser
 func Shutdown(err error) {
-	if *isDebug {
-		if e, ok := err.(*errors.Error); ok {
-			slog.Error(e.ErrorStack())
-		} else {
-			slog.Error(err.Error())
-		}
+	msg := "shutting down"
+	var e *errors.Error
+	if errors.As(err, &e) {
+		slog.Error(msg, "errorStack", e.ErrorStack())
+	} else {
+		slog.Error(msg, "error", err)
 	}
-	exitCode := 0
 	if screen != nil {
 		screen.Fini()
 	}
-	if err.Error() != "normal" {
+	exitCode := 0
+	if !errors.Is(err, errNormalExit) {
 		exitCode = 1
-		println(err.Error())
 	}
 	os.Exit(exitCode)
 }
@@ -99,6 +98,7 @@ func saveScreenshot(base64String string) {
 	if err != nil {
 		Shutdown(err)
 	}
+	defer file.Close()
 	if _, err := file.Write(dec); err != nil {
 		Shutdown(err)
 	}
@@ -111,7 +111,6 @@ func saveScreenshot(base64String string) {
 	}
 	message := "Screenshot saved to " + fullPath
 	sendMessageToWebExtension("/status," + message)
-	file.Close()
 }
 
 // Shell provides nice and easy shell commands
@@ -121,9 +120,13 @@ func Shell(command string) string {
 	parts = parts[1:]
 	out, err := exec.Command(head, parts...).CombinedOutput()
 	if err != nil {
-		errorMessge := fmt.Sprintf(
-			"Browsh tried to run `%s` but failed with: %s", command, string(out))
-		Shutdown(errors.New(errorMessge))
+		err := fmt.Errorf(
+			"Browsh tried to run `%s` but failed with: %s, err: %w",
+			command,
+			string(out),
+			err,
+		)
+		Shutdown(err)
 	}
 	return strings.TrimSpace(string(out))
 }

@@ -148,7 +148,7 @@ func handleHTTPServerRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	slog.Info(r.Header.Get("User-Agent"))
+	slog.Info("Handling request", "User-Agent", r.Header.Get("User-Agent"))
 	if isKubeReadinessProbe(r.Header.Get("User-Agent")) {
 		io.WriteString(w, "healthy")
 		return

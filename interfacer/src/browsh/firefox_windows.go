@@ -20,11 +20,11 @@ func getFirefoxPath() string {
 		`Software\Mozilla\`+flavor+` `+versionString+`\bin`,
 		registry.QUERY_VALUE)
 	if err != nil {
-		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
+		Shutdown(fmt.Errorf("Error reading Windows registry: %w", err))
 	}
 	path, _, err := k.GetStringValue("PathToExe")
 	if err != nil {
-		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
+		Shutdown(fmt.Errorf("Error reading Windows registry: %w", err))
 	}
 
 	return path
@@ -38,16 +38,16 @@ func getWindowsFirefoxVersionString() string {
 		`Software\Mozilla\`+flavor,
 		registry.QUERY_VALUE)
 	if err != nil {
-		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
+		Shutdown(fmt.Errorf("Error reading Windows registry: %w", err))
 	}
 	defer k.Close()
 
 	versionString, _, err := k.GetStringValue("")
 	if err != nil {
-		Shutdown(errors.New("Error reading Windows registry: " + fmt.Sprintf("%s", err)))
+		Shutdown(fmt.Errorf("Error reading Windows registry: %w", err))
 	}
 
-	slog.Info("Windows registry Firefox version: " + versionString)
+	slog.Info("Windows registry Firefox", "version", versionString)
 
 	return versionString
 }

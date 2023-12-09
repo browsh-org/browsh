@@ -5,7 +5,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io/fs"
 	"log/slog"
 	"net"
 	"os"
@@ -70,11 +70,11 @@ func startHeadlessFirefox() {
 	}
 	profile := viper.GetString("firefox.profile")
 	if profile != "browsh-default" {
-		slog.Info("Using profile: " + profile)
+		slog.Info("Using Firefox profile", "profile", profile)
 		args = append(args, "-P", profile)
 	} else {
 		profilePath := getFirefoxProfilePath()
-		slog.Info("Using default profile at: " + profilePath)
+		slog.Info("Using default profile", "path", profilePath)
 		args = append(args, "--profile", profilePath)
 	}
 	firefoxProcess := exec.Command(firefoxPath, args...)
@@ -88,7 +88,7 @@ func startHeadlessFirefox() {
 	}
 	in := bufio.NewScanner(stdout)
 	for in.Scan() {
-		slog.Info("FF-CONSOLE: " + in.Text())
+		slog.Info("FF-CONSOLE", "stdout", in.Text())
 	}
 }
 
@@ -115,10 +115,13 @@ func ensureFirefoxBinary() string {
 			path = getFirefoxPath()
 		}
 	}
-	slog.Info("Using Firefox at: " + path)
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		Shutdown(errors.New("Firefox binary not found: " + path))
+	if _, err := os.Stat(path); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			err = errors.New("Firefox binary not found: " + path)
+		}
+		Shutdown(err)
 	}
+	slog.Info("Using Firefox", "path", path)
 	return path
 }
 
@@ -186,7 +189,7 @@ func startWERFirefox() {
 			strings.Contains(in.Text(), "dbus") {
 			continue
 		}
-		slog.Info("FF-CONSOLE: " + in.Text())
+		slog.Info("FF-CONSOLE", "stdout", in.Text())
 	}
 	slog.Info("WER Firefox unexpectedly closed")
 }
@@ -237,7 +240,9 @@ func installWebextension() {
 		Shutdown(err)
 	}
 	path := path.Join(os.TempDir(), "browsh-webext-addon")
-	ioutil.WriteFile(path, []byte(data), 0644)
+	if err := os.WriteFile(path, []byte(data), 0644); err != nil {
+		Shutdown(err)
+	}
 	args := map[string]interface{}{"path": path}
 	sendFirefoxCommand("Addon:Install", args)
 }
@@ -263,14 +268,14 @@ func readMarionette() {
 	buffer := make([]byte, 4096)
 	count, err := marionette.Read(buffer)
 	if err != nil {
-		slog.Info("Error reading from Marionette connection")
+		slog.Error("Error reading from Marionette connection", "error", err)
 		return
 	}
-	slog.Info("FF-MRNT: " + string(buffer[:count]))
+	slog.Info("FF-MRNT", "buffer", string(buffer[:count]))
 }
 
 func sendFirefoxCommand(command string, args map[string]interface{}) {
-	slog.Info("Sending `" + command + "` to Firefox Marionette")
+	slog.Info("Sending command to Firefox Marionette", "command", command, "args", args)
 	fullCommand := []interface{}{0, ffCommandCount, command, args}
 	marshalled, _ := json.Marshal(fullCommand)
 	message := fmt.Sprintf("%d:%s", len(marshalled), marshalled)
