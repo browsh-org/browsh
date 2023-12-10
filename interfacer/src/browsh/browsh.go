@@ -3,6 +3,7 @@ package browsh
 import (
 	"encoding/base64"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/url"
 	"os"
@@ -44,7 +45,7 @@ var (
 )
 
 func setupLogging() {
-	out := os.Stderr
+	out := io.Discard
 	if *isDebug {
 		dir, err := os.Getwd()
 		if err != nil {
