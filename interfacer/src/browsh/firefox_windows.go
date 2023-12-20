@@ -44,7 +44,7 @@ func getWindowsFirefoxVersionString() string {
 	}
 	defer k.Close()
 
-	versionString, _, err := k.GetStringValue("")
+	versionString, _, err := k.GetStringValue("CurrentVersion")
 	if err != nil {
 		Shutdown(fmt.Errorf("Error reading Windows registry: %w", err))
 	}
