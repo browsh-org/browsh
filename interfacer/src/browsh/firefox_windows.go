@@ -17,7 +17,7 @@ func getFirefoxPath() string {
 
 	k, err := registry.OpenKey(
 		registry.LOCAL_MACHINE,
-		`Software\Mozilla\`+flavor+` `+versionString+`\bin`,
+		`Software\Mozilla\` + flavor + `\` + versionString + `\Main`,
 		registry.QUERY_VALUE)
 	if err != nil {
 		Shutdown(fmt.Errorf("Error reading Windows registry: %w", err))
