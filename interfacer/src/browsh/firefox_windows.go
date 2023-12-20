@@ -22,6 +22,8 @@ func getFirefoxPath() string {
 	if err != nil {
 		Shutdown(fmt.Errorf("Error reading Windows registry: %w", err))
 	}
+	defer k.Close()
+
 	path, _, err := k.GetStringValue("PathToExe")
 	if err != nil {
 		Shutdown(fmt.Errorf("Error reading Windows registry: %w", err))
