@@ -1,0 +1,154 @@
+{
+  "$id": "https://json.schemastore.org/browsh-schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "https://www.brow.sh/docs/config/",
+  "properties": {
+    "browsh_supporter": {
+      "default": "♥",
+      "enum": ["I have shown my support for Browsh", "♥"],
+      "description": "By showing your support you can disable the app's branding and nags to donate",
+      "type": "string"
+    },
+    "startup-url": {
+      "description": "The page to show at startup. Browsh will fail to boot if this URL is not accessible",
+      "type": "string"
+    },
+    "default_search_engine_base": {
+      "default": "https://www.google.com/search?q=",
+      "description": "The base query when a non-URL is entered into the URL bar",
+      "type": "string"
+    },
+    "mobile_user_agent": {
+      "default": "Mozilla/5.0 (Android 7.0; Mobile; rv:54.0) Gecko/58.0 Firefox/58.0",
+      "description": "The mobile user agent for forcing web pages to use their mobile layout",
+      "type": "string"
+    },
+    "browsh": {
+      "description": "Browsh internals",
+      "properties": {
+        "websocket-port": {
+          "default": 3334,
+          "type": "integer"
+        },
+        "use_experimental_text_visibility": {
+          "description": "Possibly better handling of overlapping text in web pages. If a page seems to have text that shouldn't be visible, if it should be behind another element for example, then this experimental feature should help. It can also be toggled in-browser with F6",
+          "default": false,
+          "type": "boolean"
+        },
+        "custom_css": {
+          "description": "Custom CSS to apply to all loaded tabs",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "firefox": {
+      "properties": {
+        "path": {
+          "default": "firefox",
+          "description": "The path to your Firefox binary",
+          "type": "string"
+        },
+        "profile": {
+          "default": "browsh-default",
+          "description": "Browsh has its own profile, separate from the normal user's. But you can change that",
+          "type": "string"
+        },
+        "use-existing": {
+          "default": false,
+          "description": "Don't let Browsh launch Firefox, but make it try to connect to an existing one. Note it will need to have been launched with the '--marionette' flag",
+          "type": "boolean"
+        },
+        "with-gui": {
+          "default": "with-gui",
+          "description": "Launch Firefox in with its visible GUI window. Useful for setting up the Browsh profile.",
+          "type": "string"
+        },
+        "preferences": {
+          "items": {
+            "type": "string"
+          },
+          "description": "Config that you might usually set through Firefox's 'about:config' page Note that string must be wrapped in quotes",
+          "type": "array"
+        }
+      },
+      "tty": {
+        "properties": {
+          "small_pixel_frame_rate": {
+            "default": "250",
+            "description": "The time in milliseconds between requesting a new TTY-sized pixel frame. This is essentially the frame rate for graphics. Lower values make for smoother animations and feedback, but also increases the CPU load",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "http-server": {
+        "properties": {
+          "port": {
+            "default": 4333,
+            "type": "integer"
+          },
+          "bind": {
+            "default": "0.0.0.0",
+            "type": "string"
+          },
+          "render_delay": {
+            "default": 100,
+            "description": "The time to wait in milliseconds after the DOM is ready before trying to parse and render the page's text. Too soon and text risks not being parsed, too long and you wait unnecessarily",
+            "type": "integer"
+          },
+          "timeout": {
+            "default": 30,
+            "description": "The length of time in seconds to wait before aborting the page load",
+            "type": "integer"
+          },
+          "columns": {
+            "default": 100,
+            "description": "The dimensions of a char-based window onto a webpage. The columns are ultimately the width of the final text",
+            "type": "string"
+          },
+          "rows": {
+            "default": 30,
+            "description": "Whereas the rows represent the height of the original web page made visible to the original browser window. So the number of rows can effect things like how far down a web page images are lazy-loaded",
+            "type": "string"
+          },
+          "jpeg_compression": {
+            "default": 0.9,
+            "description": "The amount of lossy JPG compression to apply to the background image of HTML pages",
+            "type": "string"
+          },
+          "rate-limit": {
+            "default": "100000000-M",
+            "description": "Rate limit. For syntax, see: https://github.com/ulule/limiter",
+            "type": "string"
+          },
+          "blocked-domains": {
+            "items": {
+              "type": "string"
+            },
+            "description": "Blocking is useful if the HTTP server is made public. All values are evaluated as regular expressions",
+            "type": "array"
+          },
+          "blocked-user-agents": {
+            "items": {
+              "type": "string"
+            },
+            "description": "Blocking is useful if the HTTP server is made public. All values are evaluated as regular expressions",
+            "type": "array"
+          },
+          "header": {
+            "description": "HTML snippets to show at top and bottom of final page",
+            "type": "string"
+          },
+          "footer": {
+            "description": "HTML snippets to show at top and bottom of final page",
+            "type": "string"
+          }
+        }
+      },
+      "type": "object"
+    }
+  },
+  "title": "JSON schema for browsh",
+  "type": "object"
+}
