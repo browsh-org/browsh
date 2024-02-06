@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-errors/errors"
+	"github.com/spf13/viper"
 )
 
 func getFirefoxPath() string {
@@ -13,6 +14,9 @@ func getFirefoxPath() string {
 }
 
 func ensureFirefoxVersion(path string) {
+	if viper.GetBool("firefox.ignore-version") {
+        return
+    }
 	output := Shell(path + " --version")
 	pieces := strings.Split(output, " ")
 	version := pieces[len(pieces)-1]
