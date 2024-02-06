@@ -99,8 +99,8 @@ func getFirefoxFlavor() string {
 
 func ensureFirefoxVersion(path string) {
 	if viper.GetBool("firefox.ignore-version") {
-        return
-    }
+		return
+	}
 	versionString := getWindowsFirefoxVersionString()
 	pieces := strings.Split(versionString, " ")
 	version := pieces[0]
