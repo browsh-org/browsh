@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/go-errors/errors"
+	"github.com/spf13/viper"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -97,6 +98,9 @@ func getFirefoxFlavor() string {
 }
 
 func ensureFirefoxVersion(path string) {
+	if viper.GetBool("firefox.ignore-version") {
+		return
+	}
 	versionString := getWindowsFirefoxVersionString()
 	pieces := strings.Split(versionString, " ")
 	version := pieces[0]
