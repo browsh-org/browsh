@@ -31,6 +31,8 @@ ENV BASE=$GOPATH/src/browsh/interfacer
 ADD interfacer $BASE
 WORKDIR $BASE
 RUN /build/ctl.sh install_golang $BASE
+RUN wget -P "$BASE" "https://github.com/browsh-org/browsh/releases/download/v1.8.3/browsh-1.8.3.xpi"
+RUN mv "$BASE/browsh-1.8.3.xpi" "$BASE/src/browsh/browsh.xpi"
 RUN /build/ctl.sh build_browsh_binary $BASE
 
 ###########################
