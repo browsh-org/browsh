@@ -59,9 +59,12 @@ RUN install_packages \
 
 # Block ads, etc. This includes porn just because this image is also used on the
 # public SSH demo: `ssh brow.sh`.
-RUN curl \
-  -o /etc/hosts \
-  https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts
+#RUN curl \
+#  -o /etc/hosts \
+#  https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts
+
+RUN echo 'curl -o /etc/hosts https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts' >> /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Don't use root
 RUN useradd -m user --home /app
@@ -80,5 +83,6 @@ RUN TERM=xterm script \
   >/dev/null & \
   sleep 10
 
+ENTRYPOINT ["/entrypoint.sh"]
 ENTRYPOINT ["/app/bin/browsh"]
 
