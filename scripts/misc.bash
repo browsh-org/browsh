@@ -54,7 +54,8 @@ function install_golang() {
 	GOARCH=$(uname -m)
 	[[ $GOARCH == aarch64 ]] && GOARCH=arm64
 	[[ $GOARCH == x86_64 ]] && GOARCH=amd64
-	url=https://dl.google.com/go/go"$version".linux-"$GOARCH".tar.gz
+	#url=https://dl.google.com/go/go"$version".linux-"$GOARCH".tar.gz
+ 	https://go.dev/dl/go"$version".8.linux-"$GOARCH".tar.gz
 	echo "Installing Golang ($url)... to $GOROOT"
 	curl -L \
 		-o go.tar.gz \
