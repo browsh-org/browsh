@@ -2,6 +2,7 @@ FROM bitnami/minideb:bullseye as build
 
 RUN install_packages \
       curl \
+      wget\
       ca-certificates \
       git \
       autoconf \
