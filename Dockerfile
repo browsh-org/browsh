@@ -2,6 +2,7 @@ FROM bitnami/minideb:bullseye as build
 
 RUN install_packages \
       curl \
+      wget\
       ca-certificates \
       git \
       autoconf \
@@ -31,6 +32,8 @@ ENV BASE=$GOPATH/src/browsh/interfacer
 ADD interfacer $BASE
 WORKDIR $BASE
 RUN /build/ctl.sh install_golang $BASE
+RUN wget -P "$BASE" "https://github.com/browsh-org/browsh/releases/download/v1.8.3/browsh-1.8.3.xpi"
+RUN mv "$BASE/browsh-1.8.3.xpi" "$BASE/src/browsh/browsh.xpi"
 RUN /build/ctl.sh build_browsh_binary $BASE
 
 ###########################
@@ -56,9 +59,12 @@ RUN install_packages \
 
 # Block ads, etc. This includes porn just because this image is also used on the
 # public SSH demo: `ssh brow.sh`.
-RUN curl \
-  -o /etc/hosts \
-  https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts
+#RUN curl \
+#  -o /etc/hosts \
+#  https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts
+
+RUN echo 'curl -o /etc/hosts https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts' >> /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Don't use root
 RUN useradd -m user --home /app
@@ -77,5 +83,6 @@ RUN TERM=xterm script \
   >/dev/null & \
   sleep 10
 
+ENTRYPOINT ["/entrypoint.sh"]
 ENTRYPOINT ["/app/bin/browsh"]
 
