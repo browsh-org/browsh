@@ -35,7 +35,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	framesLogFileName = fmt.Sprintf(filepath.Join(dir, "frames.log"))
+	framesLogFileName = fmt.Sprintf("%s", filepath.Join(dir, "frames.log"))
 	framesLogFile, err := os.OpenFile(framesLogFileName,
 		os.O_CREATE|os.O_TRUNC|os.O_WRONLY,
 		0o644,

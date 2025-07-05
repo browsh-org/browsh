@@ -279,7 +279,7 @@ func sendFirefoxCommand(command string, args map[string]interface{}) {
 	fullCommand := []interface{}{0, ffCommandCount, command, args}
 	marshalled, _ := json.Marshal(fullCommand)
 	message := fmt.Sprintf("%d:%s", len(marshalled), marshalled)
-	fmt.Fprintf(marionette, message)
+	fmt.Fprintf(marionette, "%s", message)
 	ffCommandCount++
 	go readMarionette()
 }

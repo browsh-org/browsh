@@ -21,33 +21,25 @@ jobs:
           go-version-file: 'interfacer/go.mod'
       - name: Setup node
         uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
       - name: Install Firefox
         uses: browser-actions/setup-firefox@latest
         with:
-          firefox-version: 102.0.1
+          firefox-version: "140.0"
       - run: firefox --version
 
       # Web extension tests
       - run: npm ci
         working-directory: ./webext
       - name: Web extension tests
-        run: npm test
-        working-directory: ./webext
+        run: ./ctl.sh test_webextension
 
       # Interfacer tests
       - name: Interfacer tests setup
-        run: |
-          touch interfacer/src/browsh/browsh.xpi
-          cd webext
-          npm run build:dev
+        run: ./ctl.sh interfacer_test_setup
       - name: Unit tests
-        run: go test -v $(find src/browsh -name '*.go' | grep -v windows)
-        working-directory: ./interfacer
-      - name: TTY tests
-        run: go test test/tty/*.go -v -ginkgo.slowSpecThreshold=30 -ginkgo.flakeAttempts=3
-        working-directory: ./interfacer
+        run: ./ctl.sh test_interfacer_units
+      - name: E2E tests
+        run: ./ctl.sh test_tty
       - name: TTY debug log
         if: ${{ failure() }}
         run: cat ./interfacer/test/tty/debug.log || echo "No log file"
@@ -57,9 +49,7 @@ jobs:
           max_attempts: 3
           retry_on: error
           timeout_minutes: 15
-          command: |
-            cd interfacer
-            go test test/http-server/*.go -v -ginkgo.slowSpecThreshold=30 -ginkgo.flakeAttempts=3
+          command: ./ctl.sh test_http_server
       - name: HTTP Server debug log
         if: ${{ failure() }}
         run: cat ./interfacer/test/http-server/debug.log || echo "No log file"

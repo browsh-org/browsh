@@ -47,20 +47,25 @@ browser.
 
 For full documentation click [here](https://www.brow.sh/docs/introduction/).
 
-## Contributing
-_Note that some of these instructions may be out of date (July 2022)_
+## Development
 
-For generic Linux systems you can follow [this guide](https://github.com/browsh-org/browsh/blob/master/SETUP_DEV_LINUX.md) on how to setup a build environment, that you may be able to adapt for other systems as well.
+### The Firefox Web Extension
+This is needed to run essential JS inside web pages so that they render in a way that Browsh can consume.
 
-Windows users can follow [this guide](https://github.com/browsh-org/browsh/blob/master/SETUP_DEV_WIN.md) in order to set up a build environment.
+You will need to install `nodejs`, usually available from your OS package manager. Though for development purposes the recommended method is with https://mise.jdx.dev. 
 
-Mac users may follow [this guide](https://github.com/browsh-org/browsh/blob/master/SETUP_DEV_OSX.md) that goes through the steps of setting up a build environment.
+Then in the `webext` directory
+* `npm install`
+* `npx webpack --watch`
 
-### Communication
-Questions about Brow.sh? Stuck trying to resolve a tricky issue? Try:
-  - [Github Discussions](https://github.com/browsh-org/browsh/discussions)
-  - [Gitter](https://gitter.im/browsh)
-    
+### The `browsh` Golang code
+You will need to install `go`, usually available from your OS package manager. Though for development purposes the recommended method is with https://mise.jdx.dev. 
+
+Then in the `interfacer` directory
+* `go run ./cmd/browsh --debug`
+
+Logs will be available in `interfacer/debug.log`
+
 ## Tests
 
 For the webextension: in `webext/` folder, `npm test`    
