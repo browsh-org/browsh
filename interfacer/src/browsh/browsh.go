@@ -51,7 +51,7 @@ func setupLogging() {
 		if err != nil {
 			Shutdown(err)
 		}
-		logfile = fmt.Sprintf(filepath.Join(dir, "debug.log"))
+		logfile = fmt.Sprintf("%s", filepath.Join(dir, "debug.log"))
 		if out, err = os.OpenFile(logfile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644); err != nil {
 			Shutdown(err)
 		}
