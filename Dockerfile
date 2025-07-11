@@ -1,6 +1,7 @@
-FROM bitnami/minideb:bullseye as build
+FROM debian:trixie-slim as build
 
-RUN install_packages \
+RUN apt update
+RUN apt install --yes \
       curl \
       ca-certificates \
       git \
@@ -36,14 +37,15 @@ RUN /build/ctl.sh build_browsh_binary $BASE
 ###########################
 # Actual final Docker image
 ###########################
-FROM bitnami/minideb:bullseye
+FROM debian:trixie-slim
 
 ENV HOME=/app
 WORKDIR $HOME
 
 COPY --from=build /go-home/src/browsh/interfacer/browsh /app/bin/browsh
 
-RUN install_packages \
+RUN apt update
+RUN apt install --yes \
       xvfb \
       libgtk-3-0 \
       curl \
@@ -78,4 +80,3 @@ RUN TERM=xterm script \
   sleep 10
 
 ENTRYPOINT ["/app/bin/browsh"]
-
