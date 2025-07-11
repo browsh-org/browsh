@@ -1,6 +1,6 @@
 module github.com/browsh-org/browsh/interfacer
 
-go 1.21
+go 1.24.4
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
