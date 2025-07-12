@@ -197,6 +197,13 @@ var _ = Describe("Showing a basic webpage", func() {
 			Expect([3]int32{255, 255, 255}).To(Equal(GetFgColour(12, 11)))
 		})
 
+		It("darwin should switch to monochrome mode", func() {
+			simScreen.InjectKey(tcell.KeyRune, 'µ', 0)
+			waitForNextFrame()
+			Expect([3]int32{0, 0, 0}).To(Equal(GetBgColour(0, 2)))
+			Expect([3]int32{255, 255, 255}).To(Equal(GetFgColour(12, 11)))
+		})
+
 		Describe("Text positioning", func() {
 			It("should position the left/right-aligned coloumns", func() {
 				Expect("Smörgåsbord▄(Swedish:").To(BeInFrameAt(12, 10))
