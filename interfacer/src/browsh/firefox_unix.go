@@ -12,13 +12,14 @@ func getFirefoxPath() string {
 	return Shell("which firefox")
 }
 
-func ensureFirefoxVersion(path string) {
+func ensureFirefoxVersion(path string) string {
 	output := Shell(path + " --version")
 	pieces := strings.Split(output, " ")
-	version := pieces[len(pieces)-1]
+	version := strings.TrimSpace(pieces[len(pieces)-1])
 	if versionOrdinal(version) < versionOrdinal("57") {
 		message := "Installed Firefox version " + version + " is too old. " +
 			"Firefox 57 or newer is needed."
 		Shutdown(errors.New(message))
 	}
+	return version
 }

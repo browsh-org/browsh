@@ -96,7 +96,7 @@ func getFirefoxFlavor() string {
 	return flavor
 }
 
-func ensureFirefoxVersion(path string) {
+func ensureFirefoxVersion(path string) string {
 	versionString := getWindowsFirefoxVersionString()
 	pieces := strings.Split(versionString, " ")
 	version := pieces[0]
@@ -105,4 +105,5 @@ func ensureFirefoxVersion(path string) {
 			"Firefox 57 or newer is needed."
 		Shutdown(errors.New(message))
 	}
+	return version
 }

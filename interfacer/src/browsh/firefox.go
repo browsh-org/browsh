@@ -63,8 +63,16 @@ func startHeadlessFirefox() {
 	slog.Info("Starting Firefox in headless mode")
 	checkIfFirefoxIsAlreadyRunning()
 	firefoxPath := ensureFirefoxBinary()
-	ensureFirefoxVersion(firefoxPath)
+	ffVersion := ensureFirefoxVersion(firefoxPath)
 	args := []string{"--marionette"}
+	// Firefox 141 made `-remote-allow-system-access` mandatory for any
+	// Marionette session that uses the chrome context (which Browsh does to
+	// bootstrap prefs, set tab focus etc.). Without it, chrome-context calls
+	// fail with `System access is required.`, the webextension never starts
+	// and Browsh just sits at "Webextension not connected". See #555.
+	if versionOrdinal(ffVersion) >= versionOrdinal("141") {
+		args = append(args, "-remote-allow-system-access")
+	}
 	if !viper.GetBool("firefox.with-gui") {
 		args = append(args, "--headless")
 	}
