@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 
 	"github.com/gdamore/tcell"
@@ -78,7 +79,7 @@ func handleUserKeyPress(ev *tcell.EventKey) {
 			sendMessageToWebExtension("/tab_command,/history_back")
 		}
 	}
-	if ev.Rune() == 'm' && ev.Modifiers() == 4 {
+	if ev.Rune() == 'm' && ev.Modifiers() == 4 || (runtime.GOOS == "darwin" && ev.Rune() == 'µ') {
 		toggleMonochromeMode()
 	}
 	if ev.Key() == 279 && ev.Modifiers() == 0 {
