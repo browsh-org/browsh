@@ -12,6 +12,7 @@ builds:
       - linux
       - freebsd
       - openbsd
+      - netbsd
     goarch:
       - 386
       - amd64
@@ -25,6 +26,10 @@ builds:
         goarch: 386
       - goarch: arm64
         goos: windows
+      - goos: netbsd
+        goarch: 386
+      - goos: netbsd
+        goarch: arm
     ldflags: -s -w
 
 archives:
@@ -36,6 +41,8 @@ archives:
     - goos: freebsd
       format: binary
     - goos: openbsd
+      format: binary
+    - goos: netbsd
       format: binary
 
 nfpms:
