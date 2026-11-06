@@ -24,6 +24,7 @@ var (
 	_ = pflag.String("firefox.path", "firefox", "Path to Firefox executable")
 	_ = pflag.Bool("firefox.with-gui", false, "Don't use headless Firefox")
 	_ = pflag.Bool("firefox.use-existing", false, "Whether Browsh should launch Firefox or not")
+	_ = pflag.Bool("firefox.ignore-version", false, "Whether Browsh should launch Firefox regardless of its version or not")
 	_ = pflag.Bool("monochrome", false, "Start browsh in monochrome mode")
 	_ = pflag.Bool("name", false, "Print out the name: Browsh")
 )
