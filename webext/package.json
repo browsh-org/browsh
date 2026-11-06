@@ -24,7 +24,7 @@
     "sinon": "^14.0.0",
     "strip-ansi": "^7.0.1",
     "web-ext": "^7.5.0",
-    "webpack": "^5.73.0",
+    "webpack": "^5.76.0",
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
